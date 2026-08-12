@@ -55,18 +55,41 @@ Utility classes defined once in `globals.css`, reused everywhere:
 - `PageShell` — wraps every route's page content: gives padding, `overflow-hidden`,
   mounts `DecorShapes` + `Watermark`, and a `relative z-10` content wrapper. Takes a
   `variant` (matches a key in `DecorShapes`) and `watermark` (section name string).
-  **Every new page should be wrapped in this.**
+  **Every new page should be wrapped in this.** Top padding is `style={{ paddingTop:
+  "var(--sidebar-title-top, 3rem)" }}` instead of a plain Tailwind class — see
+  `Sidebar`/`PageHeading` below for why; horizontal padding and `pb-*` are still normal
+  Tailwind classes.
 - `DecorShapes` — thin-stroke outline background shapes (circle/square/triangle/venn),
   per-page position sets keyed by variant name (`about`, `skills`, `experience`,
   `projects`, `portfolio`, `recommendations`, `contact`, `default`). Add a new key here
   when adding a page that wants its own arrangement (open-source/certifications/bonus
   currently fall back to `default`).
-- `Sidebar` — persistent, client component. Fixed on `md:`+ (`md:fixed md:w-80`),
-  stacks in normal flow on mobile. Reads from `lib/data/profile.ts`; nav is delegated
-  to `DialNav`.
+- `PageHeading` — the eyebrow + big `h2` at the top of every page (`<PageHeading
+  eyebrow="Skills">My Expertise</PageHeading>`), used by all 10 section pages and by
+  `StubSection`. Client component: measures its own eyebrow's rendered height and pulls
+  it up via a negative `marginTop` equal to that height, so the *heading* text (not the
+  eyebrow) lands exactly at the top of `PageShell`'s padding box. This exists purely to
+  make the heading align with the sidebar name — see below. A first attempt at this
+  hardcoded a guessed 24px offset instead of measuring; it was visibly off (bottoms
+  didn't quite line up) and got replaced with this self-measuring version.
+- `Sidebar` — persistent, client component, width `clamp(360px,40vw,640px)` (not a
+  fixed px value — sized to look proportionally "big" per an explicit brief request).
+  Fixed on `md:`+, stacks in normal flow on mobile. Its whole content group (name,
+  tagline, `DialNav`, socials) is vertically centered via `justify-center` on the outer
+  flex column — **this is intentional, keep it**, a prior attempt at top-anchoring the
+  name broke this and had to be reverted. Because that centering is dynamic (depends on
+  viewport height), the name's on-screen position isn't a fixed constant, so alignment
+  with each page's heading is done live: a `useLayoutEffect` measures the name `<h1>`'s
+  `getBoundingClientRect().top` (re-measured on resize via `ResizeObserver` + a resize
+  listener) and writes it to `--sidebar-title-top` on `document.documentElement`, which
+  `PageShell` reads for its top padding. Below the `md:` breakpoint the sidebar isn't
+  fixed/centered (stacks above content instead), so the sync is skipped there and
+  `--sidebar-title-top` is removed, falling back to `PageShell`'s static padding.
+  Reads from `lib/data/profile.ts`; nav is delegated to `DialNav`.
 - `DialNav` — replaced the old flat nav `<Link>` list. A scrollable "dial"/reel: fixed
-  `396px`-tall (`ROW_HEIGHT=44 * VISIBLE_ROWS=9`, i.e. 4 rows visible above/below the
-  centered item) container with CSS `scroll-snap`, edge fade via a 10-stop `mask-image`
+  `324px`-tall (`ROW_HEIGHT=36 * VISIBLE_ROWS=9`, i.e. 4 rows visible above/below the
+  centered item — row height tightened from an original 44px per request) container
+  with CSS `scroll-snap`, edge fade via a 10-stop `mask-image`
   (not per-row opacity, and not linear — eases out over the 4 neighbor rows for a
   natural falloff). Renders `navItems` **3x** ("tripled list") and silently jumps
   `scrollTop` by one list-length when nearing the array bounds, so scrolling past the
@@ -141,11 +164,17 @@ calling this "done" done.
   `bg-base text-ink` on body.
 - `app/page.tsx` — redirects `/` → `/about` (server-side `redirect()`, no client flash).
 - `app/(sections)/layout.tsx` — route group layout wrapping all section pages with
-  `<Sidebar />` + a `md:ml-80` offset main panel.
-- `app/(sections)/about/page.tsx` + `scroll-indicator.tsx` — two-column layout, bio
-  left, placeholder "GD" monogram photo + education/location `Pill`s right, circular
-  scroll button. Emoji icons (🎓/📍) are intentional — the brief specified them
-  literally.
+  `<Sidebar />` + a `md:ml-[clamp(360px,40vw,640px)]` offset main panel (must match
+  `Sidebar`'s own width exactly, or the two will gap/overlap).
+- `app/(sections)/about/page.tsx` + `scroll-indicator.tsx` — single stacked column
+  (not the original two-column layout): `PageHeading`, then a photo+pills row (photo
+  left, education/location/"Available for opportunities" `Pill`s stacked to its right,
+  bottom-aligned with the photo), then bio paragraphs below, all left-aligned right
+  after the sidebar. Normal top-anchored flow — an earlier version force-fit everything
+  into one viewport height with `h-[calc(100dvh-...)]` + `overflow-y-auto` to avoid
+  scrolling, but that was explicitly reverted: scrolling is fine, only the heading's
+  starting position needs to align (see `PageHeading`). Emoji icons (🎓/📍/🟢) are
+  intentional — literal per the brief/requests, not meant to be swapped for an icon set.
 - `app/(sections)/skills/page.tsx` + `skill-row.tsx` — Software Engineering/Content
   Creation filter toggle, hover-to-expand category rows (CSS grid-rows trick for smooth
   height animation, not JS-measured height), `TechIcon` tooltips on hover/focus.

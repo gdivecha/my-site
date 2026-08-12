@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { projects, type ProjectCategory } from "@/lib/data/projects";
 import { ProjectCard } from "./project-card";
@@ -19,12 +20,7 @@ export default function ProjectsPage() {
 
   return (
     <PageShell variant="projects" watermark="PROJECTS">
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        Projects
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
-        My Work
-      </h2>
+      <PageHeading eyebrow="Projects">My Work</PageHeading>
 
       <div className="mt-8 flex flex-wrap gap-2">
         {FILTERS.map((f) => {

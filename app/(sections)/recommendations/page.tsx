@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import {
   recommendations,
@@ -31,12 +32,9 @@ export default function RecommendationsPage() {
 
   return (
     <PageShell variant="recommendations" watermark="RECOMMENDATIONS">
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        Recommendations
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
+      <PageHeading eyebrow="Recommendations">
         What others say about me
-      </h2>
+      </PageHeading>
 
       <div className="mt-8 flex flex-wrap gap-2">
         {recommendationCategories.map((c) => {

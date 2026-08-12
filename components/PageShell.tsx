@@ -12,7 +12,10 @@ export function PageShell({
   children: ReactNode;
 }) {
   return (
-    <div className="relative isolate min-h-screen overflow-hidden px-6 py-12 sm:px-10 md:px-16 md:py-16">
+    <div
+      className="relative isolate min-h-screen overflow-hidden px-6 pb-12 sm:px-10 md:px-16 md:pb-16"
+      style={{ paddingTop: "var(--sidebar-title-top, 3rem)" }}
+    >
       <DecorShapes variant={variant} />
       <Watermark text={watermark} />
       <div className="relative z-10">{children}</div>

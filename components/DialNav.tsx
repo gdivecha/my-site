@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { navItems } from "@/lib/data/nav";
 
 const N = navItems.length;
-const ROW_HEIGHT = 44;
+const ROW_HEIGHT = 36;
 /** Rows visible above/below the centered item before fading out completely. */
 const VISIBLE_NEIGHBORS = 4;
 const VISIBLE_ROWS = VISIBLE_NEIGHBORS * 2 + 1;
@@ -168,8 +168,8 @@ export function DialNav() {
                   scrollToRaw(rawIndex, true);
                 }}
                 aria-current={focused ? "page" : undefined}
-                className="flex h-11 w-full shrink-0 snap-center items-center gap-3 pl-2 pr-2"
-                style={{ scrollSnapStop: "always" }}
+                className="flex w-full shrink-0 snap-center items-center gap-3 pl-2 pr-2"
+                style={{ height: ROW_HEIGHT, scrollSnapStop: "always" }}
               >
                 <span
                   className="relative z-10 flex shrink-0 items-center justify-center"

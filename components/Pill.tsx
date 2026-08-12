@@ -8,7 +8,7 @@ export function Pill({
   icon?: ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-3.5 py-1.5 text-xs text-ink-soft">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-panel px-3.5 py-1.5 text-xs text-ink-soft">
       {icon}
       {children}
     </span>

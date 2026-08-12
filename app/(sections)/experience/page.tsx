@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { experiences, type ExperienceType } from "@/lib/data/experience";
 import { ExperienceCard } from "./experience-card";
@@ -17,12 +18,7 @@ export default function ExperiencePage() {
 
   return (
     <PageShell variant="experience" watermark="EXPERIENCE">
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        Experience
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
-        Professional Experience
-      </h2>
+      <PageHeading eyebrow="Experience">Professional Experience</PageHeading>
 
       <div className="mt-8 flex flex-wrap gap-2">
         {FILTERS.map((f) => {

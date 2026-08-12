@@ -1,3 +1,5 @@
+import { PageHeading } from "./PageHeading";
+
 export function StubSection({
   eyebrow,
   heading,
@@ -9,12 +11,7 @@ export function StubSection({
 }) {
   return (
     <>
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        {eyebrow}
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
-        {heading}
-      </h2>
+      <PageHeading eyebrow={eyebrow}>{heading}</PageHeading>
 
       <div className="mt-8 max-w-lg rounded-2xl border border-dashed border-line bg-panel/60 p-10">
         <p className="text-sm leading-relaxed text-ink-soft">{body}</p>

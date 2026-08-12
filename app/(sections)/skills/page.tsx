@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { skillCategories } from "@/lib/data/skills";
 import { SkillRow } from "./skill-row";
@@ -18,12 +19,7 @@ export default function SkillsPage() {
 
   return (
     <PageShell variant="skills" watermark="SKILLS">
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        Skills
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
-        My Expertise
-      </h2>
+      <PageHeading eyebrow="Skills">My Expertise</PageHeading>
 
       <div className="mt-8 inline-flex rounded-full border border-line bg-panel p-1">
         {FILTERS.map((f) => (

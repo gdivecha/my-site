@@ -1,3 +1,4 @@
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { MailIcon } from "@/components/icons";
 import { ContactForm } from "./contact-form";
@@ -5,12 +6,7 @@ import { ContactForm } from "./contact-form";
 export default function ContactPage() {
   return (
     <PageShell variant="contact" watermark="CONTACT">
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        Contact
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
-        Let&apos;s talk
-      </h2>
+      <PageHeading eyebrow="Contact">Let&apos;s talk</PageHeading>
 
       <div className="mt-8 max-w-xl">
         <div className="flex flex-col items-center gap-4 rounded-2xl bg-white py-10">

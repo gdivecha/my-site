@@ -1,15 +1,11 @@
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { DownloadIcon } from "@/components/icons";
 
 export default function PortfolioPage() {
   return (
     <PageShell variant="portfolio" watermark="PORTFOLIO">
-      <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
-        Portfolio
-      </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
-        My Résumé
-      </h2>
+      <PageHeading eyebrow="Portfolio">My Résumé</PageHeading>
 
       <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-panel p-6 md:p-8">
         <iframe
