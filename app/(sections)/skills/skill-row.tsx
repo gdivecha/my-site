@@ -36,14 +36,14 @@ export function SkillRow({ category }: { category: SkillCategory }) {
   const CategoryIcon = categoryIcons[category.id] ?? CodeBracketsIcon;
 
   return (
-    <div className="rounded-2xl border border-line bg-transparent backdrop-blur-[3.8px] transition-colors hover:bg-panel-alt/20">
+    <div className="rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover">
       <button
         type="button"
         className="flex w-full items-center gap-3 px-6 py-4 text-left"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-panel-alt text-accent-soft">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tag-bg text-accent-soft">
           <CategoryIcon className="h-4 w-4" />
         </span>
         <span className="text-sm font-medium text-ink">{category.label}</span>

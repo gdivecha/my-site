@@ -33,6 +33,13 @@ html {
 
   /* dial nav rail track */
   --dial-rail-color: rgba(92, 88, 120, 0.18);
+
+  /* translucent card tint (Skills, Experience, Portfolio, Pill) */
+  --color-card-tint: rgba(48, 49, 81, 0.15);
+  --color-card-tint-hover: rgba(48, 49, 81, 0.25);
+
+  /* Tag chip background (skill/tech tags) */
+  --color-tag-bg: var(--color-panel-alt);
 }
 
 :root[data-theme="light"] {
@@ -55,6 +62,14 @@ html {
 
   /* dial nav rail track */
   --dial-rail-color: rgba(109, 95, 232, 0.25);
+
+  /* translucent card tint — white wash instead of the dark hue, same opacity */
+  --color-card-tint: rgba(255, 255, 255, 0.03);
+  --color-card-tint-hover: rgba(255, 255, 255, 0.06);
+
+  /* Tag chip background — panel-alt is too close to the page background
+     here, so use a visible purple wash instead. */
+  --color-tag-bg: rgba(109, 95, 232, 0.14);
 }
 
 @theme inline {
@@ -71,6 +86,10 @@ html {
   --color-ink: var(--color-ink);
   --color-ink-soft: var(--color-ink-soft);
   --color-ink-faint: var(--color-ink-faint);
+
+  --color-card-tint: var(--color-card-tint);
+  --color-card-tint-hover: var(--color-card-tint-hover);
+  --color-tag-bg: var(--color-tag-bg);
 
   --font-display: var(--font-poppins);
   --font-body: var(--font-inter);

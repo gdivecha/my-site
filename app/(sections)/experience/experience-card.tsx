@@ -21,7 +21,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-line bg-transparent p-6 backdrop-blur-[3.8px] transition-colors hover:bg-panel-alt/20">
+    <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h3 className="text-base font-semibold text-ink">
           {experience.role}
