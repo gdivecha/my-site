@@ -23,6 +23,12 @@ All content is placeholder/lorem-ish and clearly marked — swap before going li
   `npm audit` after any dependency bump.
 - Standard commands: `PATH="/opt/homebrew/bin:$PATH" npm run dev`, and for builds
   `PATH="/opt/homebrew/bin:$PATH" NODE_ENV=production npm run build`.
+- **Don't run `npm run build` while `npm run dev` is running** — both write to the
+  same `.next` directory and will corrupt each other's cache (symptom: dev server
+  starts throwing `Cannot find module './NNN.js'` / `MODULE_NOT_FOUND` on every route).
+  Fix is `rm -rf .next` and restart whichever process broke. If you need a production
+  build to sanity-check, stop the dev server first (or run it in a git worktree /
+  separate checkout).
 
 ## Design tokens (decided, in `app/globals.css` under `:root` + `@theme inline`)
 
@@ -55,9 +61,33 @@ Utility classes defined once in `globals.css`, reused everywhere:
   `projects`, `portfolio`, `recommendations`, `contact`, `default`). Add a new key here
   when adding a page that wants its own arrangement (open-source/certifications/bonus
   currently fall back to `default`).
-- `Sidebar` — persistent, client component (`usePathname` for active nav state). Fixed
-  on `md:`+ (`md:fixed md:w-80`), stacks in normal flow on mobile. Reads from
-  `lib/data/nav.ts` and `lib/data/profile.ts`.
+- `Sidebar` — persistent, client component. Fixed on `md:`+ (`md:fixed md:w-80`),
+  stacks in normal flow on mobile. Reads from `lib/data/profile.ts`; nav is delegated
+  to `DialNav`.
+- `DialNav` — replaced the old flat nav `<Link>` list. A scrollable "dial"/reel: fixed
+  `396px`-tall (`ROW_HEIGHT=44 * VISIBLE_ROWS=9`, i.e. 4 rows visible above/below the
+  centered item) container with CSS `scroll-snap`, edge fade via a 10-stop `mask-image`
+  (not per-row opacity, and not linear — eases out over the 4 neighbor rows for a
+  natural falloff). Renders `navItems` **3x** ("tripled list") and silently jumps
+  `scrollTop` by one list-length when nearing the array bounds, so scrolling past the
+  last item wraps seamlessly into the first (and vice versa) — no dead end at either
+  end of the list. A static pill-shaped rail (flat translucent fill, not a gradient —
+  a brightness bump at the rail's center was tried and rejected, it read as a
+  distracting glow sliding past during transitions) sits behind uniform tick-mark
+  dashes; the focused tick is plain white with no shadow/blur (a glow/shine treatment
+  was tried and explicitly rejected in favor of flat white). Live-tracks scroll
+  position (`onScroll` → nearest-row index, mod'd back into `[0,N)` for lookups) to
+  update styling in real time, then **auto-navigates** to whichever item settles at
+  center ~160ms after scrolling stops (`router.push`, debounced via a timer reset on
+  every scroll event). The pathname-sync `useEffect` steps from the dial's *actual*
+  current raw index using a shortest-signed-delta helper — it must NOT renormalize
+  back into a "canonical" copy of the tripled list, which was a real bug: it caused
+  About→Contact (adjacent across the wrap point) to animate a long slide across
+  nearly the whole list instead of the correct one-row hop. Also handles nested routes
+  (e.g. `/projects/shelfie` still highlights "Projects") via a `startsWith` prefix
+  fallback in `findActiveIndex`. Uses a hand-rolled `.no-scrollbar` utility in
+  `globals.css` (Tailwind has no built-in one) to hide the native scrollbar. Reads
+  from `lib/data/nav.ts`.
 - `Pill` / `Tag` — small rounded-pill components for badges (education/location pills)
   vs. tech tags respectively (subtly different styling — Pill has a border+icon slot,
   Tag is a flat accent-tinted chip for tech-stack lists).

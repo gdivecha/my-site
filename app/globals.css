@@ -60,6 +60,15 @@ body {
   color: transparent;
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .watermark {
   position: absolute;
   right: -0.15em;

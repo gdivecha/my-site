@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { navItems } from "@/lib/data/nav";
 import { profile } from "@/lib/data/profile";
+import { DialNav } from "./DialNav";
 import { GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
 
 const socialIcons = {
@@ -13,8 +11,6 @@ const socialIcons = {
 };
 
 export function Sidebar() {
-  const pathname = usePathname();
-
   return (
     <aside className="border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-80 md:border-b-0 md:border-r md:overflow-y-auto">
       <div className="flex h-full flex-col gap-8 px-8 py-10 md:px-9">
@@ -31,35 +27,7 @@ export function Sidebar() {
           {profile.tagline}
         </p>
 
-        <nav className="flex flex-col gap-1" aria-label="Section navigation">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors"
-              >
-                <span
-                  className={`h-px w-4 shrink-0 transition-all ${
-                    active
-                      ? "bg-accent-soft opacity-100"
-                      : "bg-ink-faint opacity-50 group-hover:opacity-80"
-                  }`}
-                />
-                <span
-                  className={`text-[12px] font-medium uppercase tracking-wide transition-colors ${
-                    active
-                      ? "text-ink"
-                      : "text-ink-faint group-hover:text-ink-soft"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
+        <DialNav />
 
         <div className="mt-auto flex gap-2.5 pt-2">
           {profile.socials.map((social) => {
