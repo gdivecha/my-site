@@ -10,7 +10,6 @@ export type Experience = {
   tags: string[];
   summary: string;
   details?: {
-    workedOn: string;
     challenges: string;
     growth: string;
   };
@@ -29,8 +28,6 @@ export const experiences: Experience[] = [
     summary:
       "Placeholder full-time role — replace with your current position, team, and a one-line summary of scope.",
     details: {
-      workedOn:
-        "Placeholder: describe the systems, features, or products you owned or shipped in this role.",
       challenges:
         "Placeholder: describe a real technical or organizational challenge you navigated here.",
       growth:
@@ -42,14 +39,12 @@ export const experiences: Experience[] = [
     company: "Amazon",
     role: "Software Development Engineer Intern",
     team: "AWS",
-    dateRange: "Summer 2025",
+    dateRange: "Jun '25 - Aug '25",
     type: "internship",
     tags: ["Java", "AWS", "DynamoDB", "Microservices"],
     summary:
       "Placeholder internship summary — a sentence or two on the team and what you built.",
     details: {
-      workedOn:
-        "Placeholder: describe the internship project, the service or feature you contributed to, and its impact.",
       challenges:
         "Placeholder: describe a challenge — scale, ambiguity, a new stack — and how you worked through it.",
       growth:
@@ -61,14 +56,12 @@ export const experiences: Experience[] = [
     company: "Dayforce",
     role: "Software Engineer Intern",
     team: "Payroll Engineering",
-    dateRange: "Fall 2023",
+    dateRange: "Sep '23 - Dec '23",
     type: "internship",
     tags: ["C#", ".NET", "SQL", "Azure"],
     summary:
       "Placeholder internship summary — a sentence or two on the team and what you built.",
     details: {
-      workedOn:
-        "Placeholder: describe the feature, tooling, or fix you shipped during this term.",
       challenges:
         "Placeholder: describe a real challenge from this term and how it was resolved.",
       growth:
@@ -86,8 +79,6 @@ export const experiences: Experience[] = [
     summary:
       "Placeholder: student engineering team building a hyperloop pod prototype for international competition.",
     details: {
-      workedOn:
-        "Placeholder: describe the subsystem you built — telemetry, controls firmware, dashboards, etc.",
       challenges:
         "Placeholder: describe a hardware/software integration challenge under competition deadlines.",
       growth:
@@ -104,8 +95,6 @@ export const experiences: Experience[] = [
     summary:
       "Placeholder: ongoing freelance content work — video, illustration, and social media management for clients.",
     details: {
-      workedOn:
-        "Placeholder: describe representative client work, formats, and platforms.",
       challenges:
         "Placeholder: describe a creative or logistical challenge from freelance work.",
       growth:
