@@ -52,6 +52,45 @@ Contact page's white card + black mail icon (a deliberate high-contrast break fr
 theme, per brief), the Portfolio page's white résumé-iframe background (PDFs render on
 white regardless), and `DialNav`'s `bg-white` focused tick mark.
 
+**Type scale**: Tailwind's default `--text-xs` (12px) read smaller than typical
+portfolio-site body/label text, so it's overridden site-wide to 13px/1.25rem-line-height
+via a plain `@theme { --text-xs: 0.8125rem; ... }` block (separate from the color
+`@theme inline` block above — this one holds literal values, not `:root` var refs). That
+single override reaches every `text-xs` usage across the app. A handful of
+component-local arbitrary sizes that don't route through that token also got bumped by
+hand: the About-page bio copy, `DialNav`'s tab labels, `Pill`'s `Tag` variant,
+`ImagePlaceholder`'s label, the filter-count `<sup>` badges, and `TechIcon`'s tooltip
+text. Left alone on purpose: `TechIcon`'s fallback hex-badge abbreviation text (`C#`,
+`AWS`, etc.) — it's iconographic, constrained inside a fixed ~28px tile, not reading
+copy, and bumping it risked overflow on 3-letter abbreviations.
+
+On top of that, `html { font-size: 112.5%; }` in `globals.css` scales every rem-based
+Tailwind size up further still (18px root instead of 16px) — a broader "make everything
+bigger" pass layered on top of the `text-xs` token change above. The sidebar name and
+every page's big `PageHeading` were then deliberately reverted back to their original
+absolute size on top of *that* — since `justify-center`/the alignment mechanism between
+them depends on precise measurement, not visual scale, they were switched from rem-based
+classes (`text-3xl`/`text-4xl`/etc., which scale with the root) to fixed px arbitrary
+values (`text-[30px] md:text-[36px] lg:text-[48px]` for the name, `text-[36px]
+sm:text-[48px]` for `PageHeading`) so they stay immune to the root bump while everything
+else on the page still scaled up.
+
+## Keyboard shortcuts
+
+- `DialNav` listens for `Cmd+ArrowUp`/`Cmd+ArrowDown` (window-level `keydown`, guarded
+  against firing while an `<input>`/`<textarea>` is focused) to step to the
+  previous/next tab from anywhere on the page — reuses the same `scrollToRaw` animation
+  and `focusedRaw` state the scroll/click paths already used, then `router.push`es
+  directly since there's no `<Link>` click to piggyback on. Plain arrow-key page
+  scrolling needed no new code — it's native browser behavior, just documented in the
+  modal below.
+- `components/KeyboardShortcuts.tsx` — a ⌘-icon button (mounted next to `ThemeToggle` in
+  `Sidebar`, same top-left corner) that opens a modal listing both the custom dial
+  shortcuts and the native scroll keys, so they're discoverable in one place. Closes on
+  Escape, backdrop click, or the × button. The ⌘ glyph is rendered as plain Unicode text
+  (U+2318), not a custom SVG — it's a universally-recognized character and more accurate
+  than hand-drawing an approximation.
+
 ## Dark/light theme toggle
 
 - `:root[data-theme="light"]` in `globals.css` redefines all the same `--color-*`
@@ -114,7 +153,8 @@ Utility classes defined once in `globals.css`, reused everywhere:
 - `Watermark` — client component (`"use client"`; needs `useLayoutEffect` to measure
   itself). Renders 44 rows × 2 duplicated copies × 8 repeats of the word, each row's
   `animation-duration` set via a `--watermark-duration` CSS var computed from that row's
-  *actual measured width* divided by a constant `PIXELS_PER_SECOND` (12) — this is
+  *actual measured width* divided by a constant `PIXELS_PER_SECOND` (6, slowed down from
+  an initial 12 per request) — this is
   deliberate, not a fixed duration: it's what makes the scroll speed visually identical
   across pages despite "RECOMMENDATIONS" and "SKILLS" producing very different track
   widths at the same 8-repeat count. Re-measures on resize via `ResizeObserver`. Two
@@ -173,12 +213,41 @@ Utility classes defined once in `globals.css`, reused everywhere:
   from `lib/data/nav.ts`.
 - `Pill` / `Tag` — small rounded-pill components for badges (education/location pills)
   vs. tech tags respectively (subtly different styling — Pill has a border+icon slot,
-  Tag is a flat accent-tinted chip for tech-stack lists).
-- `TechIcon` — the Skills-page tech monogram badge with hover/focus tooltip. Client
-  component (needs hover state). Placeholder abbreviation badges, not real logos.
+  Tag is a flat accent-tinted chip for tech-stack lists). `Pill` is deliberately
+  translucent (`bg-panel/40` + `backdrop-blur-[3.8px]`) rather than a solid panel, per
+  request — same treatment on `SkillRow`'s card (`bg-transparent` + the same blur
+  amount) so the watermark shows through both. The exact blur radius was tuned by eye
+  across several rounds (2px read too sharp, 4px/6px too heavy) — if this needs
+  revisiting, treat 3.8px as a rough middle, not a precise target.
+- `TechIcon` — the Skills-page tech logo tile with hover/focus tooltip (shows
+  `skill.name.toUpperCase()`, e.g. hovering Python shows "PYTHON"). Renders a real brand
+  mark via the `simple-icons` npm package (added as a dependency specifically for this —
+  it's tree-shakeable, `sideEffects: false`, named per-icon ESM exports, so only the ~35
+  icons actually imported end up in the client bundle) colored with the brand's own hex.
+  Falls back to a colored hex-badge (`skill.abbr` on `skill.color`) for skills
+  `simple-icons` doesn't have — notably **C#, Java, AWS, Azure, and the whole Adobe
+  suite are missing from simple-icons** (that library drops brands with aggressive
+  trademark enforcement), not an oversight. A few available icons (`Express`, `Next.js`,
+  `Vercel`, `TikTok`) have official colors that are pure black — those are flagged
+  `monochrome: true` in `lib/data/skills.ts` so `TechIcon` renders them via
+  `currentColor`/`text-ink` instead of their literal hex, or they'd vanish against a
+  same-tone tile in dark mode. See `lib/data/skills.ts` for the full per-skill mapping.
+  **Bug fixed**: tooltips were being rendered but invisible — `SkillRow`'s
+  expand/collapse wrapper (the `grid-rows-[0fr]`→`[1fr]` height-animation trick) has an
+  `overflow-hidden` div sized tightly to the icon row, and the tooltip pops *upward*
+  outside that box (`-top-9`), so it was getting clipped by that same ancestor. Fixed by
+  switching that div's overflow to `visible` once the row is actually open (still
+  `hidden` while collapsed, so the animation itself still looks right):
+  `className={hovered ? "overflow-visible" : "overflow-hidden"}` in `skill-row.tsx`.
+- `SkillRow`'s category avatar (the icon left of "Languages", "Back-end", etc.) uses a
+  per-category icon from `components/icons.tsx` (`CodeBracketsIcon`, `SlidersIcon`,
+  `GlobeIcon`, `DatabaseIcon`, `CloudIcon`, `SparkleIcon`, `FlaskIcon`, `WrenchIcon`,
+  `FilmStripIcon`, `PaintbrushIcon`, `ShareNetworkIcon`), looked up by `category.id` in
+  a `categoryIcons` map in `skill-row.tsx` — replaced the original first-letter-of-label
+  avatar.
 - `components/icons.tsx` — hand-authored inline SVGs (Github/LinkedIn/Instagram/Mail/
-  Download/ChevronDown/ArrowDown/Play/Quote/BreadcrumbArrow). No icon library dependency
-  added on purpose.
+  Download/ChevronDown/Play/Quote/BreadcrumbArrow, plus the category icons above). No
+  general-purpose icon library dependency — `simple-icons` (above) is brand logos only.
 
 ## Data layer (`/lib/data/*.ts`) — DONE
 
@@ -189,7 +258,9 @@ All typed, all populated with clearly-placeholder content:
   session). LinkedIn/Instagram are `"#"` placeholders — deliberately not fabricated,
   marked `// TODO`.
 - `skills.ts` — all 11 categories from the brief (8 engineering + 3 content), each with
-  4-6 placeholder tech tags (`{name, abbr}` — abbr feeds `TechIcon`'s monogram).
+  3-6 tech tags. Each tag is `{name, abbr, icon?, color?, monochrome?}` — `icon` is a key
+  into `TechIcon`'s `iconMap` (real `simple-icons` brand logo) when one exists; `abbr` +
+  `color` are the hex-badge fallback for the ones that don't. See `TechIcon` above.
 - `experience.ts` — 5 entries: 1 explicit full-time placeholder ("Acme Technologies",
   obviously fake company name on purpose so it reads as a slot to fill), Amazon +
   Dayforce as internships, Ryerson International Hyperloop + "Independent" content

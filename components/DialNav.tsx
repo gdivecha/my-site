@@ -99,6 +99,29 @@ export function DialNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Cmd+Up / Cmd+Down step to the previous/next tab, from anywhere on the page.
+  useEffect(() => {
+    function handleKeydown(event: KeyboardEvent) {
+      if (!event.metaKey) return;
+      if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+      const target = event.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+
+      event.preventDefault();
+      const direction = event.key === "ArrowUp" ? -1 : 1;
+      setFocusedRaw((prevRaw) => {
+        const nextRaw = prevRaw + direction;
+        scrollToRaw(nextRaw, true);
+        const nextItem = navItems[mod(nextRaw, N)];
+        if (nextItem && nextItem.href !== pathname) router.push(nextItem.href);
+        return nextRaw;
+      });
+    }
+
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [pathname, router, scrollToRaw]);
+
   function handleScroll() {
     const el = scrollRef.current;
     if (!el) return;
@@ -178,7 +201,7 @@ export function DialNav() {
                   />
                 </span>
                 <span
-                  className={`text-[13px] uppercase tracking-wide transition-all duration-200 ${
+                  className={`text-sm uppercase tracking-wide transition-all duration-200 ${
                     focused
                       ? "font-semibold text-ink"
                       : "font-medium text-ink-faint"

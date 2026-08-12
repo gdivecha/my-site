@@ -21,7 +21,7 @@ export function ImagePlaceholder({
             "repeating-linear-gradient(135deg, var(--color-accent) 0, var(--color-accent) 1px, transparent 1px, transparent 14px)",
         }}
       />
-      <span className="relative px-4 text-center text-[11px] font-medium uppercase tracking-widest text-ink-faint">
+      <span className="relative px-4 text-center text-xs font-medium uppercase tracking-widest text-ink-faint">
         {label}
       </span>
     </div>

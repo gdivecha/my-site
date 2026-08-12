@@ -8,7 +8,7 @@ export function Pill({
   icon?: ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-panel px-3.5 py-1.5 text-xs text-ink-soft">
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-panel/40 px-3.5 py-1.5 text-xs text-ink-soft backdrop-blur-[3.8px]">
       {icon}
       {children}
     </span>
@@ -17,7 +17,7 @@ export function Pill({
 
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-panel-alt px-3 py-1 text-[11px] font-medium tracking-wide text-accent-soft">
+    <span className="inline-flex items-center rounded-full bg-panel-alt px-3 py-1 text-xs font-medium tracking-wide text-accent-soft">
       {children}
     </span>
   );

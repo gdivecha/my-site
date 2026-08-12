@@ -40,7 +40,7 @@ export function PageHeading({
       >
         {eyebrow}
       </p>
-      <h2 className="mt-2 font-display text-4xl font-bold text-ink sm:text-5xl">
+      <h2 className="mt-2 font-display text-[36px] font-bold leading-tight text-ink sm:text-[48px]">
         {children}
       </h2>
     </>

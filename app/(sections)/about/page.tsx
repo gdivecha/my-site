@@ -41,7 +41,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <div className="space-y-3 text-left text-[13px] leading-relaxed text-ink-soft sm:text-sm">
+        <div className="space-y-3 text-left text-sm leading-relaxed text-ink-soft md:text-[15px]">
           {profile.bio.map((paragraph, i) => (
             <p key={i}>{paragraph}</p>
           ))}

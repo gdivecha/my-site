@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Scale every rem-based Tailwind size (nearly the whole type system) up from
+   the 16px default — reads more in line with typical portfolio-site sizing. */
+html {
+  font-size: 112.5%;
+}
+
+/* Bump the smallest type step further still — even scaled up via the root
+   font-size above, 12px-equivalent read smaller than the rest of the copy. */
+@theme {
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+}
+
 :root {
   /* surfaces */
   --color-base: #0d0d14;
@@ -114,7 +127,7 @@ body {
 
 @media (min-width: 768px) {
   .watermark-field {
-    left: calc(clamp(360px, 40vw, 640px) - 10rem);
+    left: calc(clamp(360px, 40vw, 640px) - 15rem);
   }
 }
 

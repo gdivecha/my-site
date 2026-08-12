@@ -41,7 +41,7 @@ export default function ProjectsPage() {
               }`}
             >
               {f.label}
-              <sup className="text-[10px] font-semibold">{count}</sup>
+              <sup className="text-[11px] font-semibold">{count}</sup>
             </button>
           );
         })}

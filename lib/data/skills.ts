@@ -1,6 +1,12 @@
 export type SkillTag = {
   name: string;
   abbr: string;
+  /** Key into the `iconMap` in `components/TechIcon.tsx` (a simple-icons brand mark). Omit for skills with no available brand logo — they fall back to a colored hex-badge using `abbr` + `color`. */
+  icon?: string;
+  /** Fallback hex-badge background (used when `icon` is absent), or an override when the brand's own icon color is pure black/white — see `monochrome`. */
+  color?: string;
+  /** True when the brand's official icon color is near-black/white and would vanish against a same-tone tile — render it in the current text color instead of its own hex. */
+  monochrome?: boolean;
 };
 
 export type SkillCategory = {
@@ -16,12 +22,12 @@ export const skillCategories: SkillCategory[] = [
     label: "Languages",
     group: "engineering",
     skills: [
-      { name: "C", abbr: "C" },
-      { name: "C#", abbr: "C#" },
-      { name: "Python", abbr: "Py" },
-      { name: "Java", abbr: "Jv" },
-      { name: "JavaScript", abbr: "JS" },
-      { name: "TypeScript", abbr: "TS" },
+      { name: "C", abbr: "C", icon: "C" },
+      { name: "C#", abbr: "C#", color: "#9B4F96" },
+      { name: "Python", abbr: "Py", icon: "Python" },
+      { name: "Java", abbr: "Jv", color: "#E76F00" },
+      { name: "JavaScript", abbr: "JS", icon: "Javascript" },
+      { name: "TypeScript", abbr: "TS", icon: "Typescript" },
     ],
   },
   {
@@ -29,11 +35,11 @@ export const skillCategories: SkillCategory[] = [
     label: "Back-end",
     group: "engineering",
     skills: [
-      { name: "Node.js", abbr: "Nd" },
-      { name: "Express", abbr: "Ex" },
-      { name: ".NET", abbr: ".N" },
-      { name: "GraphQL", abbr: "GQ" },
-      { name: "REST APIs", abbr: "API" },
+      { name: "Node.js", abbr: "Nd", icon: "Nodedotjs" },
+      { name: "Express", abbr: "Ex", icon: "Express", monochrome: true },
+      { name: ".NET", abbr: ".N", icon: "Dotnet" },
+      { name: "GraphQL", abbr: "GQ", icon: "Graphql" },
+      { name: "REST APIs", abbr: "API", color: "#6D5FE8" },
     ],
   },
   {
@@ -41,11 +47,11 @@ export const skillCategories: SkillCategory[] = [
     label: "Front-end",
     group: "engineering",
     skills: [
-      { name: "React", abbr: "Re" },
-      { name: "Next.js", abbr: "Nx" },
-      { name: "Tailwind CSS", abbr: "Tw" },
-      { name: "HTML5", abbr: "H5" },
-      { name: "CSS3", abbr: "C3" },
+      { name: "React", abbr: "Re", icon: "React" },
+      { name: "Next.js", abbr: "Nx", icon: "Nextdotjs", monochrome: true },
+      { name: "Tailwind CSS", abbr: "Tw", icon: "Tailwindcss" },
+      { name: "HTML5", abbr: "H5", icon: "Html5" },
+      { name: "CSS3", abbr: "C3", icon: "Css" },
     ],
   },
   {
@@ -53,10 +59,10 @@ export const skillCategories: SkillCategory[] = [
     label: "Database",
     group: "engineering",
     skills: [
-      { name: "PostgreSQL", abbr: "Pg" },
-      { name: "MongoDB", abbr: "Mo" },
-      { name: "MySQL", abbr: "My" },
-      { name: "Redis", abbr: "Rd" },
+      { name: "PostgreSQL", abbr: "Pg", icon: "Postgresql" },
+      { name: "MongoDB", abbr: "Mo", icon: "Mongodb" },
+      { name: "MySQL", abbr: "My", icon: "Mysql" },
+      { name: "Redis", abbr: "Rd", icon: "Redis" },
     ],
   },
   {
@@ -64,10 +70,10 @@ export const skillCategories: SkillCategory[] = [
     label: "Cloud Computing",
     group: "engineering",
     skills: [
-      { name: "AWS", abbr: "AW" },
-      { name: "Azure", abbr: "Az" },
-      { name: "Docker", abbr: "Dk" },
-      { name: "Vercel", abbr: "Vc" },
+      { name: "AWS", abbr: "AWS", color: "#FF9900" },
+      { name: "Azure", abbr: "Az", color: "#0089D6" },
+      { name: "Docker", abbr: "Dk", icon: "Docker" },
+      { name: "Vercel", abbr: "Vc", icon: "Vercel", monochrome: true },
     ],
   },
   {
@@ -75,10 +81,10 @@ export const skillCategories: SkillCategory[] = [
     label: "AI & ML",
     group: "engineering",
     skills: [
-      { name: "PyTorch", abbr: "PT" },
-      { name: "TensorFlow", abbr: "TF" },
-      { name: "OpenAI API", abbr: "AI" },
-      { name: "scikit-learn", abbr: "Sk" },
+      { name: "PyTorch", abbr: "PT", icon: "Pytorch" },
+      { name: "TensorFlow", abbr: "TF", icon: "Tensorflow" },
+      { name: "OpenAI API", abbr: "AI", color: "#10A37F" },
+      { name: "scikit-learn", abbr: "Sk", icon: "Scikitlearn" },
     ],
   },
   {
@@ -86,10 +92,10 @@ export const skillCategories: SkillCategory[] = [
     label: "Testing & QA",
     group: "engineering",
     skills: [
-      { name: "Jest", abbr: "Je" },
-      { name: "Cypress", abbr: "Cy" },
-      { name: "Postman", abbr: "Po" },
-      { name: "JUnit", abbr: "JU" },
+      { name: "Jest", abbr: "Je", icon: "Jest" },
+      { name: "Cypress", abbr: "Cy", icon: "Cypress" },
+      { name: "Postman", abbr: "Po", icon: "Postman" },
+      { name: "JUnit", abbr: "JU", icon: "Junit5" },
     ],
   },
   {
@@ -97,10 +103,10 @@ export const skillCategories: SkillCategory[] = [
     label: "Other Tools",
     group: "engineering",
     skills: [
-      { name: "Git", abbr: "Gt" },
-      { name: "Figma", abbr: "Fg" },
-      { name: "Jira", abbr: "Ji" },
-      { name: "Linux", abbr: "Lx" },
+      { name: "Git", abbr: "Gt", icon: "Git" },
+      { name: "Figma", abbr: "Fg", icon: "Figma" },
+      { name: "Jira", abbr: "Ji", icon: "Jira" },
+      { name: "Linux", abbr: "Lx", icon: "Linux" },
     ],
   },
   {
@@ -108,9 +114,9 @@ export const skillCategories: SkillCategory[] = [
     label: "Video Editing",
     group: "content",
     skills: [
-      { name: "Premiere Pro", abbr: "Pr" },
-      { name: "After Effects", abbr: "Ae" },
-      { name: "DaVinci Resolve", abbr: "Dv" },
+      { name: "Premiere Pro", abbr: "Pr", color: "#00005B" },
+      { name: "After Effects", abbr: "Ae", color: "#9999FF" },
+      { name: "DaVinci Resolve", abbr: "Dv", icon: "Davinciresolve" },
     ],
   },
   {
@@ -118,9 +124,9 @@ export const skillCategories: SkillCategory[] = [
     label: "Graphic Design",
     group: "content",
     skills: [
-      { name: "Photoshop", abbr: "Ps" },
-      { name: "Illustrator", abbr: "Ai" },
-      { name: "Figma", abbr: "Fg" },
+      { name: "Photoshop", abbr: "Ps", color: "#31A8FF" },
+      { name: "Illustrator", abbr: "Ai", color: "#FF9A00" },
+      { name: "Figma", abbr: "Fg", icon: "Figma" },
     ],
   },
   {
@@ -128,10 +134,10 @@ export const skillCategories: SkillCategory[] = [
     label: "Social Media Management",
     group: "content",
     skills: [
-      { name: "Instagram", abbr: "Ig" },
-      { name: "TikTok", abbr: "Tt" },
-      { name: "YouTube Studio", abbr: "Yt" },
-      { name: "Analytics", abbr: "An" },
+      { name: "Instagram", abbr: "Ig", icon: "Instagram" },
+      { name: "TikTok", abbr: "Tt", icon: "Tiktok", monochrome: true },
+      { name: "YouTube Studio", abbr: "Yt", icon: "Youtube" },
+      { name: "Analytics", abbr: "An", icon: "Googleanalytics" },
     ],
   },
 ];
