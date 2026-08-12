@@ -7,15 +7,14 @@ export default function PortfolioPage() {
     <PageShell watermark="PORTFOLIO">
       <PageHeading eyebrow="Portfolio">My Résumé</PageHeading>
 
-      <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-panel p-6 md:p-8">
+      <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-transparent p-6 backdrop-blur-[3.8px] transition-colors hover:bg-panel-alt/20 md:p-8">
         <iframe
           src="/resume.pdf"
           title="Gaurav Divecha — Résumé"
           className="aspect-[8.5/11] w-full rounded-xl border border-line bg-white"
         />
 
-        <div className="mt-6 flex items-center justify-between">
-          <span className="text-sm font-medium text-ink">My Résumé</span>
+        <div className="mt-6">
           <a
             href="/resume.pdf"
             download

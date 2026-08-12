@@ -36,7 +36,8 @@ export function PageHeading({
     <>
       <p
         ref={eyebrowRef}
-        className="text-xs font-medium uppercase tracking-widest text-ink-faint"
+        aria-hidden="true"
+        className="text-xs font-medium uppercase tracking-widest text-ink-faint opacity-0"
       >
         {eyebrow}
       </p>
