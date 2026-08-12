@@ -3,7 +3,7 @@ import { StubSection } from "@/components/StubSection";
 
 export default function BonusPage() {
   return (
-    <PageShell variant="default" watermark="BONUS">
+    <PageShell watermark="BONUS">
       <StubSection
         eyebrow="Bonus"
         heading="Bonus"

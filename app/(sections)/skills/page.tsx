@@ -18,7 +18,7 @@ export default function SkillsPage() {
   const categories = skillCategories.filter((c) => c.group === filter);
 
   return (
-    <PageShell variant="skills" watermark="SKILLS">
+    <PageShell watermark="SKILLS">
       <PageHeading eyebrow="Skills">My Expertise</PageHeading>
 
       <div className="mt-8 inline-flex rounded-full border border-line bg-panel p-1">

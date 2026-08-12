@@ -31,7 +31,7 @@ export default function RecommendationsPage() {
   ).map(([role, recs]) => ({ role, term: recs[0].term, recs }));
 
   return (
-    <PageShell variant="recommendations" watermark="RECOMMENDATIONS">
+    <PageShell watermark="RECOMMENDATIONS">
       <PageHeading eyebrow="Recommendations">
         What others say about me
       </PageHeading>

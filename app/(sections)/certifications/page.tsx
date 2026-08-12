@@ -3,7 +3,7 @@ import { StubSection } from "@/components/StubSection";
 
 export default function CertificationsPage() {
   return (
-    <PageShell variant="default" watermark="CERTIFICATIONS">
+    <PageShell watermark="CERTIFICATIONS">
       <StubSection
         eyebrow="Certifications"
         heading="Certifications"

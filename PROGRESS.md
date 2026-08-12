@@ -47,23 +47,42 @@ both loaded via `next/font/google` in `app/layout.tsx`. No other font files need
 Utility classes defined once in `globals.css`, reused everywhere:
 - `.text-gradient` — left-to-right gradient text clip (soft → deep indigo), used on the
   sidebar wordmark.
-- `.watermark` — the giant, ~4% opacity, vertically-rotated section-name watermark along
-  the right edge. Used via `<Watermark text="..." />`.
+- `.watermark-field` / `.watermark-plane` / `.watermark-row(--reverse)` /
+  `.watermark-row__track` / `.watermark-row__copy` — the fixed-position, full-bleed
+  background: ~44 rows of the current section name, tiled and rotated -18deg as one
+  plane, alternating scroll direction row-to-row via `@keyframes watermark-scroll` +
+  `animation-direction: reverse` on odd rows. Used via `<Watermark text="..." />`.
+  `position: fixed` (offset past the sidebar via `left: clamp(360px,40vw,640px)` at
+  `md:`+) so it stays put when the content column scrolls — deliberately not `absolute`
+  inside `PageShell`, which would scroll with page content. Text is light-weight
+  (`font-weight: 300` — Poppins needed that weight added to its `next/font` config in
+  `app/layout.tsx`, it was previously only loaded at 600/700) and ~4.5% opacity.
 
 ## Component conventions established (in `/components`)
 
 - `PageShell` — wraps every route's page content: gives padding, `overflow-hidden`,
-  mounts `DecorShapes` + `Watermark`, and a `relative z-10` content wrapper. Takes a
-  `variant` (matches a key in `DecorShapes`) and `watermark` (section name string).
-  **Every new page should be wrapped in this.** Top padding is `style={{ paddingTop:
-  "var(--sidebar-title-top, 3rem)" }}` instead of a plain Tailwind class — see
-  `Sidebar`/`PageHeading` below for why; horizontal padding and `pb-*` are still normal
-  Tailwind classes.
-- `DecorShapes` — thin-stroke outline background shapes (circle/square/triangle/venn),
-  per-page position sets keyed by variant name (`about`, `skills`, `experience`,
-  `projects`, `portfolio`, `recommendations`, `contact`, `default`). Add a new key here
-  when adding a page that wants its own arrangement (open-source/certifications/bonus
-  currently fall back to `default`).
+  mounts `Watermark`, and a `relative z-10` content wrapper. Takes `watermark` (section
+  name string). **Every new page should be wrapped in this.** Top padding is
+  `style={{ paddingTop: "var(--sidebar-title-top, 3rem)" }}` instead of a plain Tailwind
+  class — see `Sidebar`/`PageHeading` below for why; horizontal padding and `pb-*` are
+  still normal Tailwind classes.
+- `DecorShapes` (the thin-stroke outline circle/square/triangle/venn background shapes)
+  was removed entirely per explicit request ("get rid of them i only want the
+  watermarks to be the background") — `PageShell` no longer takes a `variant` prop,
+  and it was stripped from every page's `<PageShell>` call.
+- `Watermark` — client component (`"use client"`; needs `useLayoutEffect` to measure
+  itself). Renders 44 rows × 2 duplicated copies × 8 repeats of the word, each row's
+  `animation-duration` set via a `--watermark-duration` CSS var computed from that row's
+  *actual measured width* divided by a constant `PIXELS_PER_SECOND` (12) — this is
+  deliberate, not a fixed duration: it's what makes the scroll speed visually identical
+  across pages despite "RECOMMENDATIONS" and "SKILLS" producing very different track
+  widths at the same 8-repeat count. Re-measures on resize via `ResizeObserver`. Two
+  earlier bugs worth knowing about if this breaks again: (1) the per-row wrapper used to
+  have `overflow: hidden` + `line-height: 1`, which clipped the tops of glyphs — fixed
+  by dropping the row-level clip (the fixed outer field already clips at the viewport
+  edge) and raising `line-height` to 1.3; (2) word-to-word spacing was originally
+  `padding-inline` on each span (reads as one run-on string) — switched to a `gap` on
+  the flex row instead.
 - `PageHeading` — the eyebrow + big `h2` at the top of every page (`<PageHeading
   eyebrow="Skills">My Expertise</PageHeading>`), used by all 10 section pages and by
   `StubSection`. Client component: measures its own eyebrow's rendered height and pulls
@@ -205,8 +224,7 @@ calling this "done" done.
   just flips to a "thanks — no backend wired up yet" confirmation state, no real send.
 - `app/(sections)/{open-source,certifications,bonus}/page.tsx` — all three use the new
   shared `components/StubSection.tsx` (dashed-border panel, body copy +
-  "Real content to follow" label), each with page-specific copy. All fall back to
-  `DecorShapes variant="default"`.
+  "Real content to follow" label), each with page-specific copy.
 - Old scaffold placeholder SVGs deleted from `/public`.
 
 ## Open items / still outstanding
@@ -227,8 +245,5 @@ calling this "done" done.
 
 ## Git / hosting state
 
-- Repo is live at **https://github.com/gdivecha/my-site** (public), `main` branch,
-  currently only has the initial `.gitignore` commit — **none of this Next.js work is
-  committed yet**. Ask before committing/pushing (this session only had explicit
-  authorization for the original `git init` + initial push, not for auto-committing
-  ongoing feature work) — don't push silently.
+- Repo is live at **https://github.com/gdivecha/my-site** (public), `main` branch. Only
+  commit/push when explicitly asked — don't push silently.

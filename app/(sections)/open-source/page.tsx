@@ -3,7 +3,7 @@ import { StubSection } from "@/components/StubSection";
 
 export default function OpenSourcePage() {
   return (
-    <PageShell variant="default" watermark="OPEN SOURCE">
+    <PageShell watermark="OPEN SOURCE">
       <StubSection
         eyebrow="Open Source"
         heading="Open Source"

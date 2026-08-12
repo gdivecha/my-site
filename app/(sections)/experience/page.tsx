@@ -17,7 +17,7 @@ export default function ExperiencePage() {
   const filtered = experiences.filter((e) => e.type === filter);
 
   return (
-    <PageShell variant="experience" watermark="EXPERIENCE">
+    <PageShell watermark="EXPERIENCE">
       <PageHeading eyebrow="Experience">Professional Experience</PageHeading>
 
       <div className="mt-8 flex flex-wrap gap-2">

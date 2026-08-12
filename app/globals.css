@@ -69,20 +69,79 @@ body {
   display: none;
 }
 
-.watermark {
-  position: absolute;
-  right: -0.15em;
-  top: 50%;
-  transform: translateY(-50%) rotate(90deg);
-  transform-origin: right center;
-  white-space: nowrap;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(4rem, 16vw, 11rem);
-  letter-spacing: 0.06em;
-  color: var(--color-ink);
-  opacity: 0.04;
+.watermark-field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
   pointer-events: none;
   user-select: none;
-  line-height: 1;
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  .watermark-field {
+    left: clamp(360px, 40vw, 640px);
+  }
+}
+
+.watermark-plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150vmax;
+  height: 150vmax;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(0.25rem, 0.6vw, 0.75rem);
+}
+
+.watermark-row {
+  width: 100%;
+}
+
+.watermark-row__track {
+  display: flex;
+  align-items: center;
+  gap: 1.8em;
+  width: max-content;
+  animation: watermark-scroll var(--watermark-duration, 90s) linear infinite;
+  will-change: transform;
+}
+
+.watermark-row--reverse .watermark-row__track {
+  animation-direction: reverse;
+}
+
+.watermark-row__copy {
+  display: flex;
+  align-items: center;
+  gap: 1.8em;
+}
+
+.watermark-row__copy span {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  color: var(--color-ink);
+  opacity: 0.045;
+  white-space: nowrap;
+}
+
+@keyframes watermark-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watermark-row__track {
+    animation: none;
+  }
 }

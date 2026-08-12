@@ -19,7 +19,7 @@ export default function ProjectsPage() {
     filter === "all" ? projects : projects.filter((p) => p.category === filter);
 
   return (
-    <PageShell variant="projects" watermark="PROJECTS">
+    <PageShell watermark="PROJECTS">
       <PageHeading eyebrow="Projects">My Work</PageHeading>
 
       <div className="mt-8 flex flex-wrap gap-2">

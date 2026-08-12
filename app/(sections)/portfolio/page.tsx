@@ -4,7 +4,7 @@ import { DownloadIcon } from "@/components/icons";
 
 export default function PortfolioPage() {
   return (
-    <PageShell variant="portfolio" watermark="PORTFOLIO">
+    <PageShell watermark="PORTFOLIO">
       <PageHeading eyebrow="Portfolio">My Résumé</PageHeading>
 
       <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-panel p-6 md:p-8">

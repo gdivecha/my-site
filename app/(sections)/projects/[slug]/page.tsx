@@ -20,7 +20,7 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   return (
-    <PageShell variant="projects" watermark="PROJECTS">
+    <PageShell watermark="PROJECTS">
       <nav
         className="flex items-center gap-1.5 text-xs text-ink-faint"
         aria-label="Breadcrumb"

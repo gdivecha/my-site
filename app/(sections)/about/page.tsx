@@ -6,7 +6,7 @@ import { ScrollIndicator } from "./scroll-indicator";
 
 export default function AboutPage() {
   return (
-    <PageShell variant="about" watermark="ABOUT">
+    <PageShell watermark="ABOUT">
       <PageHeading eyebrow="About">Hi there...</PageHeading>
 
       <div className="mt-10 flex w-full max-w-2xl flex-col items-start gap-10">

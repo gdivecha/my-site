@@ -5,7 +5,7 @@ import { ContactForm } from "./contact-form";
 
 export default function ContactPage() {
   return (
-    <PageShell variant="contact" watermark="CONTACT">
+    <PageShell watermark="CONTACT">
       <PageHeading eyebrow="Contact">Let&apos;s talk</PageHeading>
 
       <div className="mt-8 max-w-xl">
