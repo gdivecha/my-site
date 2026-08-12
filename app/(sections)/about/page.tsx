@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { Pill } from "@/components/Pill";
@@ -12,14 +13,17 @@ export default function AboutPage() {
       <div className="mt-10 flex w-full max-w-2xl flex-col items-start gap-10">
         <div className="flex items-end gap-5">
           <div
-            className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-line bg-panel"
+            className="relative aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-line bg-panel"
             style={{ maxWidth: "clamp(180px, 24vh, 260px)" }}
           >
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-panel-alt to-panel">
-              <span className="font-display text-5xl font-bold text-gradient">
-                GD
-              </span>
-            </div>
+            <Image
+              src="/profile.png"
+              alt={profile.name}
+              fill
+              sizes="260px"
+              className="object-cover"
+              priority
+            />
           </div>
 
           <div className="flex shrink-0 flex-col gap-2.5">

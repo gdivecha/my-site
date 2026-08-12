@@ -234,8 +234,11 @@ calling this "done" done.
 
 ## Open items / still outstanding
 
-- **Résumé PDF is a placeholder** (`public/resume.pdf`, generated via `cupsfilter`, not
-  fabricated content) — replace with the real file, same path, whenever it's ready.
+- **Résumé PDF is now the real file** (`public/resume.pdf`, swapped in over the old
+  `cupsfilter`-generated placeholder).
+- **About page photo is now real** (`public/profile.png`), swapped in over the "GD"
+  gradient-initial placeholder tile via `next/image` (`fill` + `object-cover` inside the
+  existing rounded-square frame).
 - **No real visual/browser QA yet** — build + HTTP-level checks pass, but nobody has
   looked at this in an actual browser. Worth doing before treating it as finished:
   gradient wordmark rendering, hover/expand animations, masonry layout, spacing.
