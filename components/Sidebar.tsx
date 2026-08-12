@@ -46,7 +46,7 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
+    <aside className="relative z-20 border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
       <div className="flex h-full flex-col justify-center gap-10 px-8 py-12 md:px-12 md:py-16 lg:px-16">
         <div>
           <h1

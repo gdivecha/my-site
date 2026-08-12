@@ -52,11 +52,16 @@ Utility classes defined once in `globals.css`, reused everywhere:
   background: ~44 rows of the current section name, tiled and rotated -18deg as one
   plane, alternating scroll direction row-to-row via `@keyframes watermark-scroll` +
   `animation-direction: reverse` on odd rows. Used via `<Watermark text="..." />`.
-  `position: fixed` (offset past the sidebar via `left: clamp(360px,40vw,640px)` at
-  `md:`+) so it stays put when the content column scrolls — deliberately not `absolute`
-  inside `PageShell`, which would scroll with page content. Text is light-weight
-  (`font-weight: 300` — Poppins needed that weight added to its `next/font` config in
-  `app/layout.tsx`, it was previously only loaded at 600/700) and ~4.5% opacity.
+  `position: fixed` (offset past the sidebar via `left: calc(clamp(360px,40vw,640px) -
+  5rem)` at `md:`+ — deliberately bleeds ~5rem back under the sidebar's edge rather than
+  starting exactly at it, so it reads as merging into the sidebar) so it stays put when
+  the content column scrolls — deliberately not `absolute` inside `PageShell`, which
+  would scroll with page content. Text is light-weight (`font-weight: 300` — Poppins
+  needed that weight added to its `next/font` config in `app/layout.tsx`, it was
+  previously only loaded at 600/700) and ~4.5% opacity. Left edge fades via `mask-image:
+  linear-gradient(to right, transparent, black 18%)` so it dissolves into the sidebar
+  instead of cutting off hard — `Sidebar`'s `<aside>` got `relative z-20` alongside this
+  so its own content always paints above that bleed.
 
 ## Component conventions established (in `/components`)
 

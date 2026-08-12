@@ -76,11 +76,13 @@ body {
   pointer-events: none;
   user-select: none;
   z-index: 0;
+  mask-image: linear-gradient(to right, transparent, black 18%);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 18%);
 }
 
 @media (min-width: 768px) {
   .watermark-field {
-    left: clamp(360px, 40vw, 640px);
+    left: calc(clamp(360px, 40vw, 640px) - 5rem);
   }
 }
 
