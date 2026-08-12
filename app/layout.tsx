@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
+import { CustomCursor } from "@/components/CustomCursor";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -37,7 +38,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full bg-base text-ink">{children}</body>
+      <body className="min-h-full bg-base text-ink">
+        {children}
+        <CustomCursor />
+      </body>
     </html>
   );
 }

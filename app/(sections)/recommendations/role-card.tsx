@@ -18,7 +18,7 @@ export function RoleCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-line bg-panel p-6">
+    <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

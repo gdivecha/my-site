@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import {
   recommendations,
   recommendationCategories,
-  recommendationCompanies,
+  previewQuotes,
   type RecommendationCategory,
 } from "@/lib/data/recommendations";
 import { QuoteCard } from "./quote-card";
@@ -16,19 +16,45 @@ export default function RecommendationsPage() {
   const [category, setCategory] = useState<RecommendationCategory>(
     recommendationCategories[0].id
   );
-  const [company, setCompany] = useState<string>(recommendationCompanies[0]);
 
-  const filteredQuotes = recommendations.filter((r) => r.category === category);
+  const filteredQuotes = previewQuotes.filter((q) => q.category === category);
 
-  const companyRecs = recommendations.filter((r) => r.company === company);
-  const roleGroups = Array.from(
-    companyRecs.reduce((map, rec) => {
-      const key = rec.role;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(rec);
-      return map;
-    }, new Map<string, typeof recommendations>())
-  ).map(([role, recs]) => ({ role, term: recs[0].term, recs }));
+  // The "Interested in reading more?" section is scoped to the currently
+  // selected category — each category has its own set of companies/roles,
+  // not a shared global list.
+  const categoryRecs = recommendations.filter((r) => r.category === category);
+  const companiesForCategory = Array.from(
+    new Set(categoryRecs.map((r) => r.company))
+  );
+
+  const [company, setCompany] = useState<string>(companiesForCategory[0]);
+  const activeCompany = companiesForCategory.includes(company)
+    ? company
+    : companiesForCategory[0];
+
+  const companyRecs = categoryRecs.filter((r) => r.company === activeCompany);
+  const roleGroups = useMemo(
+    () =>
+      Array.from(
+        companyRecs.reduce((map, rec) => {
+          const key = rec.role;
+          if (!map.has(key)) map.set(key, []);
+          map.get(key)!.push(rec);
+          return map;
+        }, new Map<string, typeof recommendations>())
+      ).map(([role, recs]) => ({ role, term: recs[0].term, recs })),
+    [companyRecs]
+  );
+
+  function handleCategoryChange(next: RecommendationCategory) {
+    setCategory(next);
+    const nextCompanies = Array.from(
+      new Set(
+        recommendations.filter((r) => r.category === next).map((r) => r.company)
+      )
+    );
+    setCompany(nextCompanies[0]);
+  }
 
   return (
     <PageShell watermark="RECOMMENDATIONS">
@@ -38,13 +64,13 @@ export default function RecommendationsPage() {
 
       <div className="mt-8 flex flex-wrap gap-2">
         {recommendationCategories.map((c) => {
-          const count = recommendations.filter((r) => r.category === c.id).length;
+          const count = previewQuotes.filter((q) => q.category === c.id).length;
           const active = category === c.id;
           return (
             <button
               key={c.id}
               type="button"
-              onClick={() => setCategory(c.id)}
+              onClick={() => handleCategoryChange(c.id)}
               className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
                 active
                   ? "border-accent/50 bg-accent text-ink"
@@ -59,47 +85,49 @@ export default function RecommendationsPage() {
       </div>
 
       <div className="mt-8 max-w-4xl columns-1 gap-4 sm:columns-2">
-        {filteredQuotes.map((rec) => (
-          <QuoteCard key={rec.id} recommendation={rec} />
+        {filteredQuotes.map((quote) => (
+          <QuoteCard key={quote.id} preview={quote} />
         ))}
       </div>
 
-      <div className="mt-20 max-w-2xl">
-        <h3 className="font-display text-2xl font-bold text-ink">
-          Interested in reading more?
-        </h3>
+      {companiesForCategory.length > 0 && (
+        <div className="mt-20 max-w-2xl">
+          <h3 className="font-display text-2xl font-bold text-ink">
+            Interested in reading more?
+          </h3>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {recommendationCompanies.map((c) => {
-            const active = company === c;
-            return (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCompany(c)}
-                className={`rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
-                  active
-                    ? "border-accent/50 bg-accent text-ink"
-                    : "border-line bg-panel text-ink-faint hover:text-ink-soft"
-                }`}
-              >
-                {c}
-              </button>
-            );
-          })}
-        </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {companiesForCategory.map((c) => {
+              const active = activeCompany === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCompany(c)}
+                  className={`rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
+                    active
+                      ? "border-accent/50 bg-accent text-ink"
+                      : "border-line bg-panel text-ink-faint hover:text-ink-soft"
+                  }`}
+                >
+                  {c}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="mt-6 flex flex-col gap-4">
-          {roleGroups.map((group) => (
-            <RoleCard
-              key={group.role}
-              role={group.role}
-              term={group.term}
-              recommendations={group.recs}
-            />
-          ))}
+          <div className="mt-6 flex flex-col gap-4">
+            {roleGroups.map((group) => (
+              <RoleCard
+                key={group.role}
+                role={group.role}
+                term={group.term}
+                recommendations={group.recs}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </PageShell>
   );
 }

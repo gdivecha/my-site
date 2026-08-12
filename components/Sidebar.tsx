@@ -58,10 +58,7 @@ export function Sidebar() {
           <h1 ref={nameRef} className="font-display text-[30px] font-bold leading-tight md:text-[36px] lg:text-[48px]">
             <span className="text-gradient">{profile.name}</span>
           </h1>
-          <p
-            className="relative mt-4 text-base leading-relaxed md:text-lg"
-            style={{ color: "#C4C9FF" }}
-          >
+          <p className="relative mt-4 text-base leading-relaxed text-roles-text md:text-lg">
             {profile.roles.join(" • ")}
           </p>
         </div>

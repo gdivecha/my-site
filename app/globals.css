@@ -40,6 +40,12 @@ html {
 
   /* Tag chip background (skill/tech tags) */
   --color-tag-bg: var(--color-panel-alt);
+
+  /* Sidebar roles line ("Software Engineer • Artist • Content Creator") */
+  --color-roles-text: #c4c9ff;
+
+  /* Contact form input background */
+  --color-input-bg: #15161b;
 }
 
 :root[data-theme="light"] {
@@ -70,6 +76,12 @@ html {
   /* Tag chip background — panel-alt is too close to the page background
      here, so use a visible purple wash instead. */
   --color-tag-bg: rgba(109, 95, 232, 0.14);
+
+  /* Sidebar roles line — the dark-mode lavender is too washed out here. */
+  --color-roles-text: #4b3dc4;
+
+  /* Contact form input background */
+  --color-input-bg: #ffffff;
 }
 
 @theme inline {
@@ -90,6 +102,8 @@ html {
   --color-card-tint: var(--color-card-tint);
   --color-card-tint-hover: var(--color-card-tint-hover);
   --color-tag-bg: var(--color-tag-bg);
+  --color-roles-text: var(--color-roles-text);
+  --color-input-bg: var(--color-input-bg);
 
   --font-display: var(--font-poppins);
   --font-body: var(--font-inter);
@@ -209,5 +223,42 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .watermark-row__track {
     animation: none;
+  }
+}
+
+/* Custom cursor: only suppress the native cursor once JS has confirmed a
+   fine pointer is present (see CustomCursor.tsx) — never hide it outright,
+   so nothing breaks if the script fails to load. */
+@media (pointer: fine) {
+  .custom-cursor-active,
+  .custom-cursor-active * {
+    cursor: none !important;
+  }
+}
+
+.custom-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  pointer-events: none;
+  z-index: 100;
+  transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
+  transition: width 0.15s ease, height 0.15s ease, background-color 0.15s ease;
+  will-change: transform;
+}
+
+.custom-cursor-dot--active {
+  width: 26px;
+  height: 26px;
+  background: var(--color-accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor-dot {
+    transition: none;
   }
 }

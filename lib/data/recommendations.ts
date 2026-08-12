@@ -4,6 +4,61 @@ export type RecommendationCategory =
   | "artist"
   | "freelance";
 
+// Short, hand-picked excerpts for the preview grid at the top of the page.
+// These are pulled manually from the full recommendations below for quick
+// reading — they aren't tied to a specific recommender/citation.
+export type PreviewQuote = {
+  id: string;
+  quote: string;
+  category: RecommendationCategory;
+};
+
+// Placeholder content — swap in real excerpts pulled from your recommendations.
+export const previewQuotes: PreviewQuote[] = [
+  {
+    id: "preview-1",
+    quote: "Consistently delivers quality work under pressure.",
+    category: "software-engineering",
+  },
+  {
+    id: "preview-2",
+    quote: "One of the fastest ramps I've seen from an intern.",
+    category: "software-engineering",
+  },
+  {
+    id: "preview-3",
+    quote: "Attention to detail that saved us from a nasty production bug.",
+    category: "software-engineering",
+  },
+  {
+    id: "preview-4",
+    quote: "A genuinely great teammate — clear, calm, always willing to pair.",
+    category: "software-engineering",
+  },
+  {
+    id: "preview-5",
+    quote: "Reliable under pressure, every time.",
+    category: "freelance",
+  },
+  {
+    id: "preview-6",
+    quote: "Explains complex concepts without making anyone feel behind.",
+    category: "freelance",
+  },
+  {
+    id: "preview-7",
+    quote: "Better turnaround than agencies we've paid ten times as much.",
+    category: "content-creation",
+  },
+  {
+    id: "preview-8",
+    quote: "A distinct visual style — every piece feels considered, never generic.",
+    category: "artist",
+  },
+];
+
+// Full recommendations — shown grouped by company/role in the "Interested
+// in reading more?" section, each with its own attribution.
 export type Recommendation = {
   id: string;
   quote: string;
@@ -133,10 +188,4 @@ export const recommendationCategories: {
   { id: "content-creation", label: "Content Creation" },
   { id: "artist", label: "Artist" },
   { id: "freelance", label: "Freelance" },
-];
-
-export const recommendationCompanies: string[] = [
-  "Dayforce",
-  "Amazon",
-  "Ryerson International Hyperloop",
 ];

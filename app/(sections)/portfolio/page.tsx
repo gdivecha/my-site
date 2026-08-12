@@ -14,7 +14,7 @@ export default function PortfolioPage() {
           className="aspect-[8.5/11] w-full rounded-xl border border-line bg-white"
         />
 
-        <div className="mt-6">
+        <div className="mt-6 flex justify-end">
           <a
             href="/resume.pdf"
             download

@@ -1,15 +1,12 @@
 import { QuoteIcon } from "@/components/icons";
-import type { Recommendation } from "@/lib/data/recommendations";
+import type { PreviewQuote } from "@/lib/data/recommendations";
 
-export function QuoteCard({ recommendation }: { recommendation: Recommendation }) {
+export function QuoteCard({ preview }: { preview: PreviewQuote }) {
   return (
-    <div className="mb-4 break-inside-avoid rounded-2xl border border-line bg-panel p-6">
+    <div className="mb-4 break-inside-avoid rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover">
       <QuoteIcon className="h-6 w-6 text-accent" />
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-        &ldquo;{recommendation.quote}&rdquo;
-      </p>
-      <p className="mt-4 text-xs text-ink-faint">
-        {recommendation.recommenderName} · {recommendation.recommenderTitle}
+        {preview.quote}
       </p>
     </div>
   );

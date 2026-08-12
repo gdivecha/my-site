@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 const inputClasses =
-  "w-full rounded-lg border border-line bg-panel-alt px-4 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors focus:border-accent/50";
+  "w-full rounded-lg border border-line bg-input-bg px-4 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors focus:border-accent/50";
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
@@ -28,85 +28,55 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label
-            htmlFor="firstName"
-            className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-ink-faint"
-          >
-            First Name
-          </label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            required
-            className={inputClasses}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="lastName"
-            className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-ink-faint"
-          >
-            Last Name
-          </label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            required
-            className={inputClasses}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label
-          htmlFor="email"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-ink-faint"
-        >
-          Email Address
-        </label>
         <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          className={inputClasses}
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="subject"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-ink-faint"
-        >
-          What is it regarding?
-        </label>
-        <input
-          id="subject"
-          name="subject"
+          id="firstName"
+          name="firstName"
           type="text"
+          placeholder="First Name"
+          aria-label="First Name"
+          required
+          className={inputClasses}
+        />
+        <input
+          id="lastName"
+          name="lastName"
+          type="text"
+          placeholder="Last Name"
+          aria-label="Last Name"
           required
           className={inputClasses}
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="message"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-ink-faint"
-        >
-          Message
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          rows={5}
-          required
-          className={`${inputClasses} resize-none`}
-        />
-      </div>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="Email Address"
+        aria-label="Email Address"
+        required
+        className={inputClasses}
+      />
+
+      <input
+        id="subject"
+        name="subject"
+        type="text"
+        placeholder="Subject"
+        aria-label="Subject"
+        required
+        className={inputClasses}
+      />
+
+      <textarea
+        id="message"
+        name="message"
+        rows={5}
+        placeholder="Message"
+        aria-label="Message"
+        required
+        className={`${inputClasses} resize-none`}
+      />
 
       <div className="flex justify-end">
         <button
