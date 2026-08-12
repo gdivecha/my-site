@@ -17,6 +17,31 @@
   --color-ink: #f2f1f8;
   --color-ink-soft: #a8a4c0;
   --color-ink-faint: #5c5878;
+
+  /* dial nav rail track */
+  --dial-rail-color: rgba(92, 88, 120, 0.18);
+}
+
+:root[data-theme="light"] {
+  /* surfaces */
+  --color-base: #f5f4fa;
+  --color-panel: #ffffff;
+  --color-panel-alt: #ece9f5;
+  --color-line: rgba(20, 18, 40, 0.1);
+
+  /* accent */
+  --color-accent: #6d5fe8;
+  --color-accent-soft: #5b4bd6;
+  --color-accent-deep: #4b3dc4;
+  --color-accent-contact: #0e9a90;
+
+  /* ink */
+  --color-ink: #15131f;
+  --color-ink-soft: #423e57;
+  --color-ink-faint: #8d89a3;
+
+  /* dial nav rail track */
+  --dial-rail-color: rgba(109, 95, 232, 0.25);
 }
 
 @theme inline {
@@ -42,6 +67,13 @@ body {
   background: var(--color-base);
   color: var(--color-ink);
   font-family: var(--font-body);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
 }
 
 ::selection {
@@ -82,7 +114,7 @@ body {
 
 @media (min-width: 768px) {
   .watermark-field {
-    left: calc(clamp(360px, 40vw, 640px) - 5rem);
+    left: calc(clamp(360px, 40vw, 640px) - 10rem);
   }
 }
 

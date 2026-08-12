@@ -53,15 +53,6 @@ export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function ArrowDownIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} {...props}>
-      <path d="M12 4v15" strokeLinecap="round" />
-      <path d="m6 13 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export function PlayIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -74,6 +65,26 @@ export function QuoteIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
       <path d="M9.5 6.5C6 7.6 4 10 4 13.2c0 2.5 1.6 4.3 3.7 4.3 1.8 0 3.1-1.3 3.1-3 0-1.6-1.1-2.8-2.6-2.9.4-1.6 1.9-3 3.7-3.6l-2.4-1.5ZM19 6.5c-3.5 1.1-5.5 3.5-5.5 6.7 0 2.5 1.6 4.3 3.7 4.3 1.8 0 3.1-1.3 3.1-3 0-1.6-1.1-2.8-2.6-2.9.4-1.6 1.9-3 3.7-3.6L19 6.5Z" />
+    </svg>
+  );
+}
+
+export function SunIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...props}>
+      <circle cx="12" cy="12" r="4.5" />
+      <path
+        d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function MoonIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M20.5 14.6A8.5 8.5 0 1 1 9.4 3.5a7 7 0 0 0 11.1 11.1Z" />
     </svg>
   );
 }

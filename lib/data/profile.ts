@@ -9,9 +9,9 @@ export const profile = {
   tagline:
     "I build full-stack products, make things that look good doing it, and share the process along the way.",
   bio: [
-    "I'm a software engineer who splits time between shipping full-stack products and making things that are, honestly, just fun to look at — from UI polish to short-form video.",
-    "I care about the details most people skip: the animation that makes a click feel right, the empty state that isn't sad, the README someone actually reads. That instinct comes from spending as much time behind a camera and a Wacom tablet as behind a keyboard.",
-    "Lately I've been deep in TypeScript, React, and cloud infrastructure by day, and editing, illustration, and content strategy by night. This site is where those two halves meet.",
+    "I'm a full-stack software engineer with 2+ years of internship experience across Amazon and Dayforce, specializing in scalable cloud infrastructure, real-time systems, and user-focused frontend design.",
+    "I work across the entire stack, from AWS backend services and database optimization to React frontends and performance dashboards, with a strong focus on shipping features that work well and feel intentional.",
+    "My background spans AI/ML integration, automated testing, CI/CD optimization, and design systems, giving me a holistic view of how engineering decisions impact both product and user experience.",
   ],
   education: "Toronto Metropolitan University",
   location: "Greater Toronto Area, ON, Canada",

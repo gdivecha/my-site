@@ -3,7 +3,6 @@ import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { Pill } from "@/components/Pill";
 import { profile } from "@/lib/data/profile";
-import { ScrollIndicator } from "./scroll-indicator";
 
 export default function AboutPage() {
   return (
@@ -27,6 +26,9 @@ export default function AboutPage() {
           </div>
 
           <div className="flex shrink-0 flex-col gap-2.5">
+            <Pill icon={<span aria-hidden="true">💼</span>}>
+              2+ years of experience in SWE
+            </Pill>
             <Pill icon={<span aria-hidden="true">🎓</span>}>
               {profile.education}
             </Pill>
@@ -44,10 +46,6 @@ export default function AboutPage() {
             <p key={i}>{paragraph}</p>
           ))}
         </div>
-      </div>
-
-      <div className="mt-10 flex justify-end">
-        <ScrollIndicator />
       </div>
     </PageShell>
   );

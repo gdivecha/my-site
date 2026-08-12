@@ -32,13 +32,49 @@ All content is placeholder/lorem-ish and clearly marked — swap before going li
 
 ## Design tokens (decided, in `app/globals.css` under `:root` + `@theme inline`)
 
-Colors (Tailwind utilities auto-generated from `--color-*` names):
+Colors (Tailwind utilities auto-generated from `--color-*` names). These are the
+**dark-mode values, which are the unconditional default** (bare `:root`, no media query
+gate) — the site was designed dark-first and light mode was added later as an explicit
+opt-in toggle, see "Dark/light theme toggle" below for the light-mode override values:
 - `bg-base` #0d0d14, `bg-panel` #1a1a26, `bg-panel-alt` #232235, `border-line` (subtle white 6%)
 - `text-accent` #6d5fe8 (primary indigo), `accent-soft` #a79ff0, `accent-deep` #4b3dc4
   (soft/deep used together for the gradient wordmark), `accent-contact` #4ecdc4 (teal,
   Contact page only)
 - `text-ink` #f2f1f8 (headings), `text-ink-soft` #a8a4c0 (body), `text-ink-faint` #5c5878
   (inactive nav / faint labels)
+
+Nearly every component styles itself via these semantic tokens (`bg-panel`,
+`text-ink-faint`, etc.) rather than raw hex, which is *why* the light-mode toggle below
+only needed a handful of files touched — swapping the token values is enough almost
+everywhere. Exceptions, deliberately left as hardcoded `bg-white`/`text-black` in both
+themes because they're intentional fixed accents, not theme-driven surfaces: the
+Contact page's white card + black mail icon (a deliberate high-contrast break from the
+theme, per brief), the Portfolio page's white résumé-iframe background (PDFs render on
+white regardless), and `DialNav`'s `bg-white` focused tick mark.
+
+## Dark/light theme toggle
+
+- `:root[data-theme="light"]` in `globals.css` redefines all the same `--color-*`
+  custom properties with light-mode values (near-white surfaces, near-black ink,
+  slightly deepened/darkened accent variants for contrast-on-white — e.g.
+  `accent-soft` goes from a light periwinkle #a79ff0 to a darker #5b4bd6, since it's
+  used as *text* color and needed to stay legible against white instead of dark
+  panels). Bare `:root` (no attribute) stays dark — dark is still the default for
+  anyone who's never toggled.
+- `components/ThemeToggle.tsx` — client component, sun/moon icon button. Toggling sets
+  or removes `data-theme="light"` on `document.documentElement` and persists the choice
+  to `localStorage["theme"]`. Mounted in `Sidebar`, absolutely positioned top-right
+  corner (`absolute right-6 top-6 md:right-8 md:top-8`) — deliberately outside the
+  `justify-center`'d content group so it doesn't affect that centering math.
+- `app/layout.tsx` has a small blocking inline `<script>` in `<head>` (before
+  hydration) that reads `localStorage["theme"]` and sets `data-theme="light"` on
+  `<html>` synchronously if that's the stored preference — this is what prevents a
+  flash of the wrong theme on load. `<html>` has `suppressHydrationWarning` because of
+  this out-of-band attribute mutation. No `prefers-color-scheme` auto-detection —
+  new/first-time visitors always get dark (deliberate: the whole site, including
+  watermark opacity and decorative highlight alpha values, was tuned against the dark
+  palette specifically; only respecting an explicit stored toggle avoids serving an
+  under-tested light mode to visitors who never asked for it).
 
 Fonts: **Poppins** (600/700, `--font-poppins` → `font-display`) for the wordmark/headings,
 **Inter** (400/500/600, `--font-inter` → `font-body`, applied as page default) for body/UI,

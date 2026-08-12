@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import { profile } from "@/lib/data/profile";
 import { DialNav } from "./DialNav";
 import { GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
+import { ThemeToggle } from "./ThemeToggle";
 
 const socialIcons = {
   GitHub: GithubIcon,
@@ -47,19 +48,13 @@ export function Sidebar() {
 
   return (
     <aside className="relative z-20 border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
+      <ThemeToggle className="absolute left-8 top-8 md:left-12 md:top-10 lg:left-16" />
       <div className="flex h-full flex-col justify-center gap-10 px-8 py-12 md:px-12 md:py-16 lg:px-16">
         <div>
-          <h1
-            ref={nameRef}
-            className="relative inline-block font-display text-3xl font-bold leading-tight md:text-4xl lg:text-5xl"
-          >
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-[-3%] bottom-0 h-[0.55em] rounded-sm bg-accent/20"
-            />
-            <span className="relative text-gradient">{profile.name}</span>
+          <h1 ref={nameRef} className="font-display text-3xl font-bold leading-tight md:text-4xl lg:text-5xl">
+            <span className="text-gradient">{profile.name}</span>
           </h1>
-          <p className="mt-4 text-sm leading-relaxed text-ink-soft md:text-base">
+          <p className="relative mt-4 text-sm leading-relaxed text-ink md:text-base">
             {profile.roles.join(" • ")}
           </p>
         </div>
@@ -80,7 +75,7 @@ export function Sidebar() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={social.label}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-ink transition-transform hover:-translate-y-0.5 hover:bg-accent-deep"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel-alt text-ink-soft transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:bg-accent hover:text-ink"
               >
                 <Icon className="h-4 w-4" />
               </a>

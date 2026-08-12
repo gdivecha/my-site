@@ -17,10 +17,6 @@ const SETTLE_DELAY = 160;
 const COPIES = 3;
 const RAIL_WIDTH = 22;
 
-// Flat tone, no brightness bump — the mask-image handles edge fading, so a
-// gradient here would create a fixed "glow" band that tabs slide past.
-const RAIL_COLOR = "rgba(92,88,120,0.18)";
-
 // A smooth, non-linear fade: full opacity for the centered row, easing out
 // over the 4 rows to either side, fully transparent by the container edge.
 const FADE_MASK = [
@@ -139,7 +135,7 @@ export function DialNav() {
         style={{
           width: RAIL_WIDTH,
           height: CONTAINER_HEIGHT,
-          background: RAIL_COLOR,
+          background: "var(--dial-rail-color)",
           maskImage: FADE_MASK_IMAGE,
           WebkitMaskImage: FADE_MASK_IMAGE,
         }}
