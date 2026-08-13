@@ -6,6 +6,12 @@ export type Experience = {
   role: string;
   team?: string;
   dateRange: string;
+  /** ISO-ish dates (`YYYY-MM-DD`) used to compute the "N months" shown next
+   * to `dateRange` — never hardcoded. Duration is always
+   * (end - start, inclusive) + 1 month. Omit `endDate` for an ongoing role
+   * ("Present") and it's computed against today's date instead. */
+  startDate: string;
+  endDate?: string;
   type: ExperienceType;
   tags: string[];
   summary: string[];
@@ -24,6 +30,7 @@ export const experiences: Experience[] = [
   //   role: "Software Engineer",
   //   team: "Platform Team",
   //   dateRange: "2026 — Present",
+  //   startDate: "2026-01-01", // ongoing — duration is computed live, not hardcoded
   //   type: "full-time",
   //   tags: ["TypeScript", "React", "AWS", "PostgreSQL"],
   //   summary:
@@ -41,6 +48,8 @@ export const experiences: Experience[] = [
     role: "Software Developer Intern",
     team: "Web Engineering team",
     dateRange: "Oct '25 - Feb '26",
+    startDate: "2025-10-01",
+    endDate: "2026-02-01",
     type: "internship",
     tags: ["Figma", "Framer"],
     logoSrc: "/logos/prestar.jpg",
@@ -60,6 +69,8 @@ export const experiences: Experience[] = [
     role: "Software Development Engineer Intern",
     team: "SCOT — FBA Inbound Placement Team",
     dateRange: "May '24 - Aug '24",
+    startDate: "2024-05-01",
+    endDate: "2024-08-01",
     type: "internship",
     tags: ["AWS", "TypeScript", "Java", "Cloud-Native Architecture"],
     logoSrc: "/logos/amazon.png",
@@ -79,6 +90,8 @@ export const experiences: Experience[] = [
     role: "Software Development Engineer",
     team: "Performance Engineering Team",
     dateRange: "Sep '23 - Dec '23",
+    startDate: "2023-09-01",
+    endDate: "2023-12-01",
     type: "internship",
     tags: ["React.js", "C#", "Node.js", "Azure"],
     logoSrc: "/logos/dayforce.png",
@@ -98,6 +111,8 @@ export const experiences: Experience[] = [
     role: "Software Development Engineer Intern",
     team: "SCOT — FBA Transportation Xperience Team",
     dateRange: "May '23 - Aug '23",
+    startDate: "2023-05-01",
+    endDate: "2023-08-01",
     type: "internship",
     tags: ["React.js", "JavaScript", "CI/CD", "AWS"],
     logoSrc: "/logos/amazon.png",
@@ -117,6 +132,8 @@ export const experiences: Experience[] = [
     role: "Software Development Engineer",
     team: "Performance Engineering Team",
     dateRange: "Jan '23 - Apr '23",
+    startDate: "2023-01-01",
+    endDate: "2023-04-01",
     type: "internship",
     tags: ["React.js", "JavaScript", "Figma", "Azure"],
     logoSrc: "/logos/dayforce.png",
@@ -136,6 +153,8 @@ export const experiences: Experience[] = [
     role: "Software Test Engineer",
     team: "Web Framework Team",
     dateRange: "Sep '22 - Dec '22",
+    startDate: "2022-09-01",
+    endDate: "2022-12-01",
     type: "internship",
     tags: ["Git", "C#", ".NET", "Test Automation"],
     logoSrc: "/logos/dayforce.png",
@@ -155,6 +174,8 @@ export const experiences: Experience[] = [
     role: "Guidance, Navigation & Control: Assistant Team Lead",
     team: "Guidance, Navigation & Control Team",
     dateRange: "May '22 - Apr '23",
+    startDate: "2022-05-01",
+    endDate: "2023-04-01",
     type: "freelance",
     tags: ["Cross-functional Team Leadership", "C++", "Embedded Systems"],
     logoSrc: "/logos/ryerson-hyperloop.jpeg",
@@ -175,6 +196,8 @@ export const experiences: Experience[] = [
     role: "Guidance, Navigation & Control: Data Acquisition Member",
     team: "Data Acquisition Member Team",
     dateRange: "Jan '22 - May '22",
+    startDate: "2022-01-01",
+    endDate: "2022-05-01",
     type: "freelance",
     tags: ["Embedded Systems", "Electronics", "C++"],
     logoSrc: "/logos/ryerson-hyperloop.jpeg",
@@ -194,6 +217,7 @@ export const experiences: Experience[] = [
   //   company: "Independent",
   //   role: "Content Creator",
   //   dateRange: "2021 — Present",
+  //   startDate: "2021-01-01", // ongoing — duration is computed live, not hardcoded
   //   type: "freelance",
   //   tags: ["Video Editing", "Illustration", "Social Strategy"],
   //   summary:
