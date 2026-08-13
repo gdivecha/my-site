@@ -7,7 +7,7 @@ export default function CertificationsPage() {
       <StubSection
         eyebrow="Certifications"
         heading="Certifications"
-        body="Certifications and credentials are being organized for this page — badges, issuing bodies, and dates are coming."
+        body="Certifications and credentials are being organized for this page - badges, issuing bodies, and dates are coming."
       />
     </PageShell>
   );

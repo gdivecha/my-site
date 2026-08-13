@@ -70,7 +70,7 @@ export const projects: Project[] = [
     slug: "hackthenorth-2024",
     name: "SousChef",
     description:
-      "Built in 36 hours — an AI recipe assistant that plans meals from what's already in your fridge.",
+      "Built in 36 hours - an AI recipe assistant that plans meals from what's already in your fridge.",
     category: "hackathon",
     tags: ["Python", "OpenAI API", "React", "Hackathon"],
     videoUrl: "#",
@@ -85,7 +85,7 @@ export const projects: Project[] = [
       },
       {
         title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result — awards, demos, or next steps.",
+        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result - awards, demos, or next steps.",
       },
     ],
   },
@@ -140,7 +140,7 @@ export const projects: Project[] = [
     slug: "hackwestern-2023",
     name: "Wayfound",
     description:
-      "Built in 24 hours — an accessible indoor-navigation app for large campus buildings.",
+      "Built in 24 hours - an accessible indoor-navigation app for large campus buildings.",
     category: "hackathon",
     tags: ["React Native", "TypeScript", "Hackathon"],
     details: [
@@ -154,7 +154,7 @@ export const projects: Project[] = [
       },
       {
         title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result — awards, demos, or next steps.",
+        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result - awards, demos, or next steps.",
       },
     ],
   },

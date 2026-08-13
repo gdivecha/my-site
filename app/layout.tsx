@@ -16,9 +16,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Gaurav Divecha — Software Engineer, Artist, Content Creator",
+  title: "Gaurav Divecha - Software Engineer, Artist, Content Creator",
   description:
-    "Portfolio of Gaurav Divecha — Software Engineer, Artist, and Content Creator.",
+    "Portfolio of Gaurav Divecha - Software Engineer, Artist, and Content Creator.",
 };
 
 export default function RootLayout({

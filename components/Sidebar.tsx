@@ -1,9 +1,10 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import Link from "next/link";
 import { profile } from "@/lib/data/profile";
 import { DialNav } from "./DialNav";
-import { GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
+import { DevpostIcon, GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { SearchModal } from "./SearchModal";
 import { ThemeToggle } from "./ThemeToggle";
@@ -12,6 +13,7 @@ const socialIcons = {
   GitHub: GithubIcon,
   LinkedIn: LinkedinIcon,
   Instagram: InstagramIcon,
+  Devpost: DevpostIcon,
 };
 
 export function Sidebar() {
@@ -58,7 +60,9 @@ export function Sidebar() {
       <div className="flex h-full flex-col justify-center gap-8 px-8 py-12 md:px-12 md:py-16 lg:px-16">
         <div>
           <h1 ref={nameRef} className="font-display text-[30px] font-bold leading-tight md:text-[36px] lg:text-[48px]">
-            <span className="text-gradient">{profile.name}</span>
+            <Link href="/about" className="text-gradient">
+              {profile.name}
+            </Link>
           </h1>
           <p className="relative mt-4 text-base leading-relaxed text-roles-text md:text-lg">
             {profile.roles.join(" • ")}

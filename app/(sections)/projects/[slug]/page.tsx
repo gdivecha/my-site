@@ -39,7 +39,7 @@ export default async function ProjectDetailPage({
             aria-label={`Watch ${project.name} video`}
           >
             <ImagePlaceholder
-              label={`${project.name} — video`}
+              label={`${project.name} - video`}
               className="aspect-video"
             />
             <span className="absolute inset-0 flex items-center justify-center">

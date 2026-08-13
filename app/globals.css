@@ -166,7 +166,7 @@ body {
 /* Themed scrollbar (Firefox) */
 html {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-accent) transparent;
+  scrollbar-color: #8375c9 transparent;
 }
 
 /* Themed scrollbar (WebKit/Chromium) — thin track, rounded purple thumb
@@ -182,13 +182,13 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-accent);
+  background-color: #8375c9;
   border-radius: 9999px;
   border: 3px solid var(--color-base);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-accent-soft);
+  background-color: #9c8fe0;
 }
 
 .text-gradient {

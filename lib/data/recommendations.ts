@@ -47,12 +47,12 @@ export const previewQuotes: PreviewQuote[] = [
   },
   {
     id: "preview-7",
-    quote: "Driving force behind both the design – participating in all discussions and brainstorming, taking requirements, and creating refined UI designs – and its instrumentation and front-end development using various frameworks.",
+    quote: "Driving force behind both the design - participating in all discussions and brainstorming, taking requirements, and creating refined UI designs - and its instrumentation and front-end development using various frameworks.",
     category: "software-engineering",
   },
   {
     id: "preview-8",
-    quote: "A distinct visual style — every piece feels considered, never generic.",
+    quote: "A distinct visual style - every piece feels considered, never generic.",
     category: "artist",
   },
 ];

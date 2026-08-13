@@ -7,7 +7,7 @@ export default function BonusPage() {
       <StubSection
         eyebrow="Bonus"
         heading="Bonus"
-        body="A grab-bag of extras — talks, art, side quests, whatever didn't fit anywhere else on this site."
+        body="A grab-bag of extras - talks, art, side quests, whatever didn't fit anywhere else on this site."
       />
     </PageShell>
   );

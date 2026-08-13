@@ -18,7 +18,7 @@ export function ContactForm() {
     return (
       <div className="rounded-2xl border border-line bg-panel p-8 text-center">
         <p className="text-sm text-ink-soft">
-          Thanks for reaching out — this is a placeholder confirmation until a
+          Thanks for reaching out - this is a placeholder confirmation until a
           real send action is wired up.
         </p>
       </div>

@@ -10,7 +10,7 @@ export default function PortfolioPage() {
       <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
         <iframe
           src="/resume.pdf"
-          title="Gaurav Divecha — Résumé"
+          title="Gaurav Divecha - Résumé"
           className="aspect-[8.5/11] w-full rounded-xl border border-line bg-white"
         />
 

@@ -1,5 +1,5 @@
 export type Social = {
-  label: "GitHub" | "LinkedIn";
+  label: "GitHub" | "LinkedIn" | "Devpost";
   href: string;
 };
 
@@ -22,5 +22,6 @@ export const profile = {
   socials: [
     { label: "GitHub", href: "https://github.com/gdivecha" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/gauravcdivecha" },
+    { label: "Devpost", href: "https://devpost.com/gdivecha" },
   ] satisfies Social[],
 };
