@@ -10,7 +10,6 @@ const FILTERS: { id: ProjectCategory | "all"; label: string }[] = [
   { id: "all", label: "All" },
   { id: "full-stack", label: "Full-Stack" },
   { id: "backend", label: "Back-end" },
-  { id: "hackathon", label: "Hackathon" },
 ];
 
 export default function ProjectsPage() {
