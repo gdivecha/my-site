@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 
 const inputClasses =
-  "w-full rounded-lg border border-line bg-input-bg px-4 py-2.5 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors focus:border-accent/50";
+  "w-full rounded-lg border border-line bg-input-bg px-4 py-2.5 text-sm text-ink placeholder:text-input-placeholder outline-none transition-colors focus:border-accent/50";
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
@@ -81,7 +81,7 @@ export function ContactForm() {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-accent-deep"
+          className="rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-deep"
         >
           Send
         </button>

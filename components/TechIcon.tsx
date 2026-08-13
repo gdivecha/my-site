@@ -167,7 +167,7 @@ export function TechIcon({ skill }: { skill: SkillTag }) {
         {skill.name.toUpperCase()}
       </span>
       <div
-        className={`text-ink-soft flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-panel-alt p-2 transition-colors duration-150 hover:border-accent/40 ${
+        className={`text-ink-soft flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-tech-icon-bg p-2 transition-colors duration-150 hover:border-accent/40 ${
           skill.monochrome ? "hover:text-accent" : ""
         }`}
       >

@@ -50,6 +50,15 @@ html {
   /* Dial nav: selected item's tick mark */
   --color-dial-tick: #ffffff;
 
+  /* Dial nav: unselected tab label */
+  --color-dial-inactive: var(--color-ink-faint);
+
+  /* Contact form input placeholder text */
+  --color-input-placeholder: var(--color-ink-faint);
+
+  /* Tech logo tile background (Skills page) */
+  --color-tech-icon-bg: var(--color-panel-alt);
+
   /* Watermark text */
   --color-watermark-text: #f8f7fc;
   --watermark-text-opacity: 0.045;
@@ -74,11 +83,11 @@ html {
   --color-ink-faint: #8d89a3;
 
   /* dial nav rail track */
-  --dial-rail-color: rgba(109, 95, 232, 0.25);
+  --dial-rail-color: rgba(133, 118, 195, 0.27);
 
   /* translucent card tint — white wash instead of the dark hue, same opacity */
   --color-card-tint: rgba(255, 255, 255, 0.03);
-  --color-card-tint-hover: rgba(255, 255, 255, 0.06);
+  --color-card-tint-hover: rgba(109, 95, 232, 0.07);
 
   /* Tag chip background — panel-alt is too close to the page background
      here, so use a visible purple wash instead. */
@@ -92,6 +101,15 @@ html {
 
   /* Dial nav: selected item's tick mark — white is invisible here */
   --color-dial-tick: #000000;
+
+  /* Dial nav: unselected tab label — lighter than the shared ink-faint token */
+  --color-dial-inactive: #aaa6c2;
+
+  /* Contact form input placeholder text — a visible purple tint */
+  --color-input-placeholder: #8b83d6;
+
+  /* Tech logo tile background — pure white in light mode */
+  --color-tech-icon-bg: #ffffff;
 
   /* Watermark text — a slight purple tint instead of plain near-black ink */
   --color-watermark-text: #8f81ef;
@@ -118,6 +136,9 @@ html {
   --color-tag-bg: var(--color-tag-bg);
   --color-roles-text: var(--color-roles-text);
   --color-dial-tick: var(--color-dial-tick);
+  --color-dial-inactive: var(--color-dial-inactive);
+  --color-input-placeholder: var(--color-input-placeholder);
+  --color-tech-icon-bg: var(--color-tech-icon-bg);
   --color-input-bg: var(--color-input-bg);
 
   --font-display: var(--font-poppins);
@@ -140,6 +161,34 @@ body {
 ::selection {
   background: var(--color-accent);
   color: var(--color-ink);
+}
+
+/* Themed scrollbar (Firefox) */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) transparent;
+}
+
+/* Themed scrollbar (WebKit/Chromium) — thin track, rounded purple thumb
+   inset from the track via a matching-color border, same idea used for
+   the translucent cards elsewhere on the site. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent);
+  border-radius: 9999px;
+  border: 3px solid var(--color-base);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent-soft);
 }
 
 .text-gradient {

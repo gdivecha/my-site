@@ -43,7 +43,7 @@ export default async function ProjectDetailPage({
               className="aspect-video"
             />
             <span className="absolute inset-0 flex items-center justify-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-black/30 transition-transform group-hover:scale-105">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-black/30 transition-transform group-hover:scale-105">
                 <PlayIcon className="h-6 w-6 translate-x-0.5" />
               </span>
             </span>

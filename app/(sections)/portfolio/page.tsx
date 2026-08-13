@@ -7,7 +7,7 @@ export default function PortfolioPage() {
     <PageShell watermark="PORTFOLIO">
       <PageHeading eyebrow="Portfolio">My Résumé</PageHeading>
 
-      <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover md:p-8">
+      <div className="mt-8 max-w-2xl rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
         <iframe
           src="/resume.pdf"
           title="Gaurav Divecha — Résumé"
@@ -18,7 +18,7 @@ export default function PortfolioPage() {
           <a
             href="/resume.pdf"
             download
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-xs font-medium text-ink transition-colors hover:bg-accent-deep"
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-accent-deep"
           >
             <DownloadIcon className="h-3.5 w-3.5" />
             Download

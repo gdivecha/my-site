@@ -204,7 +204,7 @@ export function DialNav() {
                   className={`text-sm uppercase tracking-wide transition-all duration-200 ${
                     focused
                       ? "font-semibold text-ink"
-                      : "font-medium text-ink-faint"
+                      : "font-medium text-dial-inactive"
                   }`}
                 >
                   {item.label}

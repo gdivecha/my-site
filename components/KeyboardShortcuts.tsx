@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { CloseIcon } from "./icons";
 
 const SHORTCUTS: { keys: string[]; label: string }[] = [
+  { keys: ["?"], label: "Show this menu" },
+  { keys: ["⌘", "K"], label: "Search" },
   { keys: ["⌘", "↑"], label: "Previous tab" },
   { keys: ["⌘", "↓"], label: "Next tab" },
   { keys: ["↑", "↓"], label: "Scroll page content" },
   { keys: ["Space"], label: "Page down" },
-  { keys: ["⇧", "Space"], label: "Page up" },
+  { keys: ["PageUp"], label: "Page up" },
 ];
 
 export function KeyboardShortcuts({ className = "" }: { className?: string }) {
@@ -24,6 +26,22 @@ export function KeyboardShortcuts({ className = "" }: { className?: string }) {
     window.addEventListener("keydown", handleKeydown);
     return () => window.removeEventListener("keydown", handleKeydown);
   }, [open]);
+
+  // "?" opens this modal from anywhere — not while typing, and not paired
+  // with a modifier (so it doesn't fire as a side effect of some other combo).
+  useEffect(() => {
+    function handleGlobalKeydown(event: KeyboardEvent) {
+      if (event.key !== "?") return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+      event.preventDefault();
+      setOpen(true);
+    }
+
+    window.addEventListener("keydown", handleGlobalKeydown);
+    return () => window.removeEventListener("keydown", handleGlobalKeydown);
+  }, []);
 
   return (
     <>

@@ -70,7 +70,7 @@ export default function RecommendationsPage() {
                   onClick={() => setCompany(c)}
                   className={`rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
                     active
-                      ? "border-accent/50 bg-accent text-ink"
+                      ? "border-accent/50 bg-accent text-white"
                       : "border-line bg-panel text-ink-faint hover:text-ink-soft"
                   }`}
                 >

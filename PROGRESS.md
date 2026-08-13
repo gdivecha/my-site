@@ -62,6 +62,7 @@ Newer tokens added for theme-aware surfaces that plain semantic tokens didn't co
   `--color-base` exactly). Light: pure white.
 - `--color-dial-tick` — `DialNav`'s selected-item tick mark. Dark: white (as before).
   Light: black — white was invisible against the light theme.
+- `--color-watermark-text` / `--watermark-text-opacity` — see "Watermark" below.
 
 **Type scale**: `--text-xs` overridden to 13px/1.25rem-line-height (vs Tailwind's
 default 12px) via a plain `@theme { --text-xs: 0.8125rem; ... }` block. On top of that,
@@ -107,6 +108,14 @@ request since:
   (even one that ends at `transform: none`) forces a compositing layer on the ancestor
   that breaks backdrop-filter on Skills/Pill/etc. descendants — confirmed by direct
   testing, not just theory.
+- **Text color is now theme-aware** via `--color-watermark-text` +
+  `--watermark-text-opacity` (both new tokens, see "Design tokens" above): dark mode is
+  `#f8f7fc` at `0.045` opacity (barely different from the original flat
+  `var(--color-ink)` at `0.045`); light mode is a purple `#8f81ef` at `0.1` opacity —
+  tuned through several rounds (plain `var(--color-ink)` in light mode read as
+  near-black/gray, not purple; several purple hex values were tried before landing
+  here; opacity was bumped from parity-with-dark up to `0.1` specifically because the
+  purple wasn't "apparent" enough at the original low opacity).
 
 ## Keyboard shortcuts
 
@@ -114,6 +123,36 @@ request since:
   from anywhere on the page.
 - `components/KeyboardShortcuts.tsx` — a ⌘-icon button (next to `ThemeToggle` in
   `Sidebar`) opens a modal listing the dial shortcuts + native scroll keys.
+
+## Site-wide search
+
+`components/SearchModal.tsx` + `lib/search-index.ts`. A search button sits in the
+sidebar's top-left button row, in this order: **Search → theme toggle → ⌘ keyboard
+shortcuts**. Opens via click or `Cmd+K` from anywhere on the site (guarded against
+firing while an `<input>`/`<textarea>` is focused, same pattern as `DialNav`'s
+`Cmd+Arrow`). Supports arrow-key navigation + Enter (client-side `router.push`, not a
+full reload), Escape/backdrop-click to close, autofocuses its input on open.
+
+`lib/search-index.ts` builds a **static** index at module load (every source is
+already available at build time, no need to rebuild per-keystroke) from: `nav.ts`
+(pages), `projects.ts` (deep-links straight to each project's detail page), `skills.ts`
+(engineering group only, matching what's actually shown), `experience.ts` (internship
+type only, same reasoning), and `recommendations.ts` (grouped by company). Each result
+has a `label`/`description` shown in the UI, plus an optional **hidden `keywords`
+field** that's matched against a query but never displayed — this is what lets a
+search surface a result whose match only lives inside a collapsed accordion (an
+experience's "challenges" answer, a recommender's quote and name, a project's detail
+blocks) without the user ever having opened it. The search deliberately respects the
+same visibility rules as the pages themselves (e.g. it won't surface the
+`"freelance"`-type Ryerson entries, since those are filtered out of `/experience`
+entirely, not just collapsed).
+
+**Bug fixed during build**: two Amazon internships and two Dayforce internships share
+the same "role · company" display text (different terms/teams) — the first version
+keyed the results list on that composite string and threw React's duplicate-key
+console error. Every `SearchResult` now carries its own stable `id` (derived from the
+source data's real identifier — `experience.id`, `project.slug`, etc.), not built from
+display text.
 
 ## Dark/light theme toggle
 
@@ -240,6 +279,14 @@ Fonts: **Poppins** (`["300", "400", "600", "700"]`, `--font-poppins` → `font-d
   `logoSrc?: string` field — Amazon, Dayforce, Prestar, and Ryerson Hyperloop all have
   real logos in `public/logos/`; `ExperienceCard` falls back to the diagonal-stripe
   `ImagePlaceholder` when a role has no `logoSrc`.
+  **Duration is always computed live, never hardcoded.** Every entry has real
+  `startDate`/`endDate` (`YYYY-MM-DD`; `endDate` omitted for an ongoing "Present"
+  role). `ExperienceCard`'s `durationText()` computes `(end - start, inclusive) + 1`
+  month, with `end` defaulting to `new Date()` when `endDate` is absent — so an
+  ongoing role's duration updates itself over time with zero maintenance, and a fixed
+  role's duration self-corrects if its dates are ever edited. (An earlier version
+  briefly had a literal `duration: "4 months"` string per entry — that field no longer
+  exists; don't reintroduce it.)
 - `projects.ts` — unchanged in content (still the original 6 placeholder projects
   across full-stack/backend/hackathon). The "Hackathon" filter chip was removed from
   the Projects page UI (see below) but the underlying `hackathon` category and its 2
@@ -280,7 +327,9 @@ Fonts: **Poppins** (`["300", "400", "600", "700"]`, `--font-poppins` → `font-d
   more?" is unchanged. `QuoteCard` and `RoleCard` both use the translucent
   `bg-card-tint` treatment now, and `QuoteCard` no longer wraps its text in decorative
   quote marks (`&ldquo;`/`&rdquo;` removed) since the preview text isn't attributed to
-  anyone anymore.
+  anyone anymore. `QuoteCard` also has **no hover effect** (removed
+  `transition-colors hover:bg-card-tint-hover` — was toggled off, back on, then off
+  again across a few requests; off is current).
 - `app/(sections)/portfolio/page.tsx` — removed the white "mail icon" decorative
   header block that used to sit above the résumé card (that block was actually
   copy-pasted onto Contact originally, wasn't meant for both — see Contact below); the
@@ -325,6 +374,9 @@ Fonts: **Poppins** (`["300", "400", "600", "700"]`, `--font-poppins` → `font-d
 Repo is live at **https://github.com/gdivecha/my-site** (public), `main` branch. Only
 commit/push when explicitly asked. Recent commit history (newest first) roughly
 tracks the sections above:
+`3a22a7f` Compute experience duration from real dates instead of hardcoding it ·
+`0f4b3db` Add site-wide search (Cmd+K) ·
+`a7ac18b` Remove preview card hover effect, theme-aware watermark color ·
 `a48c302` Skills expand-all/collapse-all, watermark/font tuning ·
 `dff4dd0` Real recommendations content, fix Amazon term grouping ·
 `b79682b` Real Experience content, more brand logos, profile link fixes ·
