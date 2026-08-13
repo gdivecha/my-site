@@ -75,6 +75,15 @@ export function DialNav() {
   const [focusedRaw, setFocusedRaw] = useState(
     () => N + findActiveIndex(pathname)
   );
+  // Mirrors focusedRaw for handleKeydown to read synchronously — that
+  // handler needs the latest index to compute a router.push, and doing
+  // that inside a setFocusedRaw(prev => ...) updater (the alternative)
+  // triggers React's "Cannot update Router while rendering DialNav" error,
+  // since updater callbacks are expected to be pure.
+  const focusedRawRef = useRef(focusedRaw);
+  useEffect(() => {
+    focusedRawRef.current = focusedRaw;
+  }, [focusedRaw]);
 
   const scrollToRaw = useCallback((rawIndex: number, smooth: boolean) => {
     const el = scrollRef.current;
@@ -181,13 +190,11 @@ export function DialNav() {
 
       event.preventDefault();
       const direction = event.key === "ArrowUp" ? -1 : 1;
-      setFocusedRaw((prevRaw) => {
-        const nextRaw = prevRaw + direction;
-        scrollToRaw(nextRaw, true);
-        const nextItem = navItems[mod(nextRaw, N)];
-        if (nextItem && nextItem.href !== pathname) router.push(nextItem.href);
-        return nextRaw;
-      });
+      const nextRaw = focusedRawRef.current + direction;
+      setFocusedRaw(nextRaw);
+      scrollToRaw(nextRaw, true);
+      const nextItem = navItems[mod(nextRaw, N)];
+      if (nextItem && nextItem.href !== pathname) router.push(nextItem.href);
     }
 
     window.addEventListener("keydown", handleKeydown);
