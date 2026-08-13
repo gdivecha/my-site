@@ -6,7 +6,7 @@ export function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-panel transition-colors hover:border-accent/40 hover:bg-panel-alt/60"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
     >
       <ImagePlaceholder
         label={project.name}

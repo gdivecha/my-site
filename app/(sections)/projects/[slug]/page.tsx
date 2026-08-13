@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { Tag } from "@/components/Pill";
-import { BreadcrumbArrowIcon, PlayIcon } from "@/components/icons";
+import { ArrowLeftIcon, PlayIcon } from "@/components/icons";
 import { projects } from "@/lib/data/projects";
 
 export function generateStaticParams() {
@@ -21,16 +21,13 @@ export default async function ProjectDetailPage({
 
   return (
     <PageShell watermark="PROJECTS">
-      <nav
-        className="flex items-center gap-1.5 text-xs text-ink-faint"
-        aria-label="Breadcrumb"
+      <Link
+        href="/projects"
+        className="inline-flex items-center gap-1.5 text-xs text-ink-faint transition-colors hover:text-ink-soft"
       >
-        <Link href="/projects" className="hover:text-ink-soft">
-          Projects
-        </Link>
-        <BreadcrumbArrowIcon className="h-3 w-3" />
-        <span className="text-ink-soft">{project.name}</span>
-      </nav>
+        <ArrowLeftIcon className="h-3.5 w-3.5" />
+        Projects
+      </Link>
 
       <div className="mt-6 max-w-3xl">
         {project.videoUrl ? (
