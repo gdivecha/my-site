@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { Tag } from "@/components/Pill";
 import { ChevronDownIcon } from "@/components/icons";
@@ -32,10 +33,22 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
       </div>
 
       <div className="mt-4 flex items-start gap-5">
-        <ImagePlaceholder
-          label={experience.company}
-          className="h-24 w-24 shrink-0 sm:h-28 sm:w-28"
-        />
+        {experience.logoSrc ? (
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line sm:h-28 sm:w-28">
+            <Image
+              src={experience.logoSrc}
+              alt={`${experience.company} logo`}
+              fill
+              sizes="112px"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <ImagePlaceholder
+            label={experience.company}
+            className="h-24 w-24 shrink-0 sm:h-28 sm:w-28"
+          />
+        )}
         <div className="min-w-0 flex-1">
           <p
             className="text-sm font-medium sm:text-base"
@@ -46,7 +59,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
           </p>
 
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            {experience.summary}
+            {experience.summary.join(" ")}
           </p>
         </div>
       </div>

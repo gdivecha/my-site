@@ -1,5 +1,5 @@
 export type Social = {
-  label: "GitHub" | "LinkedIn" | "Instagram";
+  label: "GitHub" | "LinkedIn";
   href: string;
 };
 
@@ -10,7 +10,7 @@ export const profile = {
     // "Content Creator"
   ],
   tagline:
-    "I build full-stack products, make things that look good doing it, and share the process along the way.",
+    "I design and build scalable, user-focused solutions across cloud infrastructure, full-stack systems, and production interfaces, creating impactful digital experiences.",
   bio: [
     "I'm a full-stack software engineer with 2+ years of internship experience across Amazon and Dayforce, specializing in scalable cloud infrastructure, real-time systems, and user-focused frontend design.",
     "I work across the entire stack, from AWS backend services and database optimization to React frontends and performance dashboards, with a strong focus on shipping features that work well and feel intentional.",
@@ -21,7 +21,6 @@ export const profile = {
   // TODO: replace with real profile URLs
   socials: [
     { label: "GitHub", href: "https://github.com/gdivecha" },
-    { label: "LinkedIn", href: "#" },
-    { label: "Instagram", href: "#" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/gauravcdivecha" },
   ] satisfies Social[],
 };

@@ -1,7 +1,7 @@
 export type SkillTag = {
   name: string;
   abbr: string;
-  /** Key into the `iconMap` in `components/TechIcon.tsx` (a simple-icons brand mark). Omit for skills with no available brand logo — they fall back to a colored hex-badge using `abbr` + `color`. */
+  /** Key into `iconMap` or `extraIconMap` in `components/TechIcon.tsx` (a simple-icons brand mark, or a devicon one for brands simple-icons has dropped). Omit for skills with no available brand logo — they fall back to a colored hex-badge using `abbr` + `color`. */
   icon?: string;
   /** Fallback hex-badge background (used when `icon` is absent), or an override when the brand's own icon color is pure black/white — see `monochrome`. */
   color?: string;
@@ -23,9 +23,9 @@ export const skillCategories: SkillCategory[] = [
     group: "engineering",
     skills: [
       { name: "C", abbr: "C", icon: "C" },
-      { name: "C#", abbr: "C#", color: "#9B4F96" },
+      { name: "C#", abbr: "C#", icon: "Csharp", color: "#9B4F96" },
       { name: "Python", abbr: "Py", icon: "Python" },
-      { name: "Java", abbr: "Jv", color: "#E76F00" },
+      { name: "Java", abbr: "Jv", icon: "Java", color: "#E76F00" },
       { name: "JavaScript", abbr: "JS", icon: "Javascript" },
       { name: "TypeScript", abbr: "TS", icon: "Typescript" },
     ],
@@ -36,9 +36,7 @@ export const skillCategories: SkillCategory[] = [
     group: "engineering",
     skills: [
       { name: "Node.js", abbr: "Nd", icon: "Nodedotjs" },
-      { name: "Express", abbr: "Ex", icon: "Express", monochrome: true },
       { name: ".NET", abbr: ".N", icon: "Dotnet" },
-      { name: "GraphQL", abbr: "GQ", icon: "Graphql" },
       { name: "REST APIs", abbr: "API", color: "#6D5FE8" },
     ],
   },
@@ -52,6 +50,8 @@ export const skillCategories: SkillCategory[] = [
       { name: "Tailwind CSS", abbr: "Tw", icon: "Tailwindcss" },
       { name: "HTML5", abbr: "H5", icon: "Html5" },
       { name: "CSS3", abbr: "C3", icon: "Css" },
+      { name: "Axios", abbr: "Ax", icon: "Axios" },
+      { name: "Material UI", abbr: "MU", icon: "Mui" },
     ],
   },
   {
@@ -62,7 +62,6 @@ export const skillCategories: SkillCategory[] = [
       { name: "PostgreSQL", abbr: "Pg", icon: "Postgresql" },
       { name: "MongoDB", abbr: "Mo", icon: "Mongodb" },
       { name: "MySQL", abbr: "My", icon: "Mysql" },
-      { name: "Redis", abbr: "Rd", icon: "Redis" },
     ],
   },
   {
@@ -71,7 +70,7 @@ export const skillCategories: SkillCategory[] = [
     group: "engineering",
     skills: [
       { name: "AWS", abbr: "AWS", color: "#FF9900" },
-      { name: "Azure", abbr: "Az", color: "#0089D6" },
+      { name: "Azure", abbr: "Az", icon: "Azure", color: "#0089D6" },
       { name: "Docker", abbr: "Dk", icon: "Docker" },
       { name: "Vercel", abbr: "Vc", icon: "Vercel", monochrome: true },
     ],
@@ -81,10 +80,9 @@ export const skillCategories: SkillCategory[] = [
     label: "AI & ML",
     group: "engineering",
     skills: [
-      { name: "PyTorch", abbr: "PT", icon: "Pytorch" },
-      { name: "TensorFlow", abbr: "TF", icon: "Tensorflow" },
       { name: "OpenAI API", abbr: "AI", color: "#10A37F" },
-      { name: "scikit-learn", abbr: "Sk", icon: "Scikitlearn" },
+      { name: "Claude Code", abbr: "CC", icon: "Claudecode" },
+      { name: "Cursor", abbr: "Cu", icon: "Cursor", monochrome: true },
     ],
   },
   {
@@ -93,7 +91,7 @@ export const skillCategories: SkillCategory[] = [
     group: "engineering",
     skills: [
       { name: "Jest", abbr: "Je", icon: "Jest" },
-      { name: "Cypress", abbr: "Cy", icon: "Cypress" },
+      { name: "Mockito", abbr: "Mk", color: "#78A641" },
       { name: "Postman", abbr: "Po", icon: "Postman" },
       { name: "JUnit", abbr: "JU", icon: "Junit5" },
     ],
@@ -114,8 +112,8 @@ export const skillCategories: SkillCategory[] = [
     label: "Video Editing",
     group: "content",
     skills: [
-      { name: "Premiere Pro", abbr: "Pr", color: "#00005B" },
-      { name: "After Effects", abbr: "Ae", color: "#9999FF" },
+      { name: "Premiere Pro", abbr: "Pr", icon: "Premierepro", color: "#00005B" },
+      { name: "After Effects", abbr: "Ae", icon: "Aftereffects", color: "#9999FF" },
       { name: "DaVinci Resolve", abbr: "Dv", icon: "Davinciresolve" },
     ],
   },
@@ -124,8 +122,8 @@ export const skillCategories: SkillCategory[] = [
     label: "Graphic Design",
     group: "content",
     skills: [
-      { name: "Photoshop", abbr: "Ps", color: "#31A8FF" },
-      { name: "Illustrator", abbr: "Ai", color: "#FF9A00" },
+      { name: "Photoshop", abbr: "Ps", icon: "Photoshop", color: "#31A8FF" },
+      { name: "Illustrator", abbr: "Ai", icon: "Illustrator", color: "#FF9A00" },
       { name: "Figma", abbr: "Fg", icon: "Figma" },
     ],
   },
