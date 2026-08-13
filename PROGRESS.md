@@ -1,8 +1,8 @@
 # Build Progress — Gaurav Divecha Portfolio Site
 
 Source brief: Next.js (App Router) + TypeScript + Tailwind CSS app-shell portfolio.
-Real routes chosen (not client-state SPA). Résumé = real PDF (not yet supplied).
-All content is placeholder/lorem-ish and clearly marked — swap before going live.
+Real routes chosen (not client-state SPA). The site is **live and mostly populated
+with real content now** — see "Data layer" below for what's real vs. still placeholder.
 
 ## Environment gotchas (read this first if builds break)
 
@@ -14,351 +14,326 @@ All content is placeholder/lorem-ish and clearly marked — swap before going li
   `next build` (causes a bogus `<Html> should not be imported outside of pages/_document`
   error on `/404` and `/500` prerendering). Always run builds as
   `NODE_ENV=production npm run build`.
-- **Next version**: `create-next-app@latest` pulled Next 16.3.0, which had an unrelated
-  prerender crash on this setup. Pinned down to **Next 15.5.23 + React 19.0.0** (stable,
-  known-good pairing). `eslint-config-next` pinned to match (15.5.23).
-- `eslint.config.mjs` uses the classic `FlatCompat` pattern (`compat.extends("next/core-web-vitals", "next/typescript")`), not the newer Next 16 array-export style — that style isn't compatible with 15.x's `eslint-config-next`.
+- **Next version**: pinned to **Next 15.5.23 + React 19.0.0** (stable, known-good
+  pairing). `eslint-config-next` pinned to match (15.5.23).
+- `eslint.config.mjs` uses the classic `FlatCompat` pattern (`compat.extends("next/core-web-vitals", "next/typescript")`), not the newer Next 16 array-export style.
 - `package.json` has an `overrides` block pinning `postcss` and `sharp` to patched
-  versions (Next 15.5.23's bundled versions had known high-severity CVEs). Re-check
-  `npm audit` after any dependency bump.
+  versions. Re-check `npm audit` after any dependency bump.
 - Standard commands: `PATH="/opt/homebrew/bin:$PATH" npm run dev`, and for builds
   `PATH="/opt/homebrew/bin:$PATH" NODE_ENV=production npm run build`.
 - **Don't run `npm run build` while `npm run dev` is running** — both write to the
   same `.next` directory and will corrupt each other's cache (symptom: dev server
   starts throwing `Cannot find module './NNN.js'` / `MODULE_NOT_FOUND` on every route).
-  Fix is `rm -rf .next` and restart whichever process broke. If you need a production
-  build to sanity-check, stop the dev server first (or run it in a git worktree /
-  separate checkout).
+  Fix is `rm -rf .next` and restart whichever process broke.
+- **Dev server can go stale after many hours of Fast Refresh** — a few times this
+  session, a change (especially to inline `<script>` content embedded in SSR output, or
+  `next/font` weight config) didn't visibly take effect until the dev server was fully
+  killed, `.next` deleted, and restarted fresh. If a change "does nothing" after
+  multiple attempts and the code looks correct, suspect this before re-diagnosing the
+  code itself.
 
-## Design tokens (decided, in `app/globals.css` under `:root` + `@theme inline`)
+## Design tokens (in `app/globals.css` under `:root` + `@theme inline`)
 
 Colors (Tailwind utilities auto-generated from `--color-*` names). These are the
-**dark-mode values, which are the unconditional default** (bare `:root`, no media query
-gate) — the site was designed dark-first and light mode was added later as an explicit
-opt-in toggle, see "Dark/light theme toggle" below for the light-mode override values:
+**dark-mode values, the unconditional default** (bare `:root`) — light mode is an
+explicit opt-in toggle, see "Dark/light theme toggle" below.
+
+Core surface/ink/accent tokens (unchanged since initial build):
 - `bg-base` #0d0d14, `bg-panel` #1a1a26, `bg-panel-alt` #232235, `border-line` (subtle white 6%)
-- `text-accent` #6d5fe8 (primary indigo), `accent-soft` #a79ff0, `accent-deep` #4b3dc4
-  (soft/deep used together for the gradient wordmark), `accent-contact` #4ecdc4 (teal,
-  Contact page only)
-- `text-ink` #f2f1f8 (headings), `text-ink-soft` #a8a4c0 (body), `text-ink-faint` #5c5878
-  (inactive nav / faint labels)
+- `text-accent` #6d5fe8, `accent-soft` #a79ff0, `accent-deep` #4b3dc4, `accent-contact` #4ecdc4
+- `text-ink` #f2f1f8, `text-ink-soft` #a8a4c0, `text-ink-faint` #5c5878
 
-Nearly every component styles itself via these semantic tokens (`bg-panel`,
-`text-ink-faint`, etc.) rather than raw hex, which is *why* the light-mode toggle below
-only needed a handful of files touched — swapping the token values is enough almost
-everywhere. Exceptions, deliberately left as hardcoded `bg-white`/`text-black` in both
-themes because they're intentional fixed accents, not theme-driven surfaces: the
-Contact page's white card + black mail icon (a deliberate high-contrast break from the
-theme, per brief), the Portfolio page's white résumé-iframe background (PDFs render on
-white regardless), and `DialNav`'s `bg-white` focused tick mark.
+Newer tokens added for theme-aware surfaces that plain semantic tokens didn't cover well:
+- `--color-card-tint` / `--color-card-tint-hover` — the translucent+blurred card
+  background used on Skills categories, Experience cards, the Portfolio résumé card,
+  Project cards, Recommendations cards, and `Pill`. Dark mode: a `#303151`-based tint
+  (`rgba(48,49,81,.15)` / `.25` on hover). Light mode: a **white** wash at much lower
+  opacity (`rgba(255,255,255,.03)` / `.06`) — a dark tint read as a smudge on the light
+  background, so the hue flips per-theme rather than just the opacity. Paired with
+  `backdrop-blur-[3.8px]` (tuned by eye — treat as a rough middle, not precise).
+- `--color-tag-bg` — background for `Tag` chips and the Skills category icon badges.
+  Dark mode: same as `--color-panel-alt` (no visible change from before). Light mode:
+  a visible purple wash (`rgba(109,95,232,.14)`) — `panel-alt` alone was nearly
+  invisible against the light theme's near-white background.
+- `--color-roles-text` — the sidebar's "Software Engineer • Artist" line. Dark:
+  `#c4c9ff` (light lavender). Light: `#4b3dc4` (darker purple) — the lavender read as
+  washed-out on a light background.
+- `--color-input-bg` — Contact form input backgrounds. Dark: `#0d0d14` (matches
+  `--color-base` exactly). Light: pure white.
+- `--color-dial-tick` — `DialNav`'s selected-item tick mark. Dark: white (as before).
+  Light: black — white was invisible against the light theme.
 
-**Type scale**: Tailwind's default `--text-xs` (12px) read smaller than typical
-portfolio-site body/label text, so it's overridden site-wide to 13px/1.25rem-line-height
-via a plain `@theme { --text-xs: 0.8125rem; ... }` block (separate from the color
-`@theme inline` block above — this one holds literal values, not `:root` var refs). That
-single override reaches every `text-xs` usage across the app. A handful of
-component-local arbitrary sizes that don't route through that token also got bumped by
-hand: the About-page bio copy, `DialNav`'s tab labels, `Pill`'s `Tag` variant,
-`ImagePlaceholder`'s label, the filter-count `<sup>` badges, and `TechIcon`'s tooltip
-text. Left alone on purpose: `TechIcon`'s fallback hex-badge abbreviation text (`C#`,
-`AWS`, etc.) — it's iconographic, constrained inside a fixed ~28px tile, not reading
-copy, and bumping it risked overflow on 3-letter abbreviations.
+**Type scale**: `--text-xs` overridden to 13px/1.25rem-line-height (vs Tailwind's
+default 12px) via a plain `@theme { --text-xs: 0.8125rem; ... }` block. On top of that,
+`html { font-size: 112.5%; }` scales every rem-based Tailwind size up further (18px
+root). The sidebar name and every page's `PageHeading` are deliberately fixed-px
+(`text-[30px] md:text-[36px] lg:text-[48px]` etc.) rather than rem-based, since the
+alignment mechanism between them (see `Sidebar`/`PageHeading` below) depends on precise
+measurement, not scaled-up sizing.
 
-On top of that, `html { font-size: 112.5%; }` in `globals.css` scales every rem-based
-Tailwind size up further still (18px root instead of 16px) — a broader "make everything
-bigger" pass layered on top of the `text-xs` token change above. The sidebar name and
-every page's big `PageHeading` were then deliberately reverted back to their original
-absolute size on top of *that* — since `justify-center`/the alignment mechanism between
-them depends on precise measurement, not visual scale, they were switched from rem-based
-classes (`text-3xl`/`text-4xl`/etc., which scale with the root) to fixed px arbitrary
-values (`text-[30px] md:text-[36px] lg:text-[48px]` for the name, `text-[36px]
-sm:text-[48px]` for `PageHeading`) so they stay immune to the root bump while everything
-else on the page still scaled up.
+## Custom cursor
+
+`components/CustomCursor.tsx`, mounted once in `app/layout.tsx` (inside `<body>`,
+after `{children}`). A small accent-colored dot that follows the mouse and grows/
+lightens on hover over links/buttons/inputs. Key implementation details:
+- Only activates on `matchMedia("(pointer: fine)")` — untouched on touch devices.
+- Reads the latest mouse position on every `mousemove` but only writes to the DOM via
+  `requestAnimationFrame`, once per paint — writing directly in the `mousemove`
+  handler was visibly choppy since events can fire faster than the screen repaints.
+- The native cursor is only hidden (`.custom-cursor-active` class + `cursor: none`)
+  once JS confirms it's active, not unconditionally — so nothing breaks if the script
+  fails to load.
+
+## Watermark
+
+`components/Watermark.tsx` + the `.watermark-*` classes in `globals.css`. Unchanged in
+structure from the original build (44 rows × 2 copies × 8 repeats, alternating scroll
+direction, per-row duration computed from measured width ÷ `PIXELS_PER_SECOND` so
+speed reads identical across pages regardless of word length). Tuned several times by
+request since:
+- **Speed**: `PIXELS_PER_SECOND` is currently **9** (history: 12 → 6 → 7 → 9 → 14 → back
+  to 9 — 14 was tried and explicitly rolled back).
+- **Text size**: `font-size: clamp(1.5rem, 3.5vw, 2.85rem)` (reduced from the original
+  `clamp(1.75rem, 4vw, 3.25rem)`).
+- **Weight**: `font-weight: 300` (the lightest loaded Poppins weight). A `400` was
+  tried and rolled back to 300. Poppins now loads `["300", "400", "600", "700"]` in
+  `app/layout.tsx` (the `400` was added specifically so a genuine in-between weight
+  step exists if this gets revisited, rather than jumping straight to 600).
+- **A fade-in entrance animation for page content was attempted twice and reverted
+  both times** (`page-content-enter` class, opacity-only after the first attempt with
+  `transform` broke `backdrop-filter` on the translucent cards). Neither version is
+  currently live — `PageShell`'s content wrapper is plain `<div className="relative
+  z-10">`, no animation class. If revisited: opacity-only is required, `transform`
+  (even one that ends at `transform: none`) forces a compositing layer on the ancestor
+  that breaks backdrop-filter on Skills/Pill/etc. descendants — confirmed by direct
+  testing, not just theory.
 
 ## Keyboard shortcuts
 
-- `DialNav` listens for `Cmd+ArrowUp`/`Cmd+ArrowDown` (window-level `keydown`, guarded
-  against firing while an `<input>`/`<textarea>` is focused) to step to the
-  previous/next tab from anywhere on the page — reuses the same `scrollToRaw` animation
-  and `focusedRaw` state the scroll/click paths already used, then `router.push`es
-  directly since there's no `<Link>` click to piggyback on. Plain arrow-key page
-  scrolling needed no new code — it's native browser behavior, just documented in the
-  modal below.
-- `components/KeyboardShortcuts.tsx` — a ⌘-icon button (mounted next to `ThemeToggle` in
-  `Sidebar`, same top-left corner) that opens a modal listing both the custom dial
-  shortcuts and the native scroll keys, so they're discoverable in one place. Closes on
-  Escape, backdrop click, or the × button. The ⌘ glyph is rendered as plain Unicode text
-  (U+2318), not a custom SVG — it's a universally-recognized character and more accurate
-  than hand-drawing an approximation.
+- `DialNav` listens for `Cmd+ArrowUp`/`Cmd+ArrowDown` to step to the previous/next tab
+  from anywhere on the page.
+- `components/KeyboardShortcuts.tsx` — a ⌘-icon button (next to `ThemeToggle` in
+  `Sidebar`) opens a modal listing the dial shortcuts + native scroll keys.
 
 ## Dark/light theme toggle
 
-- `:root[data-theme="light"]` in `globals.css` redefines all the same `--color-*`
-  custom properties with light-mode values (near-white surfaces, near-black ink,
-  slightly deepened/darkened accent variants for contrast-on-white — e.g.
-  `accent-soft` goes from a light periwinkle #a79ff0 to a darker #5b4bd6, since it's
-  used as *text* color and needed to stay legible against white instead of dark
-  panels). Bare `:root` (no attribute) stays dark — dark is still the default for
-  anyone who's never toggled.
-- `components/ThemeToggle.tsx` — client component, sun/moon icon button. Toggling sets
-  or removes `data-theme="light"` on `document.documentElement` and persists the choice
-  to `localStorage["theme"]`. Mounted in `Sidebar`, absolutely positioned top-right
-  corner (`absolute right-6 top-6 md:right-8 md:top-8`) — deliberately outside the
-  `justify-center`'d content group so it doesn't affect that centering math.
-- `app/layout.tsx` has a small blocking inline `<script>` in `<head>` (before
-  hydration) that reads `localStorage["theme"]` and sets `data-theme="light"` on
-  `<html>` synchronously if that's the stored preference — this is what prevents a
-  flash of the wrong theme on load. `<html>` has `suppressHydrationWarning` because of
-  this out-of-band attribute mutation. No `prefers-color-scheme` auto-detection —
-  new/first-time visitors always get dark (deliberate: the whole site, including
-  watermark opacity and decorative highlight alpha values, was tuned against the dark
-  palette specifically; only respecting an explicit stored toggle avoids serving an
-  under-tested light mode to visitors who never asked for it).
+- `:root[data-theme="light"]` in `globals.css` redefines all `--color-*` custom
+  properties (see "Design tokens" above for the newer ones). Bare `:root` stays dark —
+  dark is the default for anyone who's never toggled.
+- `components/ThemeToggle.tsx` — sun/moon icon button in `Sidebar`, top-left corner
+  (next to `KeyboardShortcuts`). Toggling sets/removes `data-theme="light"` on
+  `document.documentElement`, persists to `localStorage["theme"]`.
+- `app/layout.tsx` has a blocking inline `<script>` in `<head>` that reads
+  `localStorage["theme"]` and sets `data-theme="light"` on `<html>` before hydration,
+  preventing a flash of the wrong theme. `<html>` has `suppressHydrationWarning`
+  because of this. No `prefers-color-scheme` auto-detection — new visitors always get
+  dark by default.
 
-Fonts: **Poppins** (600/700, `--font-poppins` → `font-display`) for the wordmark/headings,
-**Inter** (400/500/600, `--font-inter` → `font-body`, applied as page default) for body/UI,
-both loaded via `next/font/google` in `app/layout.tsx`. No other font files needed.
+Fonts: **Poppins** (`["300", "400", "600", "700"]`, `--font-poppins` → `font-display`),
+**Inter** (`["400", "500", "600"]`, `--font-inter` → `font-body`), both via
+`next/font/google` in `app/layout.tsx`.
 
-Utility classes defined once in `globals.css`, reused everywhere:
-- `.text-gradient` — left-to-right gradient text clip (soft → deep indigo), used on the
-  sidebar wordmark.
-- `.watermark-field` / `.watermark-plane` / `.watermark-row(--reverse)` /
-  `.watermark-row__track` / `.watermark-row__copy` — the fixed-position, full-bleed
-  background: ~44 rows of the current section name, tiled and rotated -18deg as one
-  plane, alternating scroll direction row-to-row via `@keyframes watermark-scroll` +
-  `animation-direction: reverse` on odd rows. Used via `<Watermark text="..." />`.
-  `position: fixed` (offset past the sidebar via `left: calc(clamp(360px,40vw,640px) -
-  5rem)` at `md:`+ — deliberately bleeds ~5rem back under the sidebar's edge rather than
-  starting exactly at it, so it reads as merging into the sidebar) so it stays put when
-  the content column scrolls — deliberately not `absolute` inside `PageShell`, which
-  would scroll with page content. Text is light-weight (`font-weight: 300` — Poppins
-  needed that weight added to its `next/font` config in `app/layout.tsx`, it was
-  previously only loaded at 600/700) and ~4.5% opacity. Left edge fades via `mask-image:
-  linear-gradient(to right, transparent, black 18%)` so it dissolves into the sidebar
-  instead of cutting off hard — `Sidebar`'s `<aside>` got `relative z-20` alongside this
-  so its own content always paints above that bleed.
+## Component conventions (`/components`)
 
-## Component conventions established (in `/components`)
+- `PageShell` — wraps every route's page content: padding, `overflow-hidden`, mounts
+  `Watermark`, a `relative z-10` content wrapper. Top padding is
+  `style={{ paddingTop: "var(--sidebar-title-top, 3rem)" }}`.
+- `Watermark` — see "Watermark" section above.
+- `PageHeading` — the eyebrow + big `h2` at the top of every page. Two things worth
+  knowing:
+  1. The eyebrow measures its own rendered height (`useLayoutEffect`) and pulls itself
+     up via negative `marginTop` equal to that height, so the *heading* text lands
+     exactly at the top of `PageShell`'s padding box (aligns with the sidebar name).
+  2. **The eyebrow text itself is now visually hidden** (`opacity-0 aria-hidden="true"`)
+     but keeps its layout height — so "About"/"Experience"/etc. no longer render as
+     visible small-caps labels above each heading, but the heading's vertical position
+     is unaffected (the invisible eyebrow still occupies the same space it always did).
+- `Sidebar` — persistent, client component, width `clamp(360px,40vw,640px)`. Fixed on
+  `md:`+, stacks in normal flow on mobile. Content group (name, tagline, `DialNav`,
+  socials) vertically centered via `justify-center`, gap `gap-8` (was `gap-10`,
+  tightened per request). A `useLayoutEffect` measures the name `<h1>`'s
+  `getBoundingClientRect().top` and writes it to `--sidebar-title-top` on
+  `document.documentElement`, which `PageShell` reads for its top padding. **Several
+  attempts were made this session to eliminate the resulting load-time "flash" (page
+  content briefly at the wrong vertical position before snapping into place) via a
+  pre-paint blocking `<script>` — all were tried, debugged, and ultimately reverted**;
+  the mechanism is back to the original post-hydration-only `useLayoutEffect`. The
+  flash is a known, currently-unresolved cosmetic issue on hard refresh. Social icons
+  (bottom of sidebar) are solid purple badges (`bg-accent` / `hover:bg-accent-deep`)
+  with the glyph colored via `text-[var(--color-base)]` so it reads as a cutout against
+  the purple rather than a separately-colored icon.
+- `DialNav` — scrollable "dial" nav, unchanged in mechanism from initial build (tripled
+  list for seamless wraparound, CSS scroll-snap, edge-fade mask, auto-navigate ~160ms
+  after scroll settles, `Cmd+Arrow` support). **A fix for the initial-scroll-position
+  flash on page load (rendering the correct offset via CSS transform on first paint,
+  computed deterministically from the current route, then handing off to native
+  `scrollTop` post-mount) was implemented, verified working, but then explicitly
+  reverted per request** — not currently live. If revisited, the approach is sound
+  (unlike the sidebar's flash, this one *is* fully deterministic from the pathname
+  alone, no viewport measurement needed) — the git history around commit range
+  `dff4dd0..a48c302` has the working version to reference.
+- `Pill` / `Tag` — `Pill` and `Tag` both now use `bg-card-tint` / `bg-tag-bg`
+  respectively (see "Design tokens" above) instead of the original flat
+  `bg-panel`/`bg-panel-alt`.
+- `TechIcon` — Skills-page tech logo tile with hover/focus tooltip. Two icon sources
+  now, both in `components/TechIcon.tsx`:
+  - `iconMap` — real brand marks via `simple-icons` (unchanged approach from initial
+    build: single SVG path, filled with the brand's own hex via `#${icon.hex}`).
+  - `extraIconMap` (**new**) — single-path marks sourced from the `devicon` npm
+    package (MIT licensed; not an installed dependency, just used once to extract path
+    data, which now lives hardcoded in `TechIcon.tsx`) for brands `simple-icons` has
+    dropped for trademark-enforcement reasons but that still have a usable devicon
+    "plain" (monochrome) variant: **C#, Java, Azure, Premiere Pro, After Effects,
+    Photoshop, Illustrator**. Rendered the same way as `iconMap` entries but colored via
+    each skill's own `color` field instead of a baked-in hex, and using each icon's own
+    `viewBox` (devicon's are `0 0 128 128`, not simple-icons' `0 0 24 24`).
+  - Still-missing brands with no real logo anywhere reasonable: **AWS** (devicon only
+    has a wide wordmark, not a standalone glyph) and **Mockito** (not in either
+    library) — both fall back to the hex-badge (`abbr` + `color`).
+- `SkillRow` — **now click-to-open, not hover-to-open** (was hover-triggered
+  originally; changed because hover was fighting with the tooltip hover state). Also
+  **now a controlled component** — `open`/`onToggle` are props, not local state — so
+  the Skills page can drive an "Expand all"/"Collapse all" button (see below). Category
+  avatar icons (`CodeBracketsIcon` etc. from `components/icons.tsx`) unchanged.
+- `components/icons.tsx` — added `CloseIcon` and `ArrowLeftIcon` since initial build;
+  removed `BreadcrumbArrowIcon` (no longer used, see Projects below) and `ArrowDownIcon`
+  (removed with the About-page scroll indicator, an earlier-session change).
 
-- `PageShell` — wraps every route's page content: gives padding, `overflow-hidden`,
-  mounts `Watermark`, and a `relative z-10` content wrapper. Takes `watermark` (section
-  name string). **Every new page should be wrapped in this.** Top padding is
-  `style={{ paddingTop: "var(--sidebar-title-top, 3rem)" }}` instead of a plain Tailwind
-  class — see `Sidebar`/`PageHeading` below for why; horizontal padding and `pb-*` are
-  still normal Tailwind classes.
-- `DecorShapes` (the thin-stroke outline circle/square/triangle/venn background shapes)
-  was removed entirely per explicit request ("get rid of them i only want the
-  watermarks to be the background") — `PageShell` no longer takes a `variant` prop,
-  and it was stripped from every page's `<PageShell>` call.
-- `Watermark` — client component (`"use client"`; needs `useLayoutEffect` to measure
-  itself). Renders 44 rows × 2 duplicated copies × 8 repeats of the word, each row's
-  `animation-duration` set via a `--watermark-duration` CSS var computed from that row's
-  *actual measured width* divided by a constant `PIXELS_PER_SECOND` (6, slowed down from
-  an initial 12 per request) — this is
-  deliberate, not a fixed duration: it's what makes the scroll speed visually identical
-  across pages despite "RECOMMENDATIONS" and "SKILLS" producing very different track
-  widths at the same 8-repeat count. Re-measures on resize via `ResizeObserver`. Two
-  earlier bugs worth knowing about if this breaks again: (1) the per-row wrapper used to
-  have `overflow: hidden` + `line-height: 1`, which clipped the tops of glyphs — fixed
-  by dropping the row-level clip (the fixed outer field already clips at the viewport
-  edge) and raising `line-height` to 1.3; (2) word-to-word spacing was originally
-  `padding-inline` on each span (reads as one run-on string) — switched to a `gap` on
-  the flex row instead.
-- `PageHeading` — the eyebrow + big `h2` at the top of every page (`<PageHeading
-  eyebrow="Skills">My Expertise</PageHeading>`), used by all 10 section pages and by
-  `StubSection`. Client component: measures its own eyebrow's rendered height and pulls
-  it up via a negative `marginTop` equal to that height, so the *heading* text (not the
-  eyebrow) lands exactly at the top of `PageShell`'s padding box. This exists purely to
-  make the heading align with the sidebar name — see below. A first attempt at this
-  hardcoded a guessed 24px offset instead of measuring; it was visibly off (bottoms
-  didn't quite line up) and got replaced with this self-measuring version.
-- `Sidebar` — persistent, client component, width `clamp(360px,40vw,640px)` (not a
-  fixed px value — sized to look proportionally "big" per an explicit brief request).
-  Fixed on `md:`+, stacks in normal flow on mobile. Its whole content group (name,
-  tagline, `DialNav`, socials) is vertically centered via `justify-center` on the outer
-  flex column — **this is intentional, keep it**, a prior attempt at top-anchoring the
-  name broke this and had to be reverted. Because that centering is dynamic (depends on
-  viewport height), the name's on-screen position isn't a fixed constant, so alignment
-  with each page's heading is done live: a `useLayoutEffect` measures the name `<h1>`'s
-  `getBoundingClientRect().top` (re-measured on resize via `ResizeObserver` + a resize
-  listener) and writes it to `--sidebar-title-top` on `document.documentElement`, which
-  `PageShell` reads for its top padding. Below the `md:` breakpoint the sidebar isn't
-  fixed/centered (stacks above content instead), so the sync is skipped there and
-  `--sidebar-title-top` is removed, falling back to `PageShell`'s static padding.
-  Reads from `lib/data/profile.ts`; nav is delegated to `DialNav`.
-- `DialNav` — replaced the old flat nav `<Link>` list. A scrollable "dial"/reel: fixed
-  `324px`-tall (`ROW_HEIGHT=36 * VISIBLE_ROWS=9`, i.e. 4 rows visible above/below the
-  centered item — row height tightened from an original 44px per request) container
-  with CSS `scroll-snap`, edge fade via a 10-stop `mask-image`
-  (not per-row opacity, and not linear — eases out over the 4 neighbor rows for a
-  natural falloff). Renders `navItems` **3x** ("tripled list") and silently jumps
-  `scrollTop` by one list-length when nearing the array bounds, so scrolling past the
-  last item wraps seamlessly into the first (and vice versa) — no dead end at either
-  end of the list. A static pill-shaped rail (flat translucent fill, not a gradient —
-  a brightness bump at the rail's center was tried and rejected, it read as a
-  distracting glow sliding past during transitions) sits behind uniform tick-mark
-  dashes; the focused tick is plain white with no shadow/blur (a glow/shine treatment
-  was tried and explicitly rejected in favor of flat white). Live-tracks scroll
-  position (`onScroll` → nearest-row index, mod'd back into `[0,N)` for lookups) to
-  update styling in real time, then **auto-navigates** to whichever item settles at
-  center ~160ms after scrolling stops (`router.push`, debounced via a timer reset on
-  every scroll event). The pathname-sync `useEffect` steps from the dial's *actual*
-  current raw index using a shortest-signed-delta helper — it must NOT renormalize
-  back into a "canonical" copy of the tripled list, which was a real bug: it caused
-  About→Contact (adjacent across the wrap point) to animate a long slide across
-  nearly the whole list instead of the correct one-row hop. Also handles nested routes
-  (e.g. `/projects/shelfie` still highlights "Projects") via a `startsWith` prefix
-  fallback in `findActiveIndex`. Uses a hand-rolled `.no-scrollbar` utility in
-  `globals.css` (Tailwind has no built-in one) to hide the native scrollbar. Reads
-  from `lib/data/nav.ts`.
-- `Pill` / `Tag` — small rounded-pill components for badges (education/location pills)
-  vs. tech tags respectively (subtly different styling — Pill has a border+icon slot,
-  Tag is a flat accent-tinted chip for tech-stack lists). `Pill` is deliberately
-  translucent (`bg-panel/40` + `backdrop-blur-[3.8px]`) rather than a solid panel, per
-  request — same treatment on `SkillRow`'s card (`bg-transparent` + the same blur
-  amount) so the watermark shows through both. The exact blur radius was tuned by eye
-  across several rounds (2px read too sharp, 4px/6px too heavy) — if this needs
-  revisiting, treat 3.8px as a rough middle, not a precise target.
-- `TechIcon` — the Skills-page tech logo tile with hover/focus tooltip (shows
-  `skill.name.toUpperCase()`, e.g. hovering Python shows "PYTHON"). Renders a real brand
-  mark via the `simple-icons` npm package (added as a dependency specifically for this —
-  it's tree-shakeable, `sideEffects: false`, named per-icon ESM exports, so only the ~35
-  icons actually imported end up in the client bundle) colored with the brand's own hex.
-  Falls back to a colored hex-badge (`skill.abbr` on `skill.color`) for skills
-  `simple-icons` doesn't have — notably **C#, Java, AWS, Azure, and the whole Adobe
-  suite are missing from simple-icons** (that library drops brands with aggressive
-  trademark enforcement), not an oversight. A few available icons (`Express`, `Next.js`,
-  `Vercel`, `TikTok`) have official colors that are pure black — those are flagged
-  `monochrome: true` in `lib/data/skills.ts` so `TechIcon` renders them via
-  `currentColor`/`text-ink` instead of their literal hex, or they'd vanish against a
-  same-tone tile in dark mode. See `lib/data/skills.ts` for the full per-skill mapping.
-  **Bug fixed**: tooltips were being rendered but invisible — `SkillRow`'s
-  expand/collapse wrapper (the `grid-rows-[0fr]`→`[1fr]` height-animation trick) has an
-  `overflow-hidden` div sized tightly to the icon row, and the tooltip pops *upward*
-  outside that box (`-top-9`), so it was getting clipped by that same ancestor. Fixed by
-  switching that div's overflow to `visible` once the row is actually open (still
-  `hidden` while collapsed, so the animation itself still looks right):
-  `className={hovered ? "overflow-visible" : "overflow-hidden"}` in `skill-row.tsx`.
-- `SkillRow`'s category avatar (the icon left of "Languages", "Back-end", etc.) uses a
-  per-category icon from `components/icons.tsx` (`CodeBracketsIcon`, `SlidersIcon`,
-  `GlobeIcon`, `DatabaseIcon`, `CloudIcon`, `SparkleIcon`, `FlaskIcon`, `WrenchIcon`,
-  `FilmStripIcon`, `PaintbrushIcon`, `ShareNetworkIcon`), looked up by `category.id` in
-  a `categoryIcons` map in `skill-row.tsx` — replaced the original first-letter-of-label
-  avatar.
-- `components/icons.tsx` — hand-authored inline SVGs (Github/LinkedIn/Instagram/Mail/
-  Download/ChevronDown/Play/Quote/BreadcrumbArrow, plus the category icons above). No
-  general-purpose icon library dependency — `simple-icons` (above) is brand logos only.
+## Data layer (`/lib/data/*.ts`)
 
-## Data layer (`/lib/data/*.ts`) — DONE
+- `nav.ts` — **Open Source, Certifications, and Bonus are commented out**, not
+  deleted — their pages/routes still exist and work if visited directly, they're just
+  not linked from the dial nav for now. Uncomment the three entries to bring them back.
+- `profile.ts` — real GitHub (`github.com/gdivecha`) and LinkedIn
+  (`linkedin.com/in/gauravcdivecha`) URLs. Instagram removed entirely (was a `"#"`
+  placeholder, user chose to drop it rather than fill it in). Roles list has
+  "Content Creator" commented out (user edit — SWE + Artist only, for now). Tagline
+  rewritten to real copy.
+- `skills.ts` — significantly changed from the original 11-category placeholder set:
+  - **Removed**: GraphQL, Express (backend); Redis (database); PyTorch, TensorFlow,
+    scikit-learn (AI & ML — that category was Python-ML-tooling focused, now it's
+    AI-coding-tool focused instead); Cypress (testing, replaced by Mockito).
+  - **Added**: Axios, Material UI (frontend); Claude Code, Cursor (AI & ML, alongside
+    OpenAI API); Mockito (testing, hex-badge fallback — no logo available).
+  - **Real logos added** for C#, Java, Azure, Premiere Pro, After Effects, Photoshop,
+    Illustrator (see `TechIcon` above) — these previously showed only an abbreviation
+    badge.
+  - The Skills page currently only shows the `"engineering"` group by default (see
+    `app/(sections)/skills/page.tsx` below) — the `"content"` group (video-editing,
+    graphic-design, social-media categories) still exists in this file, just isn't
+    rendered right now.
+- `experience.ts` — **replaced with real history**, pulled from the user's actual
+  LinkedIn profile (screenshots provided directly). 8 entries, in order: Prestar
+  (Software Developer, Co-op), Amazon ×2 (FBA Inbound Placement Team + FBA
+  Transportation Xperience Team — two separate internships, different summers),
+  Dayforce ×3 (Performance Engineering Team, two separate terms + Software Test
+  Engineer/Web Framework Team), Ryerson International Hyperloop ×2 (Assistant Team
+  Lead + Data Acquisition Member). The old "Acme Technologies" full-time placeholder
+  and "Independent"/Content Creator freelance entry are commented out (user edit), not
+  deleted. **`summary` changed from `string` to `string[]`** — originally bullet
+  points (matching the real LinkedIn bullet-point source content), then changed again
+  per request to render as a single joined paragraph (`experience.summary.join(" ")`
+  in `experience-card.tsx`) rather than an actual bulleted list — the type stayed
+  `string[]` even though it now always renders as prose. `challenges`/`growth` (the
+  site's own reflective Q&A format, which LinkedIn doesn't have) were written fresh,
+  grounded in each role's specific real content, not generic placeholders. Added a
+  `logoSrc?: string` field — Amazon, Dayforce, Prestar, and Ryerson Hyperloop all have
+  real logos in `public/logos/`; `ExperienceCard` falls back to the diagonal-stripe
+  `ImagePlaceholder` when a role has no `logoSrc`.
+- `projects.ts` — unchanged in content (still the original 6 placeholder projects
+  across full-stack/backend/hackathon). The "Hackathon" filter chip was removed from
+  the Projects page UI (see below) but the underlying `hackathon` category and its 2
+  projects are untouched — they still show up under "All".
+- `recommendations.ts` — **substantially rewritten**:
+  - **`PreviewQuote` is a new, separate type/array** (`previewQuotes`) from the full
+    `Recommendation[]` (`recommendations`). The top-of-page preview grid used to reuse
+    full `Recommendation` entries (with citation); now it's short, hand-picked,
+    uncited excerpts that are fully decoupled from any specific recommender — edit
+    `previewQuotes` directly for the preview cards, edit `recommendations` for the
+    "Interested in reading more?" section, they're independent.
+  - Real recommendation text, recommenders, and LinkedIn links replacing the original
+    placeholder testimonials (user-provided).
+  - **Grouping bug fixed**: the "Interested in reading more?" section groups
+    recommendations into cards — originally keyed by `role` text, which both (a) broke
+    when a role string had a typo, and (b) was conceptually wrong anyway, since Amazon
+    reused the same generic role title across different summer internships. Now keyed
+    by `term` instead, in `app/(sections)/recommendations/page.tsx`.
 
-All typed, all populated with clearly-placeholder content:
-- `nav.ts` — the 10 nav items, settled order per brief.
-- `profile.ts` — name/roles/tagline/bio paragraphs/education/location/socials. GitHub
-  social link is REAL (`github.com/gdivecha`, confirmed via `gh auth status` earlier in
-  session). LinkedIn/Instagram are `"#"` placeholders — deliberately not fabricated,
-  marked `// TODO`.
-- `skills.ts` — all 11 categories from the brief (8 engineering + 3 content), each with
-  3-6 tech tags. Each tag is `{name, abbr, icon?, color?, monochrome?}` — `icon` is a key
-  into `TechIcon`'s `iconMap` (real `simple-icons` brand logo) when one exists; `abbr` +
-  `color` are the hex-badge fallback for the ones that don't. See `TechIcon` above.
-- `experience.ts` — 5 entries: 1 explicit full-time placeholder ("Acme Technologies",
-  obviously fake company name on purpose so it reads as a slot to fill), Amazon +
-  Dayforce as internships, Ryerson International Hyperloop + "Independent" content
-  creation as freelance. Chose these companies because they're the same three named in
-  the brief's Recommendations section (Dayforce/Amazon/Ryerson Hyperloop) — kept
-  consistent across pages rather than inventing unrelated placeholder companies.
-- `projects.ts` — 6 projects spread across full-stack/backend/hackathon categories, each
-  with 3 alternating detail blocks (lorem-ish) matching the brief's "alternating
-  image/text" repeatable block spec.
-- `recommendations.ts` — 8 testimonials across the 4 categories (software-engineering/
-  content-creation/artist/freelance) and 3 companies (matches experience.ts companies).
-  Recommender names are generic placeholder names (deliberately NOT real people) to
-  avoid misattributing invented quotes to anyone real. Also exports
-  `recommendationCategories` and `recommendationCompanies` lookup arrays for the filter
-  tabs.
+## Pages — current state vs. original build
 
-## STATUS: all 12 build-order tasks complete. Full build verified clean.
-
-Every route exists and `NODE_ENV=production npm run build` (with the Homebrew PATH
-prefix) passes with 0 type errors, 0 lint errors, 0 `npm audit` vulnerabilities, all
-21 static pages generated. Also spot-checked at runtime: started `npm run dev` and
-fetched every route with Node's `fetch` (curl/head are blocked in this shell — use
-`node -e` with `fetch()` instead if you need to re-check), confirming HTTP 200 (307 on
-`/` → `/about`) and no `Application error` / `Unhandled Runtime Error` /
-`Internal Server Error` markers in the HTML. **Not yet verified in an actual browser**
-— no Chrome extension was connected in that session; a real visual pass (does the
-gradient wordmark render, do hover states look right, does the masonry actually look
-like masonry, is spacing/rhythm good) is still outstanding and worth doing before
-calling this "done" done.
-
-- `app/layout.tsx` — root layout, loads Poppins+Inter, sets metadata, applies
-  `bg-base text-ink` on body.
-- `app/page.tsx` — redirects `/` → `/about` (server-side `redirect()`, no client flash).
-- `app/(sections)/layout.tsx` — route group layout wrapping all section pages with
-  `<Sidebar />` + a `md:ml-[clamp(360px,40vw,640px)]` offset main panel (must match
-  `Sidebar`'s own width exactly, or the two will gap/overlap).
-- `app/(sections)/about/page.tsx` + `scroll-indicator.tsx` — single stacked column
-  (not the original two-column layout): `PageHeading`, then a photo+pills row (photo
-  left, education/location/"Available for opportunities" `Pill`s stacked to its right,
-  bottom-aligned with the photo), then bio paragraphs below, all left-aligned right
-  after the sidebar. Normal top-anchored flow — an earlier version force-fit everything
-  into one viewport height with `h-[calc(100dvh-...)]` + `overflow-y-auto` to avoid
-  scrolling, but that was explicitly reverted: scrolling is fine, only the heading's
-  starting position needs to align (see `PageHeading`). Emoji icons (🎓/📍/🟢) are
-  intentional — literal per the brief/requests, not meant to be swapped for an icon set.
-- `app/(sections)/skills/page.tsx` + `skill-row.tsx` — Software Engineering/Content
-  Creation filter toggle, hover-to-expand category rows (CSS grid-rows trick for smooth
-  height animation, not JS-measured height), `TechIcon` tooltips on hover/focus.
-- `app/(sections)/experience/page.tsx` + `experience-card.tsx` — Full-Time/Internships/
-  Freelance filter tabs with counts, expandable cards revealing the 3 Q&A blocks +
-  an `ImagePlaceholder`.
-- `app/(sections)/projects/page.tsx` + `project-card.tsx` +
-  `[slug]/page.tsx` — All/Full-Stack/Back-end/Hackathon filter tabs with counts, 2-col
-  grid linking to a dynamic detail route (`generateStaticParams` from `projects.ts`
-  slugs, `notFound()` on bad slug). Detail page: breadcrumb, video mock with `PlayIcon`
-  overlay (links out if `videoUrl` isn't `"#"`), alternating image/text blocks mapped
-  from `project.details`.
-- `app/(sections)/recommendations/page.tsx` + `quote-card.tsx` + `role-card.tsx` +
-  `recommender-entry.tsx` — most complex page, two independent filter states (category
-  for the masonry quote grid via CSS `columns-2` + `break-inside-avoid`; company for
-  the "Interested in reading more?" section). Company section groups recommendations
-  by role, each role card expands to per-recommender entries with a `line-clamp-2` +
-  "See more" toggle.
-- `app/(sections)/portfolio/page.tsx` — iframe embed of `/resume.pdf` + download
-  button. **`public/resume.pdf` is a generated placeholder** (made with macOS's
-  built-in `cupsfilter` text→PDF converter, not fabricated resume content) — it
-  literally says "Placeholder Resume — replace this file" when opened. Swap in the
-  real PDF at `public/resume.pdf` (same filename) whenever it's ready; no code changes
-  needed.
-- `app/(sections)/contact/page.tsx` + `contact-form.tsx` — white card (deliberate
-  high-contrast break from the dark theme, per brief) with black `MailIcon` + teal
-  accent lines, then a standard dark-panel form below. Client-side only: submitting
-  just flips to a "thanks — no backend wired up yet" confirmation state, no real send.
-- `app/(sections)/{open-source,certifications,bonus}/page.tsx` — all three use the new
-  shared `components/StubSection.tsx` (dashed-border panel, body copy +
-  "Real content to follow" label), each with page-specific copy.
-- Old scaffold placeholder SVGs deleted from `/public`.
+- `app/(sections)/skills/page.tsx` — **the Software Engineering/Content Creation
+  toggle was removed**; the page always shows the `"engineering"` group only. Added an
+  "Expand all"/"Collapse all" button above the category list (`SkillRow` is now
+  controlled from here, see above).
+- `app/(sections)/experience/page.tsx` — **the Full-Time/Internships/Freelance filter
+  row was removed**; the page always shows `type === "internship"` entries only
+  (which is currently all 7 of the non-Ryerson entries — Ryerson is `"freelance"` and
+  so doesn't show; Prestar/Amazon/Dayforce are all `"internship"`).
+- `app/(sections)/projects/page.tsx` — the "Hackathon" filter chip was removed from
+  `FILTERS` (All/Full-Stack/Back-end remain). `ProjectCard` now uses the
+  `bg-card-tint`/`backdrop-blur-[3.8px]` translucent treatment (was flat `bg-panel`).
+- `app/(sections)/projects/[slug]/page.tsx` — the "Projects > ProjectName" breadcrumb
+  nav was replaced with a simple `← Projects` back-arrow link (`ArrowLeftIcon`).
+- `app/(sections)/recommendations/page.tsx` — **the category tab row (Software
+  Engineering/Content Creation/Artist/Freelance) was removed**; the page always shows
+  `"software-engineering"` only. The per-company toggle in "Interested in reading
+  more?" is unchanged. `QuoteCard` and `RoleCard` both use the translucent
+  `bg-card-tint` treatment now, and `QuoteCard` no longer wraps its text in decorative
+  quote marks (`&ldquo;`/`&rdquo;` removed) since the preview text isn't attributed to
+  anyone anymore.
+- `app/(sections)/portfolio/page.tsx` — removed the white "mail icon" decorative
+  header block that used to sit above the résumé card (that block was actually
+  copy-pasted onto Contact originally, wasn't meant for both — see Contact below); the
+  résumé card itself uses the translucent treatment; the redundant "My Résumé" caption
+  under the PDF preview was removed (the page heading already says that); the Download
+  button is right-aligned instead of split with the caption.
+- `app/(sections)/contact/page.tsx` + `contact-form.tsx` — the white card + black
+  `MailIcon` decorative header was removed entirely. The form card uses the
+  translucent treatment. **Field labels above each input were removed** — each
+  field's name is now its `placeholder` text (kept as `aria-label` too, so the label
+  isn't lost for screen readers once the user starts typing). Inputs use the new
+  `--color-input-bg` token. "What is it regarding?" was renamed to "Subject".
+- `app/(sections)/{open-source,certifications,bonus}/page.tsx` — unchanged
+  (`StubSection`), just no longer linked from nav (see `nav.ts` above).
 
 ## Open items / still outstanding
 
-- **Résumé PDF is now the real file** (`public/resume.pdf`, swapped in over the old
-  `cupsfilter`-generated placeholder).
-- **About page photo is now real** (`public/profile.png`), swapped in over the "GD"
-  gradient-initial placeholder tile via `next/image` (`fill` + `object-cover` inside the
-  existing rounded-square frame).
-- **No real visual/browser QA yet** — build + HTTP-level checks pass, but nobody has
-  looked at this in an actual browser. Worth doing before treating it as finished:
-  gradient wordmark rendering, hover/expand animations, masonry layout, spacing.
-- Mobile/responsive treatment beyond the sidebar's stack-on-mobile behavior hasn't been
-  specifically discussed with the user — current approach (sidebar becomes a normal
-  top block below `md:` breakpoint) is a reasonable default but not brief-specified.
-- LinkedIn/Instagram social links in `lib/data/profile.ts` are still `"#"`
-  placeholders — only GitHub is real.
-- All experience/project/recommendation content is placeholder text — see the
-  "Data layer" section above for what's real (GitHub link, company names matching
-  across pages) vs. invented (specific dates, quotes, recommender names).
+- **The sidebar-alignment load-time flash is unresolved** — see `Sidebar` above.
+  Several fix attempts were made and reverted; the underlying issue (the sidebar
+  name's position depends on runtime viewport height, so it can't be rendered
+  correctly on the very first paint the way `DialNav`'s analogous issue could) is
+  still real if revisited.
+- **No real visual/browser QA this session either** — no Chrome extension connected,
+  all verification was `tsc`/`eslint`/HTTP-level HTML checks. Several rounds of
+  "why did X break" this session (backdrop-blur disappearing, the sidebar snap
+  persisting, watermark speed "not changing") turned out to be either a real bug
+  caught via user visual feedback, or a stale dev-server/Fast-Refresh issue — meaning
+  the lack of direct visual access has been a real, repeated source of iteration
+  overhead, not just a theoretical gap.
+- Mobile/responsive treatment beyond the sidebar's stack-on-mobile behavior still
+  hasn't been specifically discussed.
+- Projects page content (`projects.ts`) is still the original placeholder set — not
+  yet revisited with real project details the way Skills/Experience/Recommendations
+  were.
+- An admin page (edit hidden/visible sections + content from a UI) was discussed and
+  explicitly declined in favor of continuing to hand-edit `lib/data/*.ts` directly —
+  the tradeoffs (added auth/DB attack surface vs. convenience) are worth revisiting
+  only if that becomes genuinely painful.
 
 ## Git / hosting state
 
-- Repo is live at **https://github.com/gdivecha/my-site** (public), `main` branch. Only
-  commit/push when explicitly asked — don't push silently.
+Repo is live at **https://github.com/gdivecha/my-site** (public), `main` branch. Only
+commit/push when explicitly asked. Recent commit history (newest first) roughly
+tracks the sections above:
+`a48c302` Skills expand-all/collapse-all, watermark/font tuning ·
+`dff4dd0` Real recommendations content, fix Amazon term grouping ·
+`b79682b` Real Experience content, more brand logos, profile link fixes ·
+`34e49fc` Project card blur treatment, back-arrow instead of breadcrumb ·
+`ed80fd4` Theme-aware dial tick color, purple social icon badges, input bg tweak ·
+`9f49467` Hide unfinished sections and simplify filters to a single default view ·
+`4ccce5d` Custom cursor, decoupled recommendation previews, contact form and
+theme-token polish · `aac8ed8` Theme-aware tint tokens for translucent cards and
+tag/badge backgrounds · `4a513b5` Sidebar spacing/color tweaks, hide page eyebrow
+labels, restyle résumé card · `ce7099e` Skills accordion click-to-open, Experience
+card redesign · `1762000` Real tech logos on Skills page, keyboard shortcuts, type/
+visual polish.
