@@ -36,7 +36,7 @@ html {
 
   /* translucent card tint (Skills, Experience, Portfolio, Pill) */
   --color-card-tint: rgba(48, 49, 81, 0.15);
-  --color-card-tint-hover: rgba(48, 49, 81, 0.25);
+  --color-card-tint-hover: rgba(58, 59, 96, 0.3);
 
   /* Tag chip background (skill/tech tags) */
   --color-tag-bg: var(--color-panel-alt);
@@ -87,7 +87,7 @@ html {
 
   /* translucent card tint — white wash instead of the dark hue, same opacity */
   --color-card-tint: rgba(255, 255, 255, 0.03);
-  --color-card-tint-hover: rgba(109, 95, 232, 0.07);
+  --color-card-tint-hover: rgba(109, 95, 232, 0.11);
 
   /* Tag chip background — panel-alt is too close to the page background
      here, so use a visible purple wash instead. */

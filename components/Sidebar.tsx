@@ -19,8 +19,11 @@ const socialIcons = {
 export function Sidebar() {
   const nameRef = useRef<HTMLHeadingElement>(null);
 
-  // Keeps each page's header in sync with wherever the (vertically centered,
-  // viewport-height-dependent) name ends up — see PageShell's paddingTop.
+  // Publishes wherever the (vertically centered, viewport-height-dependent)
+  // name's *bottom* edge ends up — PageHeading reads this to line up each
+  // page's heading bottom-to-bottom with the name, not top-to-top (the two
+  // sit at different font sizes, so top-aligning them left the bottoms
+  // uneven).
   useLayoutEffect(() => {
     const el = nameRef.current;
     if (!el) return;
@@ -30,13 +33,15 @@ export function Sidebar() {
       // in normal flow above the content, so a measured offset wouldn't be
       // meaningful — fall back to PageShell's default padding instead.
       if (window.innerWidth < 768) {
-        document.documentElement.style.removeProperty("--sidebar-title-top");
+        document.documentElement.style.removeProperty(
+          "--sidebar-title-bottom"
+        );
         return;
       }
-      const top = el.getBoundingClientRect().top;
+      const bottom = el.getBoundingClientRect().bottom;
       document.documentElement.style.setProperty(
-        "--sidebar-title-top",
-        `${top}px`
+        "--sidebar-title-bottom",
+        `${bottom}px`
       );
     };
 

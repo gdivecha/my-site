@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
+import { Tag } from "@/components/Pill";
 import { education } from "@/lib/data/education";
+import { CourseCard } from "./course-card";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -42,35 +45,42 @@ export default function AcademicsPage() {
 
       <div className="mt-8 max-w-2xl">
         {tab === "overview" && (
-          <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
-            <h3 className="text-lg font-semibold text-ink">
-              {education.school}
-            </h3>
-            <p className="mt-1 text-sm text-accent-soft">{education.degree}</p>
-            <p className="mt-3 text-xs text-ink-faint">
-              {education.dateRange}
-            </p>
-            <p className="text-xs text-ink-faint">{education.location}</p>
-            <p className="mt-5 text-sm leading-relaxed text-ink-soft">
+          <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover md:p-8">
+            <div className="flex items-start gap-5">
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-white sm:h-28 sm:w-28">
+                <Image
+                  src={education.logoSrc}
+                  alt={`${education.school} logo`}
+                  fill
+                  sizes="112px"
+                  className="object-contain p-3"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-semibold text-ink">
+                  {education.school}
+                </h3>
+                <p className="mt-1 text-sm text-accent-soft">
+                  {education.degree}
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Tag>{education.dateRange}</Tag>
+                  <Tag>{education.location}</Tag>
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-6 border-t border-line pt-6 text-sm leading-relaxed text-ink-soft">
               {education.overview}
             </p>
           </div>
         )}
 
         {tab === "coursework" && (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3">
             {education.coursework.map((course) => (
-              <div
-                key={course.title}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-line bg-card-tint p-5 text-center backdrop-blur-[3.8px]"
-              >
-                <span className="text-2xl" aria-hidden="true">
-                  {course.icon}
-                </span>
-                <span className="text-sm font-medium text-ink">
-                  {course.title}
-                </span>
-              </div>
+              <CourseCard key={course.title} course={course} />
             ))}
           </div>
         )}
