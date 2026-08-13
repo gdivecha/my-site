@@ -30,12 +30,15 @@ export default function RecommendationsPage() {
     () =>
       Array.from(
         companyRecs.reduce((map, rec) => {
-          const key = rec.role;
+          // Group by term, not role — the same generic role title can repeat
+          // across different stints (e.g. two separate summer internships),
+          // and those should stay in separate cards.
+          const key = rec.term;
           if (!map.has(key)) map.set(key, []);
           map.get(key)!.push(rec);
           return map;
         }, new Map<string, typeof recommendations>())
-      ).map(([role, recs]) => ({ role, term: recs[0].term, recs })),
+      ).map(([term, recs]) => ({ role: recs[0].role, term, recs })),
     [companyRecs]
   );
 
@@ -80,7 +83,7 @@ export default function RecommendationsPage() {
           <div className="mt-6 flex flex-col gap-4">
             {roleGroups.map((group) => (
               <RoleCard
-                key={group.role}
+                key={group.term}
                 role={group.role}
                 term={group.term}
                 recommendations={group.recs}

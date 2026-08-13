@@ -96,7 +96,7 @@ export const experiences: Experience[] = [
     id: "amazon-fba-transportation",
     company: "Amazon",
     role: "Software Development Engineer Intern",
-    team: "Supply Chain Optimization Technologies — FBA Transportation Xperience Team",
+    team: "SCOT — FBA Transportation Xperience Team",
     dateRange: "May '23 - Aug '23",
     type: "internship",
     tags: ["React.js", "JavaScript", "CI/CD", "AWS"],
