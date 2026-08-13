@@ -3,6 +3,7 @@ import { skillCategories } from "./data/skills";
 import { experiences } from "./data/experience";
 import { projects } from "./data/projects";
 import { recommendations, previewQuotes } from "./data/recommendations";
+import { education } from "./data/education";
 
 export type SearchResult = {
   /** Stable, unique across the whole index — used as the React key, since
@@ -28,7 +29,20 @@ const pageResults: SearchResult[] = navItems.map((item) => ({
   keywords:
     item.href === "/recommendations"
       ? previewQuotes.map((q) => q.quote).join(" ")
-      : undefined,
+      : item.href === "/academics"
+        ? [
+            education.school,
+            education.degree,
+            education.overview,
+            ...education.coursework.map((c) => c.title),
+            ...education.achievements.flatMap((a) => [
+              a.title,
+              a.description,
+            ]),
+          ]
+            .filter(Boolean)
+            .join(" ")
+        : undefined,
 }));
 
 const skillResults: SearchResult[] = skillCategories

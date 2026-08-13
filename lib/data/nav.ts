@@ -8,6 +8,7 @@ export const navItems: NavItem[] = [
   { label: "Skills", href: "/skills" },
   { label: "Experience", href: "/experience" },
   { label: "Projects", href: "/projects" },
+  { label: "Academics", href: "/academics" },
   { label: "Portfolio", href: "/portfolio" },
   { label: "Recommendations", href: "/recommendations" },
   // Hidden for now — pages still exist, just not linked from the dial.
