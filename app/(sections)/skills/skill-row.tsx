@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { TechIcon } from "@/components/TechIcon";
 import {
   CloudIcon,
@@ -31,8 +30,15 @@ const categoryIcons: Record<string, typeof CodeBracketsIcon> = {
   "social-media": ShareNetworkIcon,
 };
 
-export function SkillRow({ category }: { category: SkillCategory }) {
-  const [open, setOpen] = useState(false);
+export function SkillRow({
+  category,
+  open,
+  onToggle,
+}: {
+  category: SkillCategory;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const CategoryIcon = categoryIcons[category.id] ?? CodeBracketsIcon;
 
   return (
@@ -40,7 +46,7 @@ export function SkillRow({ category }: { category: SkillCategory }) {
       <button
         type="button"
         className="flex w-full items-center gap-3 px-6 py-4 text-left"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={onToggle}
         aria-expanded={open}
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tag-bg text-accent-soft">

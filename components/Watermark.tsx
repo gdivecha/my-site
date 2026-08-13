@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 
 const ROWS = 44;
 const REPEATS_PER_COPY = 8;
-const PIXELS_PER_SECOND = 6;
+const PIXELS_PER_SECOND = 9;
 
 export function Watermark({ text }: { text: string }) {
   const fieldRef = useRef<HTMLDivElement>(null);
