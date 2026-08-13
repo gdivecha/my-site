@@ -33,6 +33,17 @@ const FADE_MASK = [
 ].join(", ");
 const FADE_MASK_IMAGE = `linear-gradient(to bottom, ${FADE_MASK})`;
 
+// Same color-stop-gradient technique as FADE_MASK above (not a blur filter,
+// which feathers unevenly) — a clean, symmetric fade for the ScrollHint
+// thumb's top/bottom edges.
+const THUMB_GRADIENT = [
+  "linear-gradient(to bottom",
+  "transparent 0%",
+  "var(--color-accent) 35%",
+  "var(--color-accent) 65%",
+  "transparent 100%)",
+].join(", ");
+
 function findActiveIndex(pathname: string) {
   const exact = navItems.findIndex((item) => item.href === pathname);
   if (exact !== -1) return exact;
@@ -44,6 +55,86 @@ function findActiveIndex(pathname: string) {
 
 function mod(n: number, m: number) {
   return ((n % m) + m) % m;
+}
+
+const HINT_THUMB_HEIGHT = 56;
+
+// One-time scroll cue: a thin track spanning the full height of the dial,
+// with a thumb sweeping from top to bottom and back, then the whole thing
+// fades away for good — reads as "this whole column scrolls" without
+// moving any actual content (which read as a bug when it repeated on its
+// own every 30s) or flooding the sidebar with a big glow (looked cheap).
+function ScrollHint() {
+  const [mounted, setMounted] = useState(true);
+  const [fading, setFading] = useState(false);
+  const thumbRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMounted(false);
+      return;
+    }
+
+    const travel = CONTAINER_HEIGHT - HINT_THUMB_HEIGHT;
+    const easeInOutQuad = (t: number) =>
+      t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+    let frameId: number;
+    let position = 0;
+
+    function animateTo(target: number, duration: number, onDone?: () => void) {
+      const from = position;
+      const delta = target - from;
+      const start = performance.now();
+      function step(now: number) {
+        const t = Math.min((now - start) / duration, 1);
+        position = from + delta * easeInOutQuad(t);
+        if (thumbRef.current) {
+          thumbRef.current.style.transform = `translateY(${position}px)`;
+        }
+        if (t < 1) frameId = requestAnimationFrame(step);
+        else onDone?.();
+      }
+      frameId = requestAnimationFrame(step);
+    }
+
+    animateTo(travel, 900, () => animateTo(0, 900));
+
+    const fadeTimer = window.setTimeout(() => setFading(true), 2000);
+    const removeTimer = window.setTimeout(() => setMounted(false), 2500);
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(removeTimer);
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute left-2 top-0 overflow-hidden"
+      style={{
+        width: RAIL_WIDTH,
+        height: CONTAINER_HEIGHT,
+        maskImage: FADE_MASK_IMAGE,
+        WebkitMaskImage: FADE_MASK_IMAGE,
+      }}
+    >
+      <div
+        ref={thumbRef}
+        className={`rounded-full transition-opacity duration-500 ${
+          fading ? "opacity-0" : "opacity-100"
+        }`}
+        style={{
+          width: RAIL_WIDTH,
+          height: HINT_THUMB_HEIGHT,
+          background: THUMB_GRADIENT,
+        }}
+      />
+    </div>
+  );
 }
 
 /** Shortest signed step from `from` to `to` around an N-item circle. */
@@ -215,6 +306,8 @@ export function DialNav() {
         )}
         <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
       </div>
+
+      <ScrollHint />
     </nav>
   );
 }

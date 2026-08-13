@@ -45,7 +45,7 @@ export default function AcademicsPage() {
 
       <div className="mt-8 max-w-2xl">
         {tab === "overview" && (
-          <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover md:p-8">
+          <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
             <div className="flex items-start gap-5">
               <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-white sm:h-28 sm:w-28">
                 <Image
