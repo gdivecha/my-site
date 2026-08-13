@@ -33,17 +33,6 @@ const FADE_MASK = [
 ].join(", ");
 const FADE_MASK_IMAGE = `linear-gradient(to bottom, ${FADE_MASK})`;
 
-// Same color-stop-gradient technique as FADE_MASK above (not a blur filter,
-// which feathers unevenly) — a clean, symmetric fade for the ScrollHint
-// thumb's top/bottom edges.
-const THUMB_GRADIENT = [
-  "linear-gradient(to bottom",
-  "transparent 0%",
-  "var(--color-accent) 35%",
-  "var(--color-accent) 65%",
-  "transparent 100%)",
-].join(", ");
-
 function findActiveIndex(pathname: string) {
   const exact = navItems.findIndex((item) => item.href === pathname);
   if (exact !== -1) return exact;
@@ -57,85 +46,12 @@ function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }
 
-const HINT_THUMB_HEIGHT = 56;
-
-// One-time scroll cue: a thin track spanning the full height of the dial,
-// with a thumb sweeping from top to bottom and back, then the whole thing
-// fades away for good — reads as "this whole column scrolls" without
-// moving any actual content (which read as a bug when it repeated on its
-// own every 30s) or flooding the sidebar with a big glow (looked cheap).
-function ScrollHint() {
-  const [mounted, setMounted] = useState(true);
-  const [fading, setFading] = useState(false);
-  const thumbRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setMounted(false);
-      return;
-    }
-
-    const travel = CONTAINER_HEIGHT - HINT_THUMB_HEIGHT;
-    const easeInOutQuad = (t: number) =>
-      t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-
-    let frameId: number;
-    let position = 0;
-
-    function animateTo(target: number, duration: number, onDone?: () => void) {
-      const from = position;
-      const delta = target - from;
-      const start = performance.now();
-      function step(now: number) {
-        const t = Math.min((now - start) / duration, 1);
-        position = from + delta * easeInOutQuad(t);
-        if (thumbRef.current) {
-          thumbRef.current.style.transform = `translateY(${position}px)`;
-        }
-        if (t < 1) frameId = requestAnimationFrame(step);
-        else onDone?.();
-      }
-      frameId = requestAnimationFrame(step);
-    }
-
-    animateTo(travel, 900, () => animateTo(0, 900));
-
-    const fadeTimer = window.setTimeout(() => setFading(true), 2000);
-    const removeTimer = window.setTimeout(() => setMounted(false), 2500);
-    return () => {
-      cancelAnimationFrame(frameId);
-      window.clearTimeout(fadeTimer);
-      window.clearTimeout(removeTimer);
-    };
-  }, []);
-
-  if (!mounted) return null;
-
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute left-2 top-0 overflow-hidden"
-      style={{
-        width: RAIL_WIDTH,
-        height: CONTAINER_HEIGHT,
-        maskImage: FADE_MASK_IMAGE,
-        WebkitMaskImage: FADE_MASK_IMAGE,
-      }}
-    >
-      <div
-        ref={thumbRef}
-        className={`rounded-full transition-opacity duration-500 ${
-          fading ? "opacity-0" : "opacity-100"
-        }`}
-        style={{
-          width: RAIL_WIDTH,
-          height: HINT_THUMB_HEIGHT,
-          background: THUMB_GRADIENT,
-        }}
-      />
-    </div>
-  );
-}
+// Quick departure, decelerating into the stop — used for the outbound leg
+// of each swing in the nudge below (a quarter-cosine curve).
+const easeOutSine = (t: number) => Math.sin((t * Math.PI) / 2);
+// Starts and ends at rest, symmetric acceleration/deceleration — used for
+// the final return leg, which starts from a dead stop at the trough.
+const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
 
 /** Shortest signed step from `from` to `to` around an N-item circle. */
 function shortestDelta(from: number, to: number) {
@@ -190,6 +106,71 @@ export function DialNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // One-time scroll nudge on page load: up, down past rest, up again, then
+  // back to rest — three swings whose position over time traces a
+  // sine/cosine curve (quick departure, decelerating into each turning
+  // point) rather than a linear back-and-forth. Snap is briefly disabled
+  // so the swing can land off-grid instead of the browser correcting it
+  // back to a row.
+  const [peeking, setPeeking] = useState(false);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // The down leg travels from +SWING to -SWING in one continuous sweep
+    // (2×SWING total), so this needs to stay under half a row or that
+    // middle leg covers more than a full row and visually blows past the
+    // neighboring tab, reading as a snap. 0.45 leaves a small margin
+    // (2×SWING ≈ 0.9 of a row) while still reading clearly as motion.
+    const SWING = ROW_HEIGHT * 0.45;
+
+    let frameId: number;
+
+    function animate(
+      from: number,
+      to: number,
+      duration: number,
+      ease: (t: number) => number,
+      onDone?: () => void
+    ) {
+      if (!el) return;
+      const delta = to - from;
+      const start = performance.now();
+      function step(now: number) {
+        if (!el) return;
+        const t = Math.min((now - start) / duration, 1);
+        el.scrollTop = from + delta * ease(t);
+        if (t < 1) frameId = requestAnimationFrame(step);
+        else onDone?.();
+      }
+      frameId = requestAnimationFrame(step);
+    }
+
+    const timer = window.setTimeout(() => {
+      if (!el) return;
+      programmatic.current = true;
+      setPeeking(true);
+      const rest = el.scrollTop;
+
+      animate(rest, rest - SWING, 360, easeOutSine, () => {
+        animate(rest - SWING, rest + SWING, 620, easeOutSine, () => {
+          animate(rest + SWING, rest - SWING, 620, easeOutSine, () => {
+            animate(rest - SWING, rest, 600, easeInOutSine, () => {
+              programmatic.current = false;
+              setPeeking(false);
+            });
+          });
+        });
+      });
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timer);
+      cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   // Cmd+Up / Cmd+Down step to the previous/next tab, from anywhere on the page.
   useEffect(() => {
     function handleKeydown(event: KeyboardEvent) {
@@ -227,9 +208,13 @@ export function DialNav() {
       el.scrollTop = rawIndex * ROW_HEIGHT;
     }
 
-    setFocusedRaw(rawIndex);
-
+    // Skip while a programmatic scroll (click, keyboard step, or the
+    // load-time nudge) is in flight — those already set focus explicitly
+    // themselves, and without this guard the swing's off-grid scrollTop
+    // would flip the bold/tick indicator to a neighboring row mid-animation.
     if (programmatic.current) return;
+
+    setFocusedRaw(rawIndex);
 
     if (settleTimer.current) clearTimeout(settleTimer.current);
     settleTimer.current = setTimeout(() => {
@@ -257,7 +242,9 @@ export function DialNav() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="no-scrollbar relative snap-y snap-mandatory overflow-y-auto"
+        className={`no-scrollbar relative overflow-y-auto ${
+          peeking ? "" : "snap-y snap-mandatory"
+        }`}
         style={{
           height: CONTAINER_HEIGHT,
           maskImage: FADE_MASK_IMAGE,
@@ -306,8 +293,6 @@ export function DialNav() {
         )}
         <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
       </div>
-
-      <ScrollHint />
     </nav>
   );
 }
