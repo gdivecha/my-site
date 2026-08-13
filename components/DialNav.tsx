@@ -196,7 +196,7 @@ export function DialNav() {
                 >
                   <span
                     className={`h-[3px] w-3.5 rounded-full transition-all duration-200 ${
-                      focused ? "bg-white" : "bg-ink-faint/50"
+                      focused ? "bg-dial-tick" : "bg-ink-faint/50"
                     }`}
                   />
                 </span>

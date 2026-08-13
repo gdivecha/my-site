@@ -79,7 +79,7 @@ export function Sidebar() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={social.label}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel-alt text-ink-soft transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:bg-accent hover:text-ink"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-all hover:-translate-y-0.5 hover:bg-accent-deep"
               >
                 <Icon className="h-4 w-4" />
               </a>

@@ -5,7 +5,10 @@ export type Social = {
 
 export const profile = {
   name: "Gaurav Divecha",
-  roles: ["Software Engineer", "Artist", "Content Creator"],
+  roles: ["Software Engineer", 
+    "Artist", 
+    // "Content Creator"
+  ],
   tagline:
     "I build full-stack products, make things that look good doing it, and share the process along the way.",
   bio: [

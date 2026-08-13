@@ -41,11 +41,14 @@ html {
   /* Tag chip background (skill/tech tags) */
   --color-tag-bg: var(--color-panel-alt);
 
-  /* Sidebar roles line ("Software Engineer • Artist • Content Creator") */
+  /* Sidebar roles line ("Software Engineer • Artist") */
   --color-roles-text: #c4c9ff;
 
   /* Contact form input background */
-  --color-input-bg: #15161b;
+  --color-input-bg: #0d0d14;
+
+  /* Dial nav: selected item's tick mark */
+  --color-dial-tick: #ffffff;
 }
 
 :root[data-theme="light"] {
@@ -82,6 +85,9 @@ html {
 
   /* Contact form input background */
   --color-input-bg: #ffffff;
+
+  /* Dial nav: selected item's tick mark — white is invisible here */
+  --color-dial-tick: #000000;
 }
 
 @theme inline {
@@ -103,6 +109,7 @@ html {
   --color-card-tint-hover: var(--color-card-tint-hover);
   --color-tag-bg: var(--color-tag-bg);
   --color-roles-text: var(--color-roles-text);
+  --color-dial-tick: var(--color-dial-tick);
   --color-input-bg: var(--color-input-bg);
 
   --font-display: var(--font-poppins);
