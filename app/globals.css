@@ -49,6 +49,10 @@ html {
 
   /* Dial nav: selected item's tick mark */
   --color-dial-tick: #ffffff;
+
+  /* Watermark text */
+  --color-watermark-text: #f8f7fc;
+  --watermark-text-opacity: 0.045;
 }
 
 :root[data-theme="light"] {
@@ -88,6 +92,10 @@ html {
 
   /* Dial nav: selected item's tick mark — white is invisible here */
   --color-dial-tick: #000000;
+
+  /* Watermark text — a slight purple tint instead of plain near-black ink */
+  --color-watermark-text: #8f81ef;
+  --watermark-text-opacity: 0.1;
 }
 
 @theme inline {
@@ -213,8 +221,8 @@ body {
   font-size: clamp(1.5rem, 3.5vw, 2.85rem);
   letter-spacing: 0.06em;
   line-height: 1.3;
-  color: var(--color-ink);
-  opacity: 0.045;
+  color: var(--color-watermark-text);
+  opacity: var(--watermark-text-opacity);
   white-space: nowrap;
 }
 
