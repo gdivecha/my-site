@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Inter } from "next/font/google";
 import { CustomCursor } from "@/components/CustomCursor";
+import { DisableZoomGesture } from "@/components/DisableZoomGesture";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -19,6 +20,16 @@ export const metadata: Metadata = {
   title: "Gaurav Divecha - Software Engineer, Artist, Content Creator",
   description:
     "Portfolio of Gaurav Divecha - Software Engineer, Artist, and Content Creator.",
+};
+
+// Disables pinch-to-zoom on touch devices (Ctrl/Cmd+scroll and trackpad
+// pinch on desktop are handled separately by DisableZoomGesture, since
+// browsers don't expose those as a viewport setting).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -41,6 +52,7 @@ export default function RootLayout({
       <body className="min-h-full bg-base text-ink">
         {children}
         <CustomCursor />
+        <DisableZoomGesture />
       </body>
     </html>
   );
