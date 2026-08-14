@@ -36,7 +36,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       aria-label={
         theme === "light" ? "Switch to dark mode" : "Switch to light mode"
       }
-      className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-all hover:-translate-y-0.5 hover:bg-panel-alt hover:text-ink ${className}`}
+      className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
     >
       {theme === "light" ? (
         <MoonIcon className="h-4 w-4" />

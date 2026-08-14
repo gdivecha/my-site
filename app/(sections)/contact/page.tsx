@@ -8,7 +8,7 @@ export default function ContactPage() {
       <PageHeading eyebrow="Contact">Let&apos;s talk</PageHeading>
 
       <div className="mt-8 max-w-xl">
-        <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover md:p-8">
+        <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
           <ContactForm />
         </div>
       </div>

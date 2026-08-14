@@ -13,17 +13,19 @@ export function PageShell({
   children: ReactNode;
 }) {
   const [visible, setVisible] = useState(false);
+  // Only a genuine first-load wait (before the sidebar's own cascade has
+  // finished) gets the slow cinematic fade. Every ordinary navigation
+  // after that gets an instant reveal (0ms) — the actual bug wasn't a
+  // backdrop-filter rendering delay at all: the CSS transition duration
+  // was hardcoded to ENTRANCE_MS (500ms) for every single page switch,
+  // not just the first, so cards (translucent tint + blur together)
+  // visibly ramped up from invisible on every tab change. That ramp is
+  // what read as "the blur has a delay" — confirmed by extracting actual
+  // video frames of a switch: the card is already fully opaque and
+  // blurred by the second frame (~33ms in), it's just that the preceding
+  // 500ms transition made getting there visibly gradual.
+  const [durationMs, setDurationMs] = useState(0);
 
-  // Waits for the sidebar's own entrance cascade to finish before revealing
-  // page content, so the two don't compete for attention — the dial's own
-  // load-time nudge, in turn, waits for *this* to finish (see Sidebar's
-  // DIAL_NUDGE_DELAY_MS). This part only matters on the very first page
-  // load of a session — PageShell remounts on every navigation, but
-  // APP_LOADED_AT is fixed at module-load time, so on later navigations
-  // the remaining wait is already 0 and content shows immediately. The
-  // watermark below, by contrast, is gated on `visible` itself (not
-  // APP_LOADED_AT), so it fades in alongside content on *every* page open,
-  // not just the first.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setVisible(true);
@@ -33,6 +35,7 @@ export function PageShell({
       0,
       SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
     );
+    setDurationMs(remaining > 0 ? ENTRANCE_MS : 0);
     const timer = setTimeout(() => setVisible(true), remaining);
     return () => clearTimeout(timer);
   }, []);
@@ -42,12 +45,9 @@ export function PageShell({
       className="relative isolate min-h-screen overflow-hidden px-6 pb-12 sm:px-10 md:px-16 md:pb-16"
       style={{ paddingTop: "var(--sidebar-title-top, 3rem)" }}
     >
-      {/* Fades in alongside content, on every page open (not just the
-          first) — gated on `visible` itself rather than the session-wide
-          APP_LOADED_AT timer above, so it re-plays for each tab. */}
       <div
         className={`transition-opacity ease-out ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+        style={{ transitionDuration: `${durationMs > 0 ? 150 : 0}ms` }}
       >
         <Watermark text={watermark} />
       </div>
@@ -55,7 +55,7 @@ export function PageShell({
         className={`relative z-10 transition-all ease-out ${
           visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
         }`}
-        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+        style={{ transitionDuration: `${durationMs}ms` }}
       >
         {children}
       </div>

@@ -166,7 +166,7 @@ export function Sidebar() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={social.label}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-all hover:-translate-y-0.5 hover:bg-accent-deep ${
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-colors hover:bg-accent-deep ${
                   stage >= 5
                     ? "translate-y-0 opacity-100"
                     : "translate-y-2 opacity-0"

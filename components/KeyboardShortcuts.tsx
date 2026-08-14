@@ -50,7 +50,7 @@ export function KeyboardShortcuts({ className = "" }: { className?: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Keyboard shortcuts"
-        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-all hover:-translate-y-0.5 hover:bg-panel-alt hover:text-ink ${className}`}
+        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
       >
         <span className="text-[15px] leading-none">⌘</span>
       </button>
