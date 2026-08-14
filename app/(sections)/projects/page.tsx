@@ -46,7 +46,10 @@ export default function ProjectsPage() {
         })}
       </div>
 
-      <div className="mt-8 grid max-w-4xl gap-6 sm:grid-cols-2">
+      <div
+        key={filter}
+        className="mt-8 grid max-w-4xl gap-6 [animation:tab-panel-in_0.35s_ease-out] motion-reduce:[animation:none] sm:grid-cols-2"
+      >
         {filtered.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}

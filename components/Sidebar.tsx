@@ -4,14 +4,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { profile } from "@/lib/data/profile";
 import {
-  DIAL_POST_CONTENT_DELAY_MS,
+  DIAL_NUDGE_DELAY_MS,
   ENTRANCE_MS,
+  ICONS_DELAY_MS,
+  SIDEBAR_STAGE_DELAYS as STAGE_DELAYS,
   SOCIALS_STAGGER_MS,
 } from "@/lib/entrance-timing";
 import { DialNav } from "./DialNav";
 import { DevpostIcon, GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
-import { ROLE_REVEAL_DURATION_MS, RoleReveal } from "./RoleReveal";
+import { RoleReveal } from "./RoleReveal";
 import { SearchModal } from "./SearchModal";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -22,47 +24,6 @@ const socialIcons = {
   Devpost: DevpostIcon,
 };
 
-// Each stage's delay is the *previous* stage's delay plus how long that
-// stage's own animation actually takes to finish — not a guessed round
-// number — so the next group only starts appearing once the one before it
-// has genuinely settled. Reading/priority order: utility icons, name,
-// roles, tagline, nav, socials. The dial *appears* right here in its
-// normal place in the cascade — only its nudge animation is deferred, see
-// DIAL_NUDGE_DELAY_MS below.
-const ICONS_DELAY = 0;
-const NAME_DELAY = ICONS_DELAY + ENTRANCE_MS;
-const ROLES_DELAY = NAME_DELAY + ENTRANCE_MS;
-const TAGLINE_DELAY = ROLES_DELAY + ROLE_REVEAL_DURATION_MS;
-const NAV_DELAY = TAGLINE_DELAY + ENTRANCE_MS;
-const SOCIALS_DELAY = NAV_DELAY + ENTRANCE_MS;
-
-const STAGE_DELAYS = [
-  ICONS_DELAY,
-  NAME_DELAY,
-  ROLES_DELAY,
-  TAGLINE_DELAY,
-  NAV_DELAY,
-  SOCIALS_DELAY,
-] as const;
-
-/** Wall-clock time (from page load) until the sidebar's own cascade above
- * has finished — the last social icon is the last thing in it, staggered
- * by SOCIALS_STAGGER_MS per icon. Exported so PageShell can wait for this
- * before revealing page content, rather than that content appearing
- * alongside (or before) the sidebar mid-cascade. */
-export const SIDEBAR_CASCADE_DONE_MS =
-  SOCIALS_DELAY +
-  (profile.socials.length - 1) * SOCIALS_STAGGER_MS +
-  ENTRANCE_MS;
-
-/** The dial itself appears on schedule, in the cascade above — but its
- * load-time nudge is deferred until the page's own content (which waits
- * for SIDEBAR_CASCADE_DONE_MS, then takes ENTRANCE_MS to fade in) has
- * fully settled, plus a deliberate pause, so the nudge motion doesn't
- * compete with the right side still animating in. */
-export const DIAL_NUDGE_DELAY_MS =
-  SIDEBAR_CASCADE_DONE_MS + ENTRANCE_MS + DIAL_POST_CONTENT_DELAY_MS;
-
 function stageClass(reached: boolean) {
   return `transition-all ease-out ${
     reached ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
@@ -72,18 +33,27 @@ function stageClass(reached: boolean) {
 export function Sidebar() {
   const nameRef = useRef<HTMLHeadingElement>(null);
   const [stage, setStage] = useState(0);
+  const [iconsVisible, setIconsVisible] = useState(false);
 
   // Drives the entrance cascade below. Skips straight to the end under
   // prefers-reduced-motion so nothing is gated behind a delay.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setStage(STAGE_DELAYS.length);
+      setIconsVisible(true);
       return;
     }
     const timers = STAGE_DELAYS.map((delay, i) =>
       setTimeout(() => setStage((s) => Math.max(s, i + 1)), delay)
     );
-    return () => timers.forEach(clearTimeout);
+    // Deliberately separate from the cascade above — these appear at the
+    // same moment as the page's right-side content and watermark, not on
+    // their own turn in the sidebar's own sequence.
+    const iconsTimer = setTimeout(() => setIconsVisible(true), ICONS_DELAY_MS);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(iconsTimer);
+    };
   }, []);
 
   // Publishes wherever the (vertically centered, viewport-height-dependent)
@@ -125,7 +95,7 @@ export function Sidebar() {
   return (
     <aside className="relative z-20 border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
       <div
-        className={`absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16 ${stageClass(stage >= 1)}`}
+        className={`absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16 ${stageClass(iconsVisible)}`}
         style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
       >
         <SearchModal />
@@ -144,7 +114,7 @@ export function Sidebar() {
             className="font-display text-[30px] font-bold leading-tight md:text-[36px] lg:text-[48px]"
           >
             <span
-              className={`inline-block ${stageClass(stage >= 2)}`}
+              className={`inline-block ${stageClass(stage >= 1)}`}
               style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
             >
               <Link
@@ -167,20 +137,20 @@ export function Sidebar() {
               {profile.roles[0]}
             </span>
             <span className="col-start-1 row-start-1">
-              {stage >= 3 && <RoleReveal />}
+              {stage >= 2 && <RoleReveal />}
             </span>
           </p>
         </div>
 
         <p
-          className={`text-sm leading-relaxed text-ink-soft md:text-[15px] ${stageClass(stage >= 4)}`}
+          className={`text-sm leading-relaxed text-ink-soft md:text-[15px] ${stageClass(stage >= 3)}`}
           style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
         >
           {profile.tagline}
         </p>
 
         <div
-          className={stageClass(stage >= 5)}
+          className={stageClass(stage >= 4)}
           style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
         >
           <DialNav nudgeDelayMs={DIAL_NUDGE_DELAY_MS} />
@@ -197,7 +167,7 @@ export function Sidebar() {
                 rel="noreferrer"
                 aria-label={social.label}
                 className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-all hover:-translate-y-0.5 hover:bg-accent-deep ${
-                  stage >= 6
+                  stage >= 5
                     ? "translate-y-0 opacity-100"
                     : "translate-y-2 opacity-0"
                 }`}

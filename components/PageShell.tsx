@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { SIDEBAR_CASCADE_DONE_MS } from "./Sidebar";
 import { Watermark } from "./Watermark";
 import { APP_LOADED_AT } from "@/lib/app-load-time";
-import { ENTRANCE_MS } from "@/lib/entrance-timing";
+import { ENTRANCE_MS, SIDEBAR_CASCADE_DONE_MS } from "@/lib/entrance-timing";
 
 export function PageShell({
   watermark,

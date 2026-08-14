@@ -2,21 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { profile } from "@/lib/data/profile";
+import {
+  ROLE_REVEAL_BOTH_FADE_MS as BOTH_FADE_MS,
+  ROLE_REVEAL_HOLD_FIRST_MS as HOLD_FIRST,
+  ROLE_REVEAL_HOLD_SECOND_MS as HOLD_SECOND,
+  ROLE_REVEAL_WORD_FADE_MS as WORD_FADE_MS,
+} from "@/lib/entrance-timing";
 
 type Phase = "first" | "second" | "both";
-
-const HOLD_FIRST = 900;
-const HOLD_SECOND = 900;
-const WORD_FADE_MS = 400;
-const BOTH_FADE_MS = 500;
-
-/** Total wall-clock time from mount to fully settled — exported so callers
- * (Sidebar's entrance cascade) can chain the next thing to start exactly
- * when this finishes, instead of guessing at a fixed delay. Mirrors the
- * actual timeline below: the first word's fade-in happens inside the
- * HOLD_FIRST window, the second's inside HOLD_SECOND, then the final
- * "both" state fades in over BOTH_FADE_MS. */
-export const ROLE_REVEAL_DURATION_MS = HOLD_FIRST + HOLD_SECOND + BOTH_FADE_MS;
 
 /** Choreographed one-time reveal: the first role appears alone, is
  * replaced by the second role, then both settle into their final combined

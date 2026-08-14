@@ -43,7 +43,10 @@ export default function AcademicsPage() {
         })}
       </div>
 
-      <div className="mt-8 max-w-2xl">
+      <div
+        key={tab}
+        className="mt-8 max-w-2xl [animation:tab-panel-in_0.35s_ease-out] motion-reduce:[animation:none]"
+      >
         {tab === "overview" && (
           <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
             <div className="flex items-start gap-5">

@@ -113,7 +113,7 @@ html {
 
   /* Watermark text — a slight purple tint instead of plain near-black ink */
   --color-watermark-text: #8f81ef;
-  --watermark-text-opacity: 0.1;
+  --watermark-text-opacity: 0.12;
 }
 
 @theme inline {
@@ -161,6 +161,21 @@ body {
 ::selection {
   background: var(--color-accent);
   color: var(--color-ink);
+}
+
+/* Plays whenever a page's own sub-tab content panel mounts fresh (paired
+   with a `key` that changes per tab, e.g. Academics' Overview/Coursework/
+   Achievements) — a quick fade + settle so switching tabs doesn't just
+   snap to the new content. */
+@keyframes tab-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Themed scrollbar (Firefox) */
