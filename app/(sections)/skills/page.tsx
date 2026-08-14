@@ -9,10 +9,12 @@ import {
   StackedRowsIcon,
 } from "@/components/icons";
 import { skillCategories } from "@/lib/data/skills";
+import { SkillConnectionGraph } from "./skill-connection-graph";
 import { SkillGraph } from "./skill-graph";
 import { SkillRow } from "./skill-row";
 
 type ViewMode = "list" | "graph";
+type GraphMode = "category" | "connections";
 
 export default function SkillsPage() {
   // Content-creation categories are hidden for now — swap "engineering" for
@@ -21,6 +23,7 @@ export default function SkillsPage() {
 
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<ViewMode>("graph");
+  const [graphMode, setGraphMode] = useState<GraphMode>("category");
   const allOpen = openIds.size === categories.length;
 
   function toggleAll() {
@@ -85,7 +88,32 @@ export default function SkillsPage() {
             />
           </button>
         ) : (
-          <span />
+          <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[3.8px]">
+            <button
+              type="button"
+              onClick={() => setGraphMode("category")}
+              aria-pressed={graphMode === "category"}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                graphMode === "category"
+                  ? "bg-accent text-[var(--color-base)]"
+                  : "text-ink-faint hover:text-ink"
+              }`}
+            >
+              By category
+            </button>
+            <button
+              type="button"
+              onClick={() => setGraphMode("connections")}
+              aria-pressed={graphMode === "connections"}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                graphMode === "connections"
+                  ? "bg-accent text-[var(--color-base)]"
+                  : "text-ink-faint hover:text-ink"
+              }`}
+            >
+              By connection
+            </button>
+          </div>
         )}
       </div>
 
@@ -102,7 +130,11 @@ export default function SkillsPage() {
         </div>
       ) : (
         <div className="mt-4">
-          <SkillGraph categories={categories} />
+          {graphMode === "category" ? (
+            <SkillGraph categories={categories} />
+          ) : (
+            <SkillConnectionGraph categories={categories} />
+          )}
         </div>
       )}
     </PageShell>
