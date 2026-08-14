@@ -560,7 +560,7 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
         </span>
       )}
 
-      <div className="absolute right-3 top-3 flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[3.8px]">
+      <div className="absolute right-3 top-3 flex items-center gap-1 rounded-lg border border-line bg-panel p-1 shadow-lg">
         <button
           type="button"
           onClick={() => zoomBy(1 / 1.3)}
