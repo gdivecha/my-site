@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CloseIcon, SearchIcon } from "./icons";
 import { searchIndex } from "@/lib/search-index";
 
-export function SearchModal({ className = "" }: { className?: string }) {
+export function SearchModal({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -86,6 +92,7 @@ export function SearchModal({ className = "" }: { className?: string }) {
         onClick={() => setOpen(true)}
         aria-label="Search"
         className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
+        style={style}
       >
         <SearchIcon className="h-4 w-4" />
       </button>

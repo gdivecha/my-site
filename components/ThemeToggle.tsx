@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { MoonIcon, SunIcon } from "./icons";
 
-export function ThemeToggle({ className = "" }: { className?: string }) {
+export function ThemeToggle({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
@@ -37,6 +43,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         theme === "light" ? "Switch to dark mode" : "Switch to light mode"
       }
       className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
+      style={style}
     >
       {theme === "light" ? (
         <MoonIcon className="h-4 w-4" />

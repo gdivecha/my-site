@@ -30,6 +30,18 @@ function stageClass(reached: boolean) {
   }`;
 }
 
+// Shared by both icon rows (top-left utility icons, sidebar-bottom social
+// links) so they read as the same visual language: each icon fades/slides
+// up individually, staggered by index — rather than transition-all (which
+// would also apply the entrance's slow, staggered duration to each icon's
+// hover background-color change).
+function iconEntranceStyle(index: number) {
+  const delay = `${index * SOCIALS_STAGGER_MS}ms`;
+  return {
+    transition: `opacity ${ENTRANCE_MS}ms ease-out ${delay}, transform ${ENTRANCE_MS}ms ease-out ${delay}, background-color 150ms ease`,
+  };
+}
+
 export function Sidebar() {
   const nameRef = useRef<HTMLHeadingElement>(null);
   const [stage, setStage] = useState(0);
@@ -94,13 +106,18 @@ export function Sidebar() {
 
   return (
     <aside className="relative z-20 border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
-      <div
-        className={`absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16 ${stageClass(iconsVisible)}`}
-        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
-      >
-        <SearchModal />
-        <ThemeToggle />
-        <KeyboardShortcuts />
+      <div className="absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16">
+        {[SearchModal, ThemeToggle, KeyboardShortcuts].map((Icon, i) => (
+          <Icon
+            key={i}
+            className={
+              iconsVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-2 opacity-0"
+            }
+            style={iconEntranceStyle(i)}
+          />
+        ))}
       </div>
       <div className="flex h-full flex-col justify-center gap-8 px-8 py-12 md:px-12 md:py-16 lg:px-16">
         <div>
@@ -166,15 +183,12 @@ export function Sidebar() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={social.label}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-colors hover:bg-accent-deep ${
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] hover:bg-accent-deep ${
                   stage >= 5
                     ? "translate-y-0 opacity-100"
                     : "translate-y-2 opacity-0"
                 }`}
-                style={{
-                  transitionDuration: `${ENTRANCE_MS}ms`,
-                  transitionDelay: `${i * SOCIALS_STAGGER_MS}ms`,
-                }}
+                style={iconEntranceStyle(i)}
               >
                 <Icon className="h-4 w-4" />
               </a>

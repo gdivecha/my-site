@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "./icons";
 
@@ -14,7 +14,13 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["PageUp"], label: "Page up" },
 ];
 
-export function KeyboardShortcuts({ className = "" }: { className?: string }) {
+export function KeyboardShortcuts({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -51,6 +57,7 @@ export function KeyboardShortcuts({ className = "" }: { className?: string }) {
         onClick={() => setOpen(true)}
         aria-label="Keyboard shortcuts"
         className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
+        style={style}
       >
         <span className="text-[15px] leading-none">⌘</span>
       </button>
