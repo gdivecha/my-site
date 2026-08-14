@@ -118,3 +118,12 @@ export function buildCategoryConnections(skillEdges: SkillEdge[]): CategoryEdge[
 
   return edges;
 }
+
+// Both builders are pure functions of static, module-level data (project
+// tags, experience tags, the skill catalog) — nothing that varies at
+// runtime or per-request. Computing them once here, at module load,
+// means every consumer (e.g. the connection graph, which used to call
+// both functions fresh inside a useMemo on every mount) gets the result
+// for free instead of redoing the same work.
+export const skillConnections = buildSkillConnections();
+export const categoryConnections = buildCategoryConnections(skillConnections);

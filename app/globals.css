@@ -180,15 +180,18 @@ body {
 
 /* Plays whenever a page's own sub-tab content panel mounts fresh (paired
    with a `key` that changes per tab, e.g. Academics' Overview/Coursework/
-   Achievements) — a quick fade + settle so switching tabs doesn't just
-   snap to the new content. */
+   Achievements) — a slide-up settle so switching tabs doesn't just snap
+   to the new content. Transform only, deliberately never opacity — these
+   panels contain backdrop-blur cards, and animating the opacity of an
+   ancestor of a backdrop-filter element breaks the blur's ability to
+   sample what's behind it until the animation settles (the same
+   Chromium limitation PageShell's own page-entrance animation works
+   around the same way). */
 @keyframes tab-panel-in {
   from {
-    opacity: 0;
     transform: translateY(8px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }

@@ -82,7 +82,7 @@ export default function RecommendationsPage() {
 
           <div
             key={activeCompany}
-            className="mt-6 flex flex-col gap-4 [animation:tab-panel-in_0.35s_ease-out] motion-reduce:[animation:none]"
+            className="mt-6 flex flex-col gap-4 [animation:tab-panel-in_0.5s_ease-out] motion-reduce:[animation:none]"
           >
             {roleGroups.map((group) => (
               <RoleCard

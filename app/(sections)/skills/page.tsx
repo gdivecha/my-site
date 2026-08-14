@@ -16,11 +16,17 @@ import { SkillRow } from "./skill-row";
 type ViewMode = "list" | "graph";
 type GraphMode = "category" | "connections";
 
-export default function SkillsPage() {
-  // Content-creation categories are hidden for now — swap "engineering" for
-  // "content" (or bring back the toggle) to show them again.
-  const categories = skillCategories.filter((c) => c.group === "engineering");
+// Module scope, not inside the component — skillCategories is static, so
+// this only needs to run once at import rather than once per render.
+// SkillGraph/SkillConnectionGraph key their (expensive) layout useMemo on
+// this array's identity, so a stable reference matters here, not just as
+// a micro-optimization: computing it fresh in the component body would
+// silently defeat that memoization on every render.
+// Content-creation categories are hidden for now — swap "engineering" for
+// "content" (or bring back the toggle) to show them again.
+const categories = skillCategories.filter((c) => c.group === "engineering");
 
+export default function SkillsPage() {
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<ViewMode>("graph");
   const [graphMode, setGraphMode] = useState<GraphMode>("category");

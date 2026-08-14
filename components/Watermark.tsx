@@ -1,28 +1,32 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 const ROWS = 44;
-// Each row scrolls two back-to-back copies of this many repetitions and
-// loops by jumping from translateX(-50%) back to 0 — seamless only if a
-// single copy is already wider than the row's full visible span (150vmax
-// of it, before the -18deg rotation makes it wider still). 8 was tuned
-// against longer watermark words; a short one like "SKILLS" repeated 8
-// times doesn't reach that width on a wide viewport, so the scroll runs
-// past the last real repetition into genuinely empty track before it
-// wraps — a real, periodic gap once per loop, not a one-off glitch. 30
-// comfortably covers the shortest realistic word on the widest realistic
-// screen regardless of which page's watermark text this is.
-const REPEATS_PER_COPY = 30;
+// Each row scrolls two back-to-back copies of some number of repetitions
+// and loops by jumping from translateX(-50%) back to 0 — seamless only
+// if a single copy is already wider than the row's full visible span.
+// That required repeat count depends on both the word's length and the
+// viewport width, so it's measured and corrected below rather than fixed
+// — a flat constant is either wrong for short words on wide screens (a
+// real, periodic gap once per loop — this happened at 8) or wildly
+// over-provisioned for long words (extra DOM nodes doing nothing, this
+// happened at 30, sized for the worst case regardless of actual page).
+const INITIAL_REPEATS = 10;
+const MIN_REPEATS = 4;
+const MAX_REPEATS = 40;
 const PIXELS_PER_SECOND = 9;
 
 export function Watermark({ text }: { text: string }) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
+  const [repeats, setRepeats] = useState(INITIAL_REPEATS);
 
-  // A row's animation-duration is derived from its own rendered width so
-  // every page — regardless of word length or viewport — slides at the
-  // same constant pixels-per-second speed rather than the same duration.
+  // Two things measured off the same rendered copy: how many repetitions
+  // are actually needed to outrun the viewport (so the loop never runs
+  // out of real content), and the duration that makes every page slide
+  // at the same constant pixels-per-second regardless of word length or
+  // viewport width.
   useLayoutEffect(() => {
     const fieldEl = fieldRef.current;
     const copyEl = copyRef.current;
@@ -31,6 +35,22 @@ export function Watermark({ text }: { text: string }) {
     const sync = () => {
       const width = copyEl.getBoundingClientRect().width;
       if (width <= 0) return;
+
+      // The rotated plane can expose more than the raw viewport size —
+      // the larger of width/height, generously padded, comfortably
+      // covers it without needing to duplicate the -18deg/150vmax CSS
+      // details here.
+      const target = Math.max(window.innerWidth, window.innerHeight) * 1.6;
+      const perRepeat = width / repeats;
+      const needed = Math.min(
+        MAX_REPEATS,
+        Math.max(MIN_REPEATS, Math.ceil(target / perRepeat))
+      );
+      if (needed !== repeats) {
+        setRepeats(needed);
+        return; // the resulting re-render + resize triggers sync again
+      }
+
       fieldEl.style.setProperty(
         "--watermark-duration",
         `${width / PIXELS_PER_SECOND}s`
@@ -45,7 +65,7 @@ export function Watermark({ text }: { text: string }) {
       window.removeEventListener("resize", sync);
       resizeObserver.disconnect();
     };
-  }, [text]);
+  }, [text, repeats]);
 
   return (
     <div className="watermark-field" ref={fieldRef} aria-hidden="true">
@@ -62,7 +82,7 @@ export function Watermark({ text }: { text: string }) {
                   key={copy}
                   ref={row === 0 && copy === 0 ? copyRef : undefined}
                 >
-                  {Array.from({ length: REPEATS_PER_COPY }).map((_, i) => (
+                  {Array.from({ length: repeats }).map((_, i) => (
                     <span key={i}>{text}</span>
                   ))}
                 </div>

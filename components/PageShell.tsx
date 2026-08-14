@@ -13,11 +13,13 @@ export function PageShell({
   children: ReactNode;
 }) {
   const [visible, setVisible] = useState(false);
-  // Only a genuine first-load wait (before the sidebar's own cascade has
-  // finished) gets the slow cinematic entrance. Every ordinary navigation
-  // after that gets an instant reveal (0ms).
-  const [durationMs, setDurationMs] = useState(0);
-
+  // Every page mount plays the entrance — on a genuine first load, this
+  // wait is what makes content appear only once the sidebar's own
+  // cascade has finished; on ordinary navigation (real elapsed time
+  // already exceeds SIDEBAR_CASCADE_DONE_MS), `remaining` resolves to 0,
+  // so the timer fires next tick and the animation plays immediately —
+  // still a real slide-in, just with no artificial extra wait in front
+  // of it.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setVisible(true);
@@ -27,7 +29,6 @@ export function PageShell({
       0,
       SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
     );
-    setDurationMs(remaining > 0 ? ENTRANCE_MS : 0);
     const timer = setTimeout(() => setVisible(true), remaining);
     return () => clearTimeout(timer);
   }, []);
@@ -39,7 +40,7 @@ export function PageShell({
     >
       <div
         className={`transition-opacity ease-out ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDuration: `${durationMs}ms` }}
+        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
       >
         <Watermark text={watermark} />
       </div>
@@ -62,7 +63,7 @@ export function PageShell({
         className={`relative z-10 transition-transform ease-out ${
           visible ? "translate-y-0" : "translate-y-2 invisible"
         }`}
-        style={{ transitionDuration: `${durationMs}ms` }}
+        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
       >
         {children}
       </div>
