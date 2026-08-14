@@ -14,16 +14,8 @@ export function PageShell({
 }) {
   const [visible, setVisible] = useState(false);
   // Only a genuine first-load wait (before the sidebar's own cascade has
-  // finished) gets the slow cinematic fade. Every ordinary navigation
-  // after that gets an instant reveal (0ms) — the actual bug wasn't a
-  // backdrop-filter rendering delay at all: the CSS transition duration
-  // was hardcoded to ENTRANCE_MS (500ms) for every single page switch,
-  // not just the first, so cards (translucent tint + blur together)
-  // visibly ramped up from invisible on every tab change. That ramp is
-  // what read as "the blur has a delay" — confirmed by extracting actual
-  // video frames of a switch: the card is already fully opaque and
-  // blurred by the second frame (~33ms in), it's just that the preceding
-  // 500ms transition made getting there visibly gradual.
+  // finished) gets the slow cinematic entrance. Every ordinary navigation
+  // after that gets an instant reveal (0ms).
   const [durationMs, setDurationMs] = useState(0);
 
   useEffect(() => {
@@ -47,13 +39,28 @@ export function PageShell({
     >
       <div
         className={`transition-opacity ease-out ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDuration: `${durationMs > 0 ? 150 : 0}ms` }}
+        style={{ transitionDuration: `${durationMs}ms` }}
       >
         <Watermark text={watermark} />
       </div>
+      {/* Slides up via transform only — deliberately never opacity.
+          Practically every card on every page uses backdrop-blur, and
+          animating the OPACITY of an ancestor of a backdrop-filter
+          element is a real Chromium rendering limitation: the blur can't
+          correctly sample what's behind it while this wrapper is mid
+          cross-fade, so cards render as plain unblurred text (watermark
+          clearly readable through them) for the whole transition.
+          Confirmed by extracting actual video frames of a hard reload.
+          A pure transform doesn't have this problem — it repositions an
+          already fully-rendered, already-blurred layer rather than
+          blending two paint passes — so the slide is safe to keep.
+          `invisible` (not opacity) hides it pre-reveal so it isn't
+          painted at all until `visible` flips, at which point the
+          transform transition animates normally from its earlier,
+          already-rendered translate-y-2 starting position. */}
       <div
-        className={`relative z-10 transition-all ease-out ${
-          visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+        className={`relative z-10 transition-transform ease-out ${
+          visible ? "translate-y-0" : "translate-y-2 invisible"
         }`}
         style={{ transitionDuration: `${durationMs}ms` }}
       >
