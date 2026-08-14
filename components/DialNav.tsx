@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { navItems } from "@/lib/data/nav";
+import { NUDGE_START_DELAY_MS } from "@/lib/entrance-timing";
 
 const N = navItems.length;
 const ROW_HEIGHT = 36;
@@ -63,7 +64,15 @@ function shortestDelta(from: number, to: number) {
   return best;
 }
 
-export function DialNav() {
+export function DialNav({
+  nudgeDelayMs = NUDGE_START_DELAY_MS,
+}: {
+  /** How long, from mount, before the load-time nudge below fires. DialNav
+   * itself always appears on its own normal schedule (wherever its caller
+   * places it) — this only defers the nudge *motion*, e.g. so it doesn't
+   * play while the page's right-side content is still animating in. */
+  nudgeDelayMs?: number;
+} = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -172,13 +181,13 @@ export function DialNav() {
           });
         });
       });
-    }, 900);
+    }, nudgeDelayMs);
 
     return () => {
       window.clearTimeout(timer);
       cancelAnimationFrame(frameId);
     };
-  }, []);
+  }, [nudgeDelayMs]);
 
   // Cmd+Up / Cmd+Down step to the previous/next tab, from anywhere on the page.
   useEffect(() => {

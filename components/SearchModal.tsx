@@ -84,7 +84,7 @@ export function SearchModal({ className = "" }: { className?: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
-        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:text-ink ${className}`}
+        className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
       >
         <SearchIcon className="h-4 w-4" />
       </button>

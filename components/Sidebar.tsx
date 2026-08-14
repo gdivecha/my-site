@@ -1,11 +1,17 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { profile } from "@/lib/data/profile";
+import {
+  DIAL_POST_CONTENT_DELAY_MS,
+  ENTRANCE_MS,
+  SOCIALS_STAGGER_MS,
+} from "@/lib/entrance-timing";
 import { DialNav } from "./DialNav";
 import { DevpostIcon, GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
+import { ROLE_REVEAL_DURATION_MS, RoleReveal } from "./RoleReveal";
 import { SearchModal } from "./SearchModal";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -16,8 +22,69 @@ const socialIcons = {
   Devpost: DevpostIcon,
 };
 
+// Each stage's delay is the *previous* stage's delay plus how long that
+// stage's own animation actually takes to finish — not a guessed round
+// number — so the next group only starts appearing once the one before it
+// has genuinely settled. Reading/priority order: utility icons, name,
+// roles, tagline, nav, socials. The dial *appears* right here in its
+// normal place in the cascade — only its nudge animation is deferred, see
+// DIAL_NUDGE_DELAY_MS below.
+const ICONS_DELAY = 0;
+const NAME_DELAY = ICONS_DELAY + ENTRANCE_MS;
+const ROLES_DELAY = NAME_DELAY + ENTRANCE_MS;
+const TAGLINE_DELAY = ROLES_DELAY + ROLE_REVEAL_DURATION_MS;
+const NAV_DELAY = TAGLINE_DELAY + ENTRANCE_MS;
+const SOCIALS_DELAY = NAV_DELAY + ENTRANCE_MS;
+
+const STAGE_DELAYS = [
+  ICONS_DELAY,
+  NAME_DELAY,
+  ROLES_DELAY,
+  TAGLINE_DELAY,
+  NAV_DELAY,
+  SOCIALS_DELAY,
+] as const;
+
+/** Wall-clock time (from page load) until the sidebar's own cascade above
+ * has finished — the last social icon is the last thing in it, staggered
+ * by SOCIALS_STAGGER_MS per icon. Exported so PageShell can wait for this
+ * before revealing page content, rather than that content appearing
+ * alongside (or before) the sidebar mid-cascade. */
+export const SIDEBAR_CASCADE_DONE_MS =
+  SOCIALS_DELAY +
+  (profile.socials.length - 1) * SOCIALS_STAGGER_MS +
+  ENTRANCE_MS;
+
+/** The dial itself appears on schedule, in the cascade above — but its
+ * load-time nudge is deferred until the page's own content (which waits
+ * for SIDEBAR_CASCADE_DONE_MS, then takes ENTRANCE_MS to fade in) has
+ * fully settled, plus a deliberate pause, so the nudge motion doesn't
+ * compete with the right side still animating in. */
+export const DIAL_NUDGE_DELAY_MS =
+  SIDEBAR_CASCADE_DONE_MS + ENTRANCE_MS + DIAL_POST_CONTENT_DELAY_MS;
+
+function stageClass(reached: boolean) {
+  return `transition-all ease-out ${
+    reached ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+  }`;
+}
+
 export function Sidebar() {
   const nameRef = useRef<HTMLHeadingElement>(null);
+  const [stage, setStage] = useState(0);
+
+  // Drives the entrance cascade below. Skips straight to the end under
+  // prefers-reduced-motion so nothing is gated behind a delay.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStage(STAGE_DELAYS.length);
+      return;
+    }
+    const timers = STAGE_DELAYS.map((delay, i) =>
+      setTimeout(() => setStage((s) => Math.max(s, i + 1)), delay)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   // Publishes wherever the (vertically centered, viewport-height-dependent)
   // name's *bottom* edge ends up — PageHeading reads this to line up each
@@ -57,31 +124,70 @@ export function Sidebar() {
 
   return (
     <aside className="relative z-20 border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
-      <div className="absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16">
+      <div
+        className={`absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16 ${stageClass(stage >= 1)}`}
+        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+      >
         <SearchModal />
         <ThemeToggle />
         <KeyboardShortcuts />
       </div>
       <div className="flex h-full flex-col justify-center gap-8 px-8 py-12 md:px-12 md:py-16 lg:px-16">
         <div>
-          <h1 ref={nameRef} className="font-display text-[30px] font-bold leading-tight md:text-[36px] lg:text-[48px]">
-            <Link href="/about" className="text-gradient">
-              {profile.name}
-            </Link>
+          {/* The entrance animation lives on the inner span, not the h1
+              itself — the h1 is what nameRef measures for the page-heading
+              bottom-alignment sync above, and that only runs once on
+              mount, so an animated transform directly on the h1 would get
+              measured mid-slide instead of at its settled position. */}
+          <h1
+            ref={nameRef}
+            className="font-display text-[30px] font-bold leading-tight md:text-[36px] lg:text-[48px]"
+          >
+            <span
+              className={`inline-block ${stageClass(stage >= 2)}`}
+              style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+            >
+              <Link
+                href="/about"
+                className="text-gradient inline-block transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                {profile.name}
+              </Link>
+            </span>
           </h1>
-          <p className="relative mt-4 text-base leading-relaxed text-roles-text md:text-lg">
-            {profile.roles.join(" • ")}
+          {/* Grid-stacks an invisible placeholder under the real content so
+              this line always reserves its final height, even before
+              RoleReveal has mounted — otherwise the empty paragraph
+              collapses to 0px, and since the whole block above is
+              vertically centered, that missing height shifts the name
+              itself once RoleReveal appears, breaking the one-time
+              nameRef measurement the page-heading alignment depends on. */}
+          <p className="relative mt-4 grid text-base leading-relaxed text-roles-text md:text-lg">
+            <span className="invisible col-start-1 row-start-1" aria-hidden="true">
+              {profile.roles[0]}
+            </span>
+            <span className="col-start-1 row-start-1">
+              {stage >= 3 && <RoleReveal />}
+            </span>
           </p>
         </div>
 
-        <p className="text-sm leading-relaxed text-ink-soft md:text-[15px]">
+        <p
+          className={`text-sm leading-relaxed text-ink-soft md:text-[15px] ${stageClass(stage >= 4)}`}
+          style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+        >
           {profile.tagline}
         </p>
 
-        <DialNav />
+        <div
+          className={stageClass(stage >= 5)}
+          style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+        >
+          <DialNav nudgeDelayMs={DIAL_NUDGE_DELAY_MS} />
+        </div>
 
         <div className="flex gap-2.5">
-          {profile.socials.map((social) => {
+          {profile.socials.map((social, i) => {
             const Icon = socialIcons[social.label];
             return (
               <a
@@ -90,7 +196,15 @@ export function Sidebar() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={social.label}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-all hover:-translate-y-0.5 hover:bg-accent-deep"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-accent text-[var(--color-base)] transition-all hover:-translate-y-0.5 hover:bg-accent-deep ${
+                  stage >= 6
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-2 opacity-0"
+                }`}
+                style={{
+                  transitionDuration: `${ENTRANCE_MS}ms`,
+                  transitionDelay: `${i * SOCIALS_STAGGER_MS}ms`,
+                }}
               >
                 <Icon className="h-4 w-4" />
               </a>
