@@ -108,7 +108,15 @@ const extraIconMap: Record<string, { path: string; viewBox: string }> = {
   },
 };
 
-function TechLogo({ skill }: { skill: SkillTag }) {
+export function TechLogo({
+  skill,
+  className = "h-6 w-6",
+  fallbackTextClassName = "text-[10px]",
+}: {
+  skill: SkillTag;
+  className?: string;
+  fallbackTextClassName?: string;
+}) {
   const icon = skill.icon ? iconMap[skill.icon] : undefined;
   const extra = !icon && skill.icon ? extraIconMap[skill.icon] : undefined;
 
@@ -116,7 +124,7 @@ function TechLogo({ skill }: { skill: SkillTag }) {
     return (
       <svg
         viewBox="0 0 24 24"
-        className="h-6 w-6"
+        className={className}
         fill={skill.monochrome ? "currentColor" : `#${icon.hex}`}
       >
         <path d={icon.path} />
@@ -128,7 +136,7 @@ function TechLogo({ skill }: { skill: SkillTag }) {
     return (
       <svg
         viewBox={extra.viewBox}
-        className="h-6 w-6"
+        className={className}
         fill={skill.monochrome ? "currentColor" : (skill.color ?? "currentColor")}
       >
         <path d={extra.path} />
@@ -138,7 +146,7 @@ function TechLogo({ skill }: { skill: SkillTag }) {
 
   return (
     <span
-      className="flex h-full w-full items-center justify-center rounded-md text-[10px] font-bold text-white"
+      className={`flex h-full w-full items-center justify-center rounded-md font-bold text-white ${fallbackTextClassName}`}
       style={{ background: skill.color ?? "var(--color-accent)" }}
     >
       {skill.abbr}

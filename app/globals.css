@@ -59,6 +59,13 @@ html {
   /* Tech logo tile background (Skills page) */
   --color-tech-icon-bg: var(--color-panel-alt);
 
+  /* Skills graph category-node fill — panel-alt reads fine here in dark
+     mode, but needs its own tuning in both directions: a touch lighter
+     than panel-alt here so the node lifts off the near-black background;
+     in light mode (see below) panel-alt is nearly invisible against the
+     page, so that variant uses a visible purple wash instead. */
+  --color-graph-node-bg: #2b2a42;
+
   /* Watermark text */
   --color-watermark-text: #f8f7fc;
   --watermark-text-opacity: 0.045;
@@ -111,6 +118,13 @@ html {
   /* Tech logo tile background — pure white in light mode */
   --color-tech-icon-bg: #ffffff;
 
+  /* Skills graph category-node fill — same fix as tag-bg above, and for
+     the same reason (panel-alt is nearly invisible against the page
+     here). Solid, not translucent — this sits directly on the page with
+     nothing behind it to blend with, so transparency just looks washed
+     out rather than doing anything useful. */
+  --color-graph-node-bg: #e2dff7;
+
   /* Watermark text — a slight purple tint instead of plain near-black ink */
   --color-watermark-text: #8f81ef;
   --watermark-text-opacity: 0.095;
@@ -140,6 +154,7 @@ html {
   --color-input-placeholder: var(--color-input-placeholder);
   --color-tech-icon-bg: var(--color-tech-icon-bg);
   --color-input-bg: var(--color-input-bg);
+  --color-graph-node-bg: var(--color-graph-node-bg);
 
   --font-display: var(--font-poppins);
   --font-body: var(--font-inter);
