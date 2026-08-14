@@ -124,12 +124,12 @@ export function DialNav({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // One-time scroll nudge on page load: up, down past rest, up again, then
-  // back to rest — three swings whose position over time traces a
-  // sine/cosine curve (quick departure, decelerating into each turning
-  // point) rather than a linear back-and-forth. Snap is briefly disabled
-  // so the swing can land off-grid instead of the browser correcting it
-  // back to a row.
+  // One-time scroll nudge on page load: up, down past rest, up again, down
+  // again (opposite the swing before it), then back to rest — four swings
+  // whose position over time traces a sine/cosine curve (quick departure,
+  // decelerating into each turning point) rather than a linear
+  // back-and-forth. Snap is briefly disabled so the swing can land
+  // off-grid instead of the browser correcting it back to a row.
   const [peeking, setPeeking] = useState(false);
   useEffect(() => {
     const el = scrollRef.current;
@@ -174,9 +174,11 @@ export function DialNav({
       animate(rest, rest - SWING, 360, easeOutSine, () => {
         animate(rest - SWING, rest + SWING, 620, easeOutSine, () => {
           animate(rest + SWING, rest - SWING, 620, easeOutSine, () => {
-            animate(rest - SWING, rest, 600, easeInOutSine, () => {
-              programmatic.current = false;
-              setPeeking(false);
+            animate(rest - SWING, rest + SWING, 620, easeOutSine, () => {
+              animate(rest + SWING, rest, 600, easeInOutSine, () => {
+                programmatic.current = false;
+                setPeeking(false);
+              });
             });
           });
         });
