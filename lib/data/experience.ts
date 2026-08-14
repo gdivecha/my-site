@@ -23,6 +23,22 @@ export type Experience = {
   };
 };
 
+// Always computed, never hardcoded — end defaults to today for ongoing
+// roles (no endDate set). +1 makes it inclusive of both start and end
+// months, matching how e.g. "Jun - Aug" reads as 3 months, not 2. Shared
+// by the card (badge) and the detail page (header), rather than each
+// re-deriving it.
+export function durationText(experience: Experience): string {
+  const start = new Date(experience.startDate);
+  const end = experience.endDate ? new Date(experience.endDate) : new Date();
+  const months =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth()) +
+    1;
+  const n = Math.max(months, 1);
+  return `${n} ${n === 1 ? "month" : "months"}`;
+}
+
 export const experiences: Experience[] = [
   // {
   //   id: "acme-technologies",
