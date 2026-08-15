@@ -130,6 +130,43 @@ html {
   --watermark-text-opacity: 0.095;
 }
 
+/* Résumé preview image (Portfolio page): it's a plain white-page render of
+   the PDF, which looks right in light mode as-is but sits as a stark white
+   rectangle in dark mode. invert() flips white<->black (and every other
+   lightness), and hue-rotate(180deg) undoes the hue shift invert() causes
+   as a side effect — so colored elements (the blue links) keep roughly
+   their original hue while the page itself goes from white-bg/black-text
+   to black-bg/white-text. contrast(0.8) lifts the resulting pure-#000
+   floor to a neutral ~#191919 first. Neither filter can introduce hue
+   into that now-neutral-gray background on its own — hue-rotate has
+   nothing to rotate on a zero-saturation pixel — so .resume-preview-wrap
+   below layers a soft-light blend of the site's own accent purple on top
+   (mix-blend-mode has more effect on dark pixels than bright ones under
+   soft-light, so it tints the background without washing out the white
+   text), landing the floor almost exactly on --color-panel. No second
+   rendered asset needed. */
+.resume-preview-image {
+  filter: invert(1) hue-rotate(180deg) contrast(0.8);
+}
+:root[data-theme="light"] .resume-preview-image {
+  filter: none;
+}
+.resume-preview-wrap {
+  position: relative;
+}
+.resume-preview-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  mix-blend-mode: soft-light;
+  opacity: 0.18;
+  pointer-events: none;
+}
+:root[data-theme="light"] .resume-preview-wrap::after {
+  display: none;
+}
+
 @theme inline {
   --color-base: var(--color-base);
   --color-panel: var(--color-panel);

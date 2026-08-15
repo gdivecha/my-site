@@ -72,14 +72,16 @@ export default function PortfolioPage() {
           </a>
         </div>
 
-        <Image
-          src="/resume-preview.png"
-          alt="Gaurav Divecha - Résumé"
-          width={1131}
-          height={1600}
-          sizes="(min-width: 672px) 672px, 100vw"
-          className="w-full"
-        />
+        <div className="resume-preview-wrap">
+          <Image
+            src="/resume-preview.png"
+            alt="Gaurav Divecha - Résumé"
+            width={1131}
+            height={1600}
+            sizes="(min-width: 672px) 672px, 100vw"
+            className="resume-preview-image block w-full"
+          />
+        </div>
       </div>
     </PageShell>
   );
