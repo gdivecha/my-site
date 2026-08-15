@@ -1,7 +1,7 @@
 "use client";
 
 import { TechIcon } from "@/components/TechIcon";
-import { CodeBracketsIcon } from "@/components/icons";
+import { ChevronDownIcon, CodeBracketsIcon } from "@/components/icons";
 import type { SkillCategory } from "@/lib/data/skills";
 import { categoryIcons } from "./category-icons";
 
@@ -17,7 +17,7 @@ export function SkillRow({
   const CategoryIcon = categoryIcons[category.id] ?? CodeBracketsIcon;
 
   return (
-    <div className="rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover">
+    <div className="group rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover">
       <button
         type="button"
         className="flex w-full items-center gap-3 px-6 py-4 text-left"
@@ -27,10 +27,15 @@ export function SkillRow({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tag-bg text-accent-soft">
           <CategoryIcon className="h-4 w-4" />
         </span>
-        <span className="text-sm font-medium text-ink">{category.label}</span>
+        <span className="text-sm font-medium text-ink transition-colors group-hover:text-accent-soft">
+          {category.label}
+        </span>
         <span className="ml-auto text-xs text-ink-faint">
           {category.skills.length}
         </span>
+        <ChevronDownIcon
+          className={`h-3.5 w-3.5 shrink-0 text-ink-faint transition-all duration-150 group-hover:text-accent-soft ${open ? "rotate-180" : ""}`}
+        />
       </button>
       <div
         className={`grid px-6 transition-[grid-template-rows] duration-300 ease-out ${

@@ -18,7 +18,7 @@ export function RoleCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover">
+    <div className="group rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -26,7 +26,9 @@ export function RoleCard({
         aria-expanded={expanded}
       >
         <div>
-          <h4 className="text-sm font-semibold text-ink">{role}</h4>
+          <h4 className="text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+            {role}
+          </h4>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <Tag>{term}</Tag>
             <span className="text-xs text-ink-faint">
@@ -36,7 +38,7 @@ export function RoleCard({
           </div>
         </div>
         <ChevronDownIcon
-          className={`h-4 w-4 shrink-0 text-ink-faint transition-transform ${
+          className={`h-4 w-4 shrink-0 text-ink-faint transition-all duration-150 group-hover:text-accent-soft ${
             expanded ? "rotate-180" : ""
           }`}
         />

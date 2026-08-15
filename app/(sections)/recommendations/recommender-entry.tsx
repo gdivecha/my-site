@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LinkedinIcon } from "@/components/icons";
+import { ChevronDownIcon, LinkedinIcon } from "@/components/icons";
 import type { Recommendation } from "@/lib/data/recommendations";
 
 export function RecommenderEntry({
@@ -44,9 +44,12 @@ export function RecommenderEntry({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-1 text-xs font-medium text-accent-soft hover:text-accent"
+        className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-accent-soft hover:text-accent"
       >
         {expanded ? "See less" : "See more"}
+        <ChevronDownIcon
+          className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+        />
       </button>
     </div>
   );

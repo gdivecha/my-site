@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { Tag } from "@/components/Pill";
+import { ArrowRightIcon } from "@/components/icons";
 import { durationText, type Experience } from "@/lib/data/experience";
 
 export function ExperienceCard({ experience }: { experience: Experience }) {
@@ -10,11 +11,12 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
   return (
     <Link
       href={`/experience/${experience.id}`}
-      className="block rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover"
+      className="group block rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className="text-base font-semibold text-ink">
+        <h3 className="inline-flex items-center gap-1.5 text-base font-semibold text-ink transition-colors group-hover:text-accent-soft">
           {experience.role}
+          <ArrowRightIcon className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </h3>
         <span className="shrink-0 text-xs text-ink-faint">
           {experience.dateRange}

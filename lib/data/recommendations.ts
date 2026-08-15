@@ -98,7 +98,7 @@ export const recommendations: Recommendation[] = [
     recommenderName: "Chris Zou",
     recommenderTitle: "Software Development Manager",
     relationship: "My Manager",
-    linkedin: "https://www.linkedin.com/in/chriszou",
+    linkedin: "https://www.linkedin.com/in/chriszoux",
   },
   {
     id: "3",

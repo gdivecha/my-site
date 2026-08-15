@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { Pill } from "@/components/Pill";
+import { ArrowRightIcon } from "@/components/icons";
 import { experiences } from "@/lib/data/experience";
 import { profile } from "@/lib/data/profile";
 import { projects } from "@/lib/data/projects";
@@ -95,12 +96,13 @@ export default function AboutPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <Link
               href={`/projects/${featuredProject.slug}`}
-              className="rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-accent-soft">
+              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
                 Featured project
+                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
               </p>
-              <p className="mt-2 text-sm font-semibold text-ink">
+              <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
                 {featuredProject.name}
               </p>
               <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-faint">
@@ -110,12 +112,13 @@ export default function AboutPage() {
 
             <Link
               href="/experience"
-              className="rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-accent-soft">
+              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
                 Featured role
+                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
               </p>
-              <p className="mt-2 text-sm font-semibold text-ink">
+              <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
                 {featuredRole.role}
               </p>
               <p className="mt-1 text-xs text-ink-faint">
@@ -125,10 +128,11 @@ export default function AboutPage() {
 
             <Link
               href="/recommendations"
-              className="rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-accent-soft">
+              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
                 What people say
+                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
               </p>
               <p className="mt-2 line-clamp-3 text-xs italic leading-relaxed text-ink-soft">
                 &ldquo;{featuredQuote.quote}&rdquo;
