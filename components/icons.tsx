@@ -240,6 +240,16 @@ export function SwapIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function FileIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...props}>
+      <path d="M6 2.5h8.5L19 7v14.5H6V2.5Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14.5 2.5V7H19" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.5 12.5h7M8.5 16h7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function SearchIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
