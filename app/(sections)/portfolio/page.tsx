@@ -6,17 +6,25 @@ import { experiences } from "@/lib/data/experience";
 import { projects } from "@/lib/data/projects";
 
 // Every number here is derived from the real data files, never hardcoded —
-// same convention as durationText() in lib/data/experience.ts.
+// same convention as durationText() in lib/data/experience.ts. Companies/
+// teams count only real internships (type === "internship"), excluding
+// the Ryerson Hyperloop student-team stints (type === "freelance").
+const internships = experiences.filter((e) => e.type === "internship");
 const stats = [
   { value: "2+", label: "Years experience" },
+  { value: String(internships.length), label: "Internships" },
+  { value: String(projects.length), label: "Industry projects" },
   {
-    value: String(experiences.filter((e) => e.type === "internship").length),
-    label: "Internships",
+    value: String(new Set(internships.map((e) => e.company)).size),
+    label: "Companies",
   },
-  { value: String(projects.length), label: "Projects shipped" },
   {
-    value: String(new Set(experiences.map((e) => e.company)).size),
-    label: "Companies & teams",
+    value: String(new Set(internships.map((e) => e.team)).size),
+    label: "Teams",
+  },
+  {
+    value: String(experiences.filter((e) => e.returnOffer).length),
+    label: "Return offers",
   },
 ];
 
@@ -27,11 +35,11 @@ export default function PortfolioPage() {
 
       <div className="mt-6 flex max-w-2xl flex-wrap divide-x divide-line overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px]">
         {stats.map((stat) => (
-          <div key={stat.label} className="min-w-[7.5rem] flex-1 px-5 py-4 text-center">
-            <p className="font-display text-2xl font-bold tabular-nums text-accent-soft sm:text-3xl">
+          <div key={stat.label} className="min-w-[5.5rem] flex-1 px-2 py-4 text-center sm:px-4">
+            <p className="font-display text-xl font-bold tabular-nums text-accent-soft sm:text-3xl">
               {stat.value}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-ink-faint">
+            <p className="mt-1 text-[9px] uppercase tracking-wide text-ink-faint sm:text-[11px]">
               {stat.label}
             </p>
           </div>

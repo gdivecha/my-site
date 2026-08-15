@@ -13,6 +13,10 @@ export type Experience = {
   startDate: string;
   endDate?: string;
   type: ExperienceType;
+  /** True when this stint followed an earlier one at the same company —
+   * i.e. they asked me back. Used to compute the résumé page's "return
+   * offers" stat, never hardcoded there. */
+  returnOffer?: boolean;
   tags: string[];
   summary: string[];
   /** Path to a real company logo in `public/`. Falls back to the diagonal-stripe placeholder when absent. */
@@ -88,6 +92,7 @@ export const experiences: Experience[] = [
     startDate: "2024-05-01",
     endDate: "2024-08-01",
     type: "internship",
+    returnOffer: true,
     tags: ["AWS", "TypeScript", "Java", "Cloud-Native Architecture"],
     logoSrc: "/logos/amazon.png",
     summary: [
@@ -109,6 +114,7 @@ export const experiences: Experience[] = [
     startDate: "2023-09-01",
     endDate: "2023-12-01",
     type: "internship",
+    returnOffer: true,
     tags: ["React.js", "C#", "Node.js", "Azure"],
     logoSrc: "/logos/dayforce.png",
     summary: [
@@ -151,6 +157,7 @@ export const experiences: Experience[] = [
     startDate: "2023-01-01",
     endDate: "2023-04-01",
     type: "internship",
+    returnOffer: true,
     tags: ["React.js", "JavaScript", "Figma", "Azure"],
     logoSrc: "/logos/dayforce.png",
     summary: [
