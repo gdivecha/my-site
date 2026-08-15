@@ -19,10 +19,10 @@ const featuredProject = projects[0];
 const featuredRole = experiences.find((e) => e.id === "amazon-fba-inbound")!;
 const featuredQuote = previewQuotes[0];
 
-export default function AboutPage() {
+export default function HomePage() {
   return (
-    <PageShell watermark="ABOUT">
-      <PageHeading eyebrow="About">Hi there...</PageHeading>
+    <PageShell watermark="HOME">
+      <PageHeading eyebrow="Home">Hi there...</PageHeading>
 
       <div className="mt-6 flex w-full max-w-2xl flex-col items-start gap-6">
         <div className="flex items-end gap-5">

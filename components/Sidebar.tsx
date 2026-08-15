@@ -135,7 +135,7 @@ export function Sidebar() {
               style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
             >
               <Link
-                href="/about"
+                href="/home"
                 className="text-gradient inline-block transition-transform duration-200 hover:-translate-y-0.5"
               >
                 {profile.name}
