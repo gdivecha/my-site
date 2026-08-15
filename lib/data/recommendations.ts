@@ -6,54 +6,77 @@ export type RecommendationCategory =
 
 // Short, hand-picked excerpts for the preview grid at the top of the page.
 // These are pulled manually from the full recommendations below for quick
-// reading — they aren't tied to a specific recommender/citation.
+// reading. recommendationId links back to the source in `recommendations`
+// so the preview card can show real attribution (name/title/company)
+// without copying those fields in twice — leave it unset for an excerpt
+// that isn't backed by a full entry below yet (see the two below without
+// one: neither has a matching recommendation to cite).
 export type PreviewQuote = {
   id: string;
   quote: string;
   category: RecommendationCategory;
+  recommendationId?: string;
 };
 
-// Placeholder content — swap in real excerpts pulled from your recommendations.
+// Ordered by the recommender's authority relative to Gaurav (manager >
+// lead > senior > individual contributor > intern/colleague), most to
+// least — not by company or recency.
 export const previewQuotes: PreviewQuote[] = [
   {
     id: "preview-1",
-    quote: "Gaurav’s ability to work well under pressure and deliver quality results consistently is truly impressive.",
+    // Chris Zou — Software Development Manager, My Manager (Amazon)
+    quote: "His unwavering dedication to excellence, combined with this relentless pursuit of growth, positions him as a valuable asset in any tech environment.",
     category: "software-engineering",
+    recommendationId: "2",
   },
   {
     id: "preview-2",
-    quote: "Isn't afraid to ask for constructive feedback and will use it to reach his goals.",
+    // Jason Wu — Software Development Manager, My Manager (Dayforce)
+    quote: "Equipped with a driven attitude and a positive mindset, he was able to quickly learn and contribute.",
     category: "software-engineering",
+    recommendationId: "11",
   },
   {
     id: "preview-3",
-    quote: "Highly motivated, inspiring, and encouraging individual, who is always willing to go the extra mile to be helpful in any given situation.",
+    // Ayon Saha — Lead Performance Engineer, My Senior (Dayforce)
+    quote: "Gaurav is an asset, excellent communication, good ability to comprehend complex instructions and execute on them.",
     category: "software-engineering",
+    recommendationId: "7",
   },
   {
     id: "preview-4",
-    quote: "His ability to take ownership of the project and handle constant changes requested by the team demonstrates his determination and willingness to learn.",
+    // Azmat Mungur — Senior Performance Engineer, My Mentor (Dayforce)
+    quote: "He is one of the most talented and dedicated developers I have ever worked with.",
     category: "software-engineering",
+    recommendationId: "4",
   },
   {
     id: "preview-5",
-    quote: "Outcome-driven, bringing creative ideas and problem-solving to the table, as well as staying agile and focused when changes in direction or scope came up.",
+    // Nikolay Labzin — Business System Analyst, My Senior (Dayforce)
+    quote: "Driving force behind both the design - participating in all discussions and brainstorming, taking requirements, and creating refined UI designs - and its instrumentation and front-end development using various frameworks.",
     category: "software-engineering",
+    recommendationId: "5",
   },
   {
     id: "preview-6",
-    quote: "Possesses a great skill set and the ability to learn and adapt quickly.",
+    // Fazeel Abbasi — Software Development Engineer I, My Mentor (Amazon)
+    quote: "Gaurav displayed an incredible work ethic and was determined to cross any hurdle he faced.",
     category: "software-engineering",
+    recommendationId: "1",
   },
   {
     id: "preview-7",
-    quote: "Driving force behind both the design - participating in all discussions and brainstorming, taking requirements, and creating refined UI designs - and its instrumentation and front-end development using various frameworks.",
+    // Gokulnath Dayalan — Software Developer Intern, My Colleague (Dayforce)
+    quote: "Gaurav’s ability to work well under pressure and deliver quality results consistently is truly impressive.",
     category: "software-engineering",
+    recommendationId: "6",
   },
   {
     id: "preview-8",
-    quote: "A distinct visual style - every piece feels considered, never generic.",
-    category: "artist",
+    // Alina Tang — Early Talent Intern, My Colleague (Dayforce)
+    quote: "Isn't afraid to ask for constructive feedback and will use it to reach his goals.",
+    category: "software-engineering",
+    recommendationId: "10",
   },
 ];
 
