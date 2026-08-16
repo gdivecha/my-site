@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
 import { Tag } from "@/components/Pill";
 import type { Recommendation } from "@/lib/data/recommendations";
@@ -10,18 +7,20 @@ export function RoleCard({
   role,
   term,
   recommendations,
+  expanded,
+  onToggle,
 }: {
   role: string;
   term: string;
   recommendations: Recommendation[];
+  expanded: boolean;
+  onToggle: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div className="group rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover">
       <button
         type="button"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={onToggle}
         className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 text-left"
         aria-expanded={expanded}
       >
