@@ -196,6 +196,24 @@ export function Sidebar() {
           })}
         </div>
       </div>
+
+      {/* Absolutely positioned, not a flex child of the centered column
+          above — that column is centered via justify-center, so a normal
+          child here would grow its height and shift everything else in
+          it upward to stay centered. This sits independently at the
+          bottom instead, same left offsets as the top utility icons —
+          and gated on the same iconsVisible flag as those icons (not the
+          sidebar's own earlier cascade), so both appear together with
+          the page's right-side content rather than the copyright line
+          showing up early alongside the social icons above it. */}
+      <p
+        className={`absolute bottom-8 left-8 text-xs text-ink-faint transition-all ease-out md:bottom-10 md:left-12 lg:left-16 ${
+          iconsVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+        }`}
+        style={{ transitionDuration: `${ENTRANCE_MS}ms` }}
+      >
+        © {new Date().getFullYear()} {profile.name}. All rights reserved.
+      </p>
     </aside>
   );
 }
