@@ -38,13 +38,12 @@ export default function HomePage() {
             className="relative aspect-[4/5] w-full shrink-0 bg-panel"
             style={{
               maxWidth: "clamp(180px, 24vh, 260px)",
-              // Same blob outline as always, just rotated ~7deg clockwise
-              // around its own centroid in true (non-square) aspect space
-              // — rotating the raw percentage coordinates directly would
-              // skew the shape, since 1% of width != 1% of height at a
-              // 4:5 box. See the marginBottom note below: rotating shifted
-              // the shape's bottom-most point too, from 2.00% to 2.35% of
-              // the box's height.
+              // Rotated ~7deg clockwise around its own centroid in true
+              // (non-square) aspect space — rotating the raw percentage
+              // coordinates directly would skew the shape, since 1% of
+              // width != 1% of height at a 4:5 box. See the marginBottom
+              // note below: rotating shifted the shape's bottom-most point
+              // too, from 2.00% to 2.35% of the box's height.
               clipPath:
                 "polygon(96.80% 62.90%, 95.82% 65.96%, 94.67% 68.96%, 93.30% 71.87%, 91.75% 74.68%, 89.99% 77.39%, 88.02% 79.97%, 85.85% 82.41%, 83.50% 84.70%, 80.96% 86.82%, 78.26% 88.74%, 75.42% 90.47%, 72.46% 92.01%, 69.41% 93.35%, 66.29% 94.48%, 63.11% 95.43%, 59.91% 96.19%, 56.69% 96.78%, 53.45% 97.22%, 50.23% 97.50%, 47.01% 97.65%, 43.80% 97.65%, 40.60% 97.53%, 37.41% 97.28%, 34.23% 96.89%, 31.07% 96.34%, 27.94% 95.65%, 24.85% 94.78%, 21.81% 93.74%, 18.86% 92.49%, 16.02% 91.05%, 13.32% 89.39%, 10.79% 87.53%, 8.48% 85.47%, 6.41% 83.21%, 4.61% 80.79%, 3.11% 78.22%, 1.93% 75.54%, 1.08% 72.77%, 0.53% 69.96%, 0.31% 67.14%, 0.37% 64.32%, 0.70% 61.55%, 1.25% 58.85%, 2.00% 56.22%, 2.88% 53.68%, 3.89% 51.21%, 4.97% 48.80%, 6.09% 46.47%, 7.25% 44.14%, 8.41% 41.84%, 9.58% 39.50%, 10.78% 37.12%, 12.02% 34.69%, 13.34% 32.17%, 14.76% 29.56%, 16.34% 26.88%, 18.11% 24.14%, 20.12% 21.37%, 22.40% 18.60%, 24.97% 15.88%, 27.87% 13.26%, 31.09% 10.82%, 34.62% 8.58%, 38.44% 6.64%, 42.53% 5.03%, 46.83% 3.81%, 51.27% 3.02%, 55.81% 2.68%, 60.36% 2.81%, 64.86% 3.42%, 69.24% 4.50%, 73.44% 6.02%, 77.38% 7.96%, 81.05% 10.26%, 84.37% 12.90%, 87.35% 15.80%, 89.96% 18.93%, 92.20% 22.23%, 94.08% 25.64%, 95.61% 29.13%, 96.81% 32.66%, 97.72% 36.19%, 98.35% 39.71%, 98.73% 43.19%, 98.89% 46.62%, 98.85% 50.00%, 98.61% 53.32%, 98.18% 56.57%, 97.58% 59.76%)",
             }}

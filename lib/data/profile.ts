@@ -10,7 +10,7 @@ export const profile = {
     // "Content Creator"
   ],
   tagline:
-    "Software engineer by trade, artist by nature - I care as much about how something feels as how it performs, and I bring that same creativity to how I design systems.",
+    "Software engineer by trade, artist by nature - I care as much about how a system feels as how it performs.",
   bio: [
     "I'm a full-stack software engineer with 2+ years of internship experience across Amazon and Dayforce, specializing in scalable cloud infrastructure, real-time systems, and user-focused frontend design. I'm especially drawn to system design - reasoning through how the pieces of a system fit together is usually the part I enjoy most.",
     "I work across the entire stack, from AWS backend services and database optimization to React frontends and performance dashboards, with a strong focus on shipping features that work well and feel intentional.",
