@@ -5,7 +5,7 @@ import Image from "next/image";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { Tag } from "@/components/Pill";
-import { education } from "@/lib/data/education";
+import { courseCategories, education } from "@/lib/data/education";
 import { CourseCard } from "./course-card";
 
 const TABS = [
@@ -81,10 +81,26 @@ export default function AcademicsPage() {
         )}
 
         {tab === "coursework" && (
-          <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3">
-            {education.coursework.map((course) => (
-              <CourseCard key={course.title} course={course} />
-            ))}
+          <div className="flex flex-col gap-8">
+            {courseCategories.map((cat) => {
+              const courses = education.coursework.filter(
+                (c) => c.category === cat.id
+              );
+              if (courses.length === 0) return null;
+              return (
+                <div key={cat.id}>
+                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-ink-faint">
+                    <span aria-hidden="true">{cat.icon}</span>
+                    {cat.label}
+                  </h4>
+                  <div className="mt-3 grid grid-cols-2 items-start gap-4 sm:grid-cols-3">
+                    {courses.map((course) => (
+                      <CourseCard key={course.title} course={course} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
