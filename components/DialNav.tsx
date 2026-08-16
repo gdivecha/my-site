@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { isDialSoundMuted } from "@/lib/dial-sound";
 import { navItems } from "@/lib/data/nav";
 import { NUDGE_START_DELAY_MS } from "@/lib/entrance-timing";
 
@@ -71,60 +72,103 @@ function shortestDelta(from: number, to: number) {
  * brief tonal "snap" that decays almost immediately, not a ring. That
  * combination is what a physical dial actually sounds like — noise
  * alone read as dull/dead, a longer pure tone read as a musical
- * game-console chime. AudioContext is created lazily (browsers block
- * audio until a real user gesture, and this only ever gets called from
- * one — see the `programmatic` guard everywhere this is invoked). */
+ * game-console chime. */
 let dialAudioCtx: AudioContext | null = null;
 let dialNoiseBuffer: AudioBuffer | null = null;
 
+function getAudioCtxClass() {
+  return (
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext
+  );
+}
+
+// Browsers only unlock Web Audio on an actual "activation-triggering"
+// input event — click, keydown, pointerdown, touchend — and `scroll`/
+// `wheel` (the only thing that ever calls playDialTick, below) isn't one
+// of them. Without this, `AudioContext.resume()` never resolves and the
+// dial stays silent forever, not just on the first tick. Any real
+// gesture anywhere on the page — not necessarily on the dial itself —
+// satisfies it, so this just grabs the first one it sees.
+if (typeof window !== "undefined") {
+  const unlockDialAudio = () => {
+    try {
+      const Ctx = getAudioCtxClass();
+      if (!Ctx) return;
+      if (!dialAudioCtx) dialAudioCtx = new Ctx();
+      if (dialAudioCtx.state === "suspended") dialAudioCtx.resume();
+    } catch {
+      // Nice-to-have; never worth surfacing an error over.
+    }
+  };
+  window.addEventListener("pointerdown", unlockDialAudio, { once: true });
+  window.addEventListener("keydown", unlockDialAudio, { once: true });
+  window.addEventListener("touchend", unlockDialAudio, { once: true });
+}
+
+function emitDialTick(ctx: AudioContext) {
+  // Mechanical part: a short noise transient through a fairly wide
+  // bandpass — the "physical contact" of the detent.
+  const noiseDuration = 0.012;
+  if (!dialNoiseBuffer) {
+    const length = Math.ceil(ctx.sampleRate * noiseDuration);
+    dialNoiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = dialNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = dialNoiseBuffer;
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 3200;
+  noiseFilter.Q.value = 0.7;
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.18, ctx.currentTime);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + noiseDuration);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+  noise.start();
+  noise.stop(ctx.currentTime + noiseDuration);
+
+  // Tonal part: barely a ring, just enough pitch to keep it from
+  // sounding like a dead thud.
+  const snapDuration = 0.035;
+  const osc = ctx.createOscillator();
+  const oscGain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = 2800;
+  oscGain.gain.setValueAtTime(0.05, ctx.currentTime);
+  oscGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + snapDuration);
+  osc.connect(oscGain);
+  oscGain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + snapDuration);
+}
+
 function playDialTick() {
+  if (isDialSoundMuted()) return;
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
+    const Ctx = getAudioCtxClass();
     if (!Ctx) return;
     if (!dialAudioCtx) dialAudioCtx = new Ctx();
-    if (dialAudioCtx.state === "suspended") dialAudioCtx.resume();
     const ctx = dialAudioCtx;
 
-    // Mechanical part: a short noise transient through a fairly wide
-    // bandpass — the "physical contact" of the detent.
-    const noiseDuration = 0.012;
-    if (!dialNoiseBuffer) {
-      const length = Math.ceil(ctx.sampleRate * noiseDuration);
-      dialNoiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
-      const data = dialNoiseBuffer.getChannelData(0);
-      for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+    if (ctx.state === "suspended") {
+      // Scheduling nodes against a clock that hasn't started yet produces
+      // no audible sound even once resume() eventually succeeds — their
+      // very short stop times (12ms/35ms), computed from a currentTime
+      // that isn't advancing, can already be in the past by the time
+      // playback actually begins. Wait for resume to genuinely complete,
+      // then emit against the now-running clock, rather than firing
+      // blind. If nothing has unlocked audio yet (see above), this
+      // promise simply never resolves and the tick is silently skipped —
+      // exactly as before, just without a dead scheduling race on top.
+      ctx.resume().then(() => emitDialTick(ctx));
+      return;
     }
-    const noise = ctx.createBufferSource();
-    noise.buffer = dialNoiseBuffer;
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = "bandpass";
-    noiseFilter.frequency.value = 3200;
-    noiseFilter.Q.value = 0.7;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.18, ctx.currentTime);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + noiseDuration);
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-    noise.start();
-    noise.stop(ctx.currentTime + noiseDuration);
-
-    // Tonal part: barely a ring, just enough pitch to keep it from
-    // sounding like a dead thud.
-    const snapDuration = 0.035;
-    const osc = ctx.createOscillator();
-    const oscGain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 2800;
-    oscGain.gain.setValueAtTime(0.05, ctx.currentTime);
-    oscGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + snapDuration);
-    osc.connect(oscGain);
-    oscGain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + snapDuration);
+    emitDialTick(ctx);
   } catch {
     // Web Audio unavailable/blocked — the tick is a nice-to-have, never
     // worth breaking navigation over.
@@ -146,7 +190,6 @@ export function DialNav({
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmatic = useRef(false);
   const hasMounted = useRef(false);
-
   // Index into the tripled list — always kept near the middle copy.
   const [focusedRaw, setFocusedRaw] = useState(
     () => N + findActiveIndex(pathname)

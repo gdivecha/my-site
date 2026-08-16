@@ -276,6 +276,25 @@ export function SearchIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function VolumeOnIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...props}>
+      <path d="M4 9.5h2.8L11 6v12l-4.2-3.5H4V9.5Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 8.7a5 5 0 0 1 0 6.6" strokeLinecap="round" />
+      <path d="M17.6 6a8.6 8.6 0 0 1 0 12" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function VolumeOffIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...props}>
+      <path d="M4 9.5h2.8L11 6v12l-4.2-3.5H4V9.5Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.3 9.3l5.4 5.4M20.7 9.3l-5.4 5.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function StackedRowsIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...props}>
