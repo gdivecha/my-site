@@ -22,11 +22,11 @@ export function CopyEmailButton({ email }: { email: string }) {
     <button
       type="button"
       onClick={handleClick}
-      // Styled like a copyable code snippet (monospace, a divider before
-      // the action glyph) rather than a plain pill button — a familiar
-      // "click to copy" pattern from developer tools, which reads as more
-      // deliberately "copy this" than a generic button would.
-      className={`group mt-5 inline-flex items-center gap-3 rounded-lg border px-4 py-2.5 font-mono text-sm transition-all duration-200 ${
+      // Styled like a copyable snippet (a divider before the action
+      // glyph) rather than a plain pill button — a familiar "click to
+      // copy" pattern from developer tools — but in the site's normal
+      // typeface, not monospace, to stay consistent with everything else.
+      className={`group mt-5 inline-flex items-center gap-3 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200 ${
         copied
           ? "border-accent/50 bg-accent/10 text-accent-soft"
           : "border-line bg-input-bg text-ink hover:border-accent/40"
