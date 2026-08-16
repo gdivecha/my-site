@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { Pill } from "@/components/Pill";
-import { ArrowRightIcon } from "@/components/icons";
+import { ArrowRightIcon, DownloadIcon } from "@/components/icons";
 import { experiences } from "@/lib/data/experience";
 import { profile } from "@/lib/data/profile";
 import { projects } from "@/lib/data/projects";
@@ -17,7 +17,12 @@ const featuredProject = projects[0];
 // The second (2024) of two Amazon internships — "amazon-fba-inbound" —
 // rather than experiences[0], which would just be whatever's most recent.
 const featuredRole = experiences.find((e) => e.id === "amazon-fba-inbound")!;
-const featuredQuote = previewQuotes[0];
+// Not previewQuotes[0] (the highest-authority one, Chris Zou) — it's a
+// longer quote that line-clamp-3 was cutting off mid-thought here ("...
+// combined with this..."). This one (Azmat Mungur, Senior Performance
+// Engineer) is short enough to read as a complete sentence in the card
+// instead of trailing off.
+const featuredQuote = previewQuotes.find((q) => q.id === "preview-4")!;
 
 export default function HomePage() {
   return (
@@ -88,6 +93,43 @@ export default function HomePage() {
           {profile.bio.map((paragraph, i) => (
             <p key={i}>{paragraph}</p>
           ))}
+        </div>
+
+        {/* Plain links to the real pages, not the form/résumé themselves
+            inlined here — this is a prompt to go there, not a substitute
+            for going there, so Contact and Portfolio stay the actual
+            place those things happen rather than becoming redundant. */}
+        <div className="flex flex-wrap items-center gap-5">
+          {/* Primary: the site's own signature gradient (same two stops
+              as the name and the Skills graph's root node), with real
+              weight and a lift on hover — this is the one action the
+              page is actually pointing at. */}
+          <Link
+            href="/contact"
+            // text-[var(--color-base)] rather than a literal white: base
+            // flips to near-black in dark mode against this bright
+            // gradient (same trick as the Skills graph's root label and
+            // DialNav's active state) and stays near-white in light mode,
+            // where it already looked right.
+            className="group inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-[var(--color-base)] shadow-lg shadow-accent/25 transition-transform duration-200 hover:-translate-y-0.5"
+            style={{
+              background:
+                "linear-gradient(135deg, var(--color-accent-soft), var(--color-accent-deep))",
+            }}
+          >
+            Get in touch
+            <ArrowRightIcon className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
+          {/* Secondary: deliberately lighter-weight — a plain link, not
+              a second competing button — so there's one clear primary
+              action rather than two pills of equal weight. */}
+          <Link
+            href="/portfolio"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-ink-soft transition-colors hover:text-accent-soft"
+          >
+            <DownloadIcon className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
+            Download résumé
+          </Link>
         </div>
 
         {/* The one thing only this page does: a quick taste of the rest

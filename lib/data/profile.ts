@@ -5,7 +5,9 @@ export type Social = {
 
 export const profile = {
   name: "Gaurav Divecha",
-  roles: ["Software Engineer",
+  roles: [
+    "Software Engineer",
+    "Systems Thinker", // placeholder second role — swap for whatever you'd rather show
     // "Artist",
     // "Content Creator"
   ],
