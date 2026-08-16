@@ -244,7 +244,7 @@ export function DialNav({
   }
 
   return (
-    <nav className="relative" aria-label="Section navigation">
+    <nav className="relative" aria-label="Section navigation" data-dial-nav>
       {/* Static pill-shaped rail: always centered on the focused row. */}
       <div
         aria-hidden="true"

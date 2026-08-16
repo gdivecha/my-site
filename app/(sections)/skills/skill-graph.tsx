@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TechLogo } from "@/components/TechIcon";
 import { CodeBracketsIcon } from "@/components/icons";
 import type { SkillCategory } from "@/lib/data/skills";
@@ -23,6 +23,10 @@ const SKILL_NODE_SIZE = 89;
 // smaller than a full slot's worth of angular space, reclaiming room
 // that would otherwise sit empty so the leaves themselves can be bigger.
 const GAP_SLOT_FRACTION = 0.5;
+// Degrees the wheel turns per unit of wheel deltaY — tuned so a normal
+// trackpad/mouse scroll gesture reads as a deliberate spin, not a hair-
+// trigger flick.
+const ROTATION_PER_DELTA = 0.15;
 
 type Point = { x: number; y: number };
 
@@ -65,7 +69,7 @@ type SkillNode = {
 // distributed across categories. One empty slot after each category's
 // skills doubles as the visual gap that separates one group from the
 // next, without needing any explicit padding math.
-function useGraphLayout(categories: SkillCategory[]) {
+function useGraphLayout(categories: SkillCategory[], rotationOffset: number) {
   return useMemo(() => {
     const totalSlots =
       categories.reduce((sum, c) => sum + c.skills.length, 0) +
@@ -78,7 +82,7 @@ function useGraphLayout(categories: SkillCategory[]) {
     let slot = 0;
     for (const category of categories) {
       const angles = category.skills.map(() => {
-        const a = -90 + (slot + 0.5) * slotAngle;
+        const a = -90 + (slot + 0.5) * slotAngle + rotationOffset;
         slot += 1;
         return a;
       });
@@ -95,7 +99,7 @@ function useGraphLayout(categories: SkillCategory[]) {
     }
 
     return { categoryNodes, skillNodes };
-  }, [categories]);
+  }, [categories, rotationOffset]);
 }
 
 // A radial "S-curve": leaves the parent moving purely along its own
@@ -113,20 +117,71 @@ function radialLinkPath(parentAngle: number, parentR: number, childAngle: number
 }
 
 export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
-  const { categoryNodes, skillNodes } = useGraphLayout(categories);
+  const [rotationOffset, setRotationOffset] = useState(0);
+  const { categoryNodes, skillNodes } = useGraphLayout(categories, rotationOffset);
   const [hovered, setHovered] = useState<{ label: string } & Point>();
 
   const categoryPos = new Map(categoryNodes.map((n) => [n.category.id, n]));
 
+  // The graph is circular, so scrolling spins it around its own center
+  // instead of scrolling the page past it — same trade-off the connection
+  // graph already makes for pan/zoom. Listens on the whole window, not
+  // just this element: the page itself can't scroll anywhere while this
+  // view is mounted (see the body-overflow effect below), so there's
+  // nothing else for a wheel gesture anywhere on screen to do anyway, and
+  // restricting rotation to a tight hit-box around the visible nodes was
+  // its own source of missed input at the edges. Scoped to exactly this
+  // view regardless, since the listener is attached/removed with this
+  // component's own mount/unmount. React's onWheel can't reliably
+  // preventDefault (passive by default), so this is a real listener
+  // instead, same approach as DisableZoomGesture.
+  useEffect(() => {
+    function handleWheel(event: WheelEvent) {
+      // The sidebar's own scroll-to-navigate dial needs real, unhijacked
+      // wheel events to work at all — leave it alone wherever it's
+      // interactable, rather than stealing every wheel gesture on screen.
+      if ((event.target as HTMLElement).closest("[data-dial-nav]")) return;
+      event.preventDefault();
+      setRotationOffset((prev) => prev + event.deltaY * ROTATION_PER_DELTA);
+    }
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  // Trying to give the wheel listener above enough hit-area to never miss
+  // still leaves a real seam at the edge, so instead: while this view is
+  // mounted, there's simply nothing to scroll to — the page itself can't
+  // move vertically, and the graph is sized (see max-w-[min(...)] below)
+  // to always fit within one viewport. Scrolling to the top on mount
+  // guards against landing here already scrolled down from a taller
+  // previous view. Restores normal scrolling on unmount (switching to
+  // List view or the connection graph, or leaving the page), so this
+  // never affects anywhere else on the site.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   return (
-    <div className="relative mx-auto w-full max-w-3xl">
-      <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="w-full"
-        role="img"
-        aria-label="Skills grouped by category, shown as a network graph"
-      >
-        <defs>
+    <div>
+      {/* max-w-[min(48rem,72vh)]: the viewBox is a perfect square, so an
+          equivalent max-height is just the same value in width terms —
+          this is what actually keeps the whole graph within one
+          viewport (72vh leaves room for the heading/toggle row above),
+          rather than the old flat max-w-3xl, which had no awareness of
+          how tall the square it produces actually is. */}
+      <div className="relative mx-auto mt-12 w-full max-w-[min(48rem,72vh)]">
+        <svg
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="w-full"
+          role="img"
+          aria-label="Skills grouped by category, shown as a network graph you can spin by scrolling over it"
+        >
+          <defs>
           {/* Same two stops as the .text-gradient name treatment in the
               sidebar — ties the graph's focal point back to the site's
               one recurring gradient motif instead of inventing a new one. */}
@@ -201,12 +256,19 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
 
         {/* Category nodes — each gets its own soft glow (the graph's
             second tier of visual weight, between the root and the many
-            quiet skill leaves) and a darker filled disc. */}
+            quiet skill leaves) and a darker filled disc. Labels show on
+            hover (see the tooltip below) rather than always-on text, same
+            as the skill leaves — keeps the wheel legible as it spins
+            instead of a ring of text sweeping past at every angle. */}
         {categoryNodes.map((n) => {
           const CategoryIcon = categoryIcons[n.category.id] ?? CodeBracketsIcon;
-          const onLeft = Math.cos((n.angle * Math.PI) / 180) < 0;
           return (
-            <g key={n.category.id}>
+            <g
+              key={n.category.id}
+              onMouseEnter={() => setHovered({ label: n.category.label, x: n.x, y: n.y })}
+              onMouseLeave={() => setHovered(undefined)}
+              className="cursor-default"
+            >
               <circle
                 cx={n.x}
                 cy={n.y}
@@ -225,15 +287,6 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
                   <CategoryIcon className="h-9 w-9" />
                 </div>
               </foreignObject>
-              <text
-                x={n.x + (onLeft ? -(CATEGORY_NODE_RADIUS + 19) : CATEGORY_NODE_RADIUS + 19)}
-                y={n.y}
-                textAnchor={onLeft ? "end" : "start"}
-                dominantBaseline="middle"
-                className="fill-ink text-[30px] font-semibold"
-              >
-                {n.category.label}
-              </text>
             </g>
           );
         })}
@@ -288,6 +341,7 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
           {hovered.label.toUpperCase()}
         </span>
       )}
+      </div>
     </div>
   );
 }
