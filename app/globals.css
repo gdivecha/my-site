@@ -233,6 +233,18 @@ body {
   }
 }
 
+/* Sidebar role line (RoleReveal.tsx): a plain fade/rise on mount. */
+@keyframes role-reveal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Contact page's copy-email button: a slow, gentle bob on the copy icon
    so "click to copy" reads without anyone having to hover first. */
 @keyframes copy-hint-bob {

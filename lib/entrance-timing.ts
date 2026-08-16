@@ -29,18 +29,11 @@ export const NUDGE_START_DELAY_MS = 900;
  * everything else has settled. */
 export const DIAL_POST_CONTENT_DELAY_MS = 1200;
 
-// RoleReveal's own internal timeline.
-export const ROLE_REVEAL_HOLD_FIRST_MS = 900;
-export const ROLE_REVEAL_HOLD_SECOND_MS = 900;
-export const ROLE_REVEAL_WORD_FADE_MS = 400;
-export const ROLE_REVEAL_BOTH_FADE_MS = 500;
-
-/** Total wall-clock time from RoleReveal's mount to fully settled — the
- * first word's fade-in happens inside the HOLD_FIRST window, the
- * second's inside HOLD_SECOND, then the final "both" state fades in over
- * BOTH_FADE_MS. */
-export const ROLE_REVEAL_DURATION_MS =
-  ROLE_REVEAL_HOLD_FIRST_MS + ROLE_REVEAL_HOLD_SECOND_MS + ROLE_REVEAL_BOTH_FADE_MS;
+/** Total wall-clock time from RoleReveal's mount to fully settled — it's
+ * a single plain fade now (see RoleReveal.tsx), same duration as
+ * ENTRANCE_MS, kept as its own export since TAGLINE_DELAY_MS below needs
+ * to chain off it. */
+export const ROLE_REVEAL_DURATION_MS = ENTRANCE_MS;
 
 // Sidebar's own cascade: each stage's delay is the previous stage's delay
 // plus how long that stage's own animation actually takes to finish, so
