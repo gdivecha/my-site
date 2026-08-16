@@ -64,6 +64,73 @@ function shortestDelta(from: number, to: number) {
   return best;
 }
 
+/** A short synthesized detent click — no audio file, no network request,
+ * nothing that could ever cost anything: ~10ms of filtered noise (the
+ * physical, mechanical part of a real detent — a knob or click-wheel
+ * isn't a clean tone, it's a broadband transient) layered with a very
+ * brief tonal "snap" that decays almost immediately, not a ring. That
+ * combination is what a physical dial actually sounds like — noise
+ * alone read as dull/dead, a longer pure tone read as a musical
+ * game-console chime. AudioContext is created lazily (browsers block
+ * audio until a real user gesture, and this only ever gets called from
+ * one — see the `programmatic` guard everywhere this is invoked). */
+let dialAudioCtx: AudioContext | null = null;
+let dialNoiseBuffer: AudioBuffer | null = null;
+
+function playDialTick() {
+  try {
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!Ctx) return;
+    if (!dialAudioCtx) dialAudioCtx = new Ctx();
+    if (dialAudioCtx.state === "suspended") dialAudioCtx.resume();
+    const ctx = dialAudioCtx;
+
+    // Mechanical part: a short noise transient through a fairly wide
+    // bandpass — the "physical contact" of the detent.
+    const noiseDuration = 0.012;
+    if (!dialNoiseBuffer) {
+      const length = Math.ceil(ctx.sampleRate * noiseDuration);
+      dialNoiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
+      const data = dialNoiseBuffer.getChannelData(0);
+      for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = dialNoiseBuffer;
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = "bandpass";
+    noiseFilter.frequency.value = 3200;
+    noiseFilter.Q.value = 0.7;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.18, ctx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + noiseDuration);
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + noiseDuration);
+
+    // Tonal part: barely a ring, just enough pitch to keep it from
+    // sounding like a dead thud.
+    const snapDuration = 0.035;
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 2800;
+    oscGain.gain.setValueAtTime(0.05, ctx.currentTime);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + snapDuration);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + snapDuration);
+  } catch {
+    // Web Audio unavailable/blocked — the tick is a nice-to-have, never
+    // worth breaking navigation over.
+  }
+}
+
 export function DialNav({
   nudgeDelayMs = NUDGE_START_DELAY_MS,
 }: {
@@ -90,6 +157,14 @@ export function DialNav({
   // triggers React's "Cannot update Router while rendering DialNav" error,
   // since updater callbacks are expected to be pure.
   const focusedRawRef = useRef(focusedRaw);
+  // Which index the tick sound last played for — updated synchronously
+  // everywhere focus changes (this ref, unlike focusedRawRef above,
+  // can't wait for an effect to catch up: handleScroll needs to compare
+  // against it within the same synchronous scroll event, not a render
+  // later) so a real user scroll never re-ticks a tab it's already
+  // ticked, and switching tabs by click/keyboard doesn't leave a stale
+  // value that fires a spurious tick on the next scroll.
+  const lastTickedRawRef = useRef(focusedRaw);
   useEffect(() => {
     focusedRawRef.current = focusedRaw;
   }, [focusedRaw]);
@@ -119,6 +194,7 @@ export function DialNav({
       const nextRaw = prevRaw + delta;
       scrollToRaw(nextRaw, hasMounted.current);
       hasMounted.current = true;
+      lastTickedRawRef.current = nextRaw;
       return nextRaw;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -203,6 +279,7 @@ export function DialNav({
       const direction = event.key === "ArrowUp" ? -1 : 1;
       const nextRaw = focusedRawRef.current + direction;
       setFocusedRaw(nextRaw);
+      lastTickedRawRef.current = nextRaw;
       scrollToRaw(nextRaw, true);
       const nextItem = navItems[mod(nextRaw, N)];
       if (nextItem && nextItem.href !== pathname) router.push(nextItem.href);
@@ -233,6 +310,13 @@ export function DialNav({
     if (programmatic.current) return;
 
     setFocusedRaw(rawIndex);
+
+    // One tick per tab actually crossed, like a real dial's detent — not
+    // once per scroll event, which fires many times per row.
+    if (rawIndex !== lastTickedRawRef.current) {
+      lastTickedRawRef.current = rawIndex;
+      playDialTick();
+    }
 
     // Navigation itself is driven by the native `scrollend` event below,
     // not from here — trackpad/wheel scrolling can have real gaps
@@ -310,6 +394,7 @@ export function DialNav({
                 href={item.href}
                 onClick={() => {
                   setFocusedRaw(rawIndex);
+                  lastTickedRawRef.current = rawIndex;
                   scrollToRaw(rawIndex, true);
                 }}
                 aria-current={focused ? "page" : undefined}
