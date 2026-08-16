@@ -18,6 +18,7 @@ export const profile = {
   ],
   education: "Toronto Metropolitan University",
   location: "Greater Toronto Area, ON, Canada",
+  email: "gdivecha.portfolio@gmail.com",
   // TODO: replace with real profile URLs
   socials: [
     { label: "GitHub", href: "https://github.com/gdivecha" },
