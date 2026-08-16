@@ -233,6 +233,18 @@ body {
   }
 }
 
+/* Contact page's copy-email button: a slow, gentle bob on the copy icon
+   so "click to copy" reads without anyone having to hover first. */
+@keyframes copy-hint-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
 /* Themed scrollbar (Firefox) */
 html {
   scrollbar-width: thin;
