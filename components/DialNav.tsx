@@ -234,14 +234,44 @@ export function DialNav({
 
     setFocusedRaw(rawIndex);
 
-    if (settleTimer.current) clearTimeout(settleTimer.current);
-    settleTimer.current = setTimeout(() => {
+    // Navigation itself is driven by the native `scrollend` event below,
+    // not from here — trackpad/wheel scrolling can have real gaps
+    // between individual scroll events even mid-gesture (e.g. while
+    // decelerating past a row), and a fixed debounce here was firing
+    // during one of those gaps, navigating to a tab the user was still
+    // scrolling past rather than the one they meant to land on. Only
+    // browsers without `scrollend` support fall back to that debounce.
+    if (!("onscrollend" in window)) {
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+      settleTimer.current = setTimeout(() => {
+        const target = navItems[mod(rawIndex, N)];
+        if (target && target.href !== pathname) {
+          router.push(target.href);
+        }
+      }, SETTLE_DELAY);
+    }
+  }
+
+  // Primary "commit the navigation" path: fires once the browser
+  // considers scrolling (including momentum/inertial coasting) to have
+  // actually stopped — unlike `scroll`, which fires continuously
+  // throughout the gesture. See the `programmatic` guard note above.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !("onscrollend" in window)) return;
+
+    function handleScrollEnd() {
+      if (!el || programmatic.current) return;
+      const rawIndex = Math.round(el.scrollTop / ROW_HEIGHT);
       const target = navItems[mod(rawIndex, N)];
       if (target && target.href !== pathname) {
         router.push(target.href);
       }
-    }, SETTLE_DELAY);
-  }
+    }
+
+    el.addEventListener("scrollend", handleScrollEnd);
+    return () => el.removeEventListener("scrollend", handleScrollEnd);
+  }, [pathname, router]);
 
   return (
     <nav className="relative" aria-label="Section navigation" data-dial-nav>
