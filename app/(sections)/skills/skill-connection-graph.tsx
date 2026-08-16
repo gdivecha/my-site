@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type PointerEvent, type WheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { TechLogo } from "@/components/TechIcon";
 import { CodeBracketsIcon } from "@/components/icons";
 import {
@@ -293,15 +293,32 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
     });
   }
 
-  function handleWheel(e: WheelEvent<SVGSVGElement>) {
-    e.preventDefault();
+  // React's onWheel can't reliably preventDefault (attached passive by
+  // default), which is exactly what was letting the page scroll behind
+  // the graph while zooming — same issue and same fix as the category
+  // graph (see skill-graph.tsx): a real listener via useEffect instead.
+  // viewBoxRef mirrors the latest viewBox so the handler (attached once,
+  // on mount) always reads current state without needing to be torn
+  // down/re-attached on every zoom.
+  const viewBoxRef = useRef(viewBox);
+  useEffect(() => {
+    viewBoxRef.current = viewBox;
+  }, [viewBox]);
+
+  useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const fx = viewBox.x + ((e.clientX - rect.left) / rect.width) * viewBox.w;
-    const fy = viewBox.y + ((e.clientY - rect.top) / rect.height) * viewBox.h;
-    zoomBy(e.deltaY > 0 ? 1.08 : 1 / 1.08, { x: fx, y: fy });
-  }
+    function handleWheelNative(e: globalThis.WheelEvent) {
+      e.preventDefault();
+      const rect = svg!.getBoundingClientRect();
+      const vb = viewBoxRef.current;
+      const fx = vb.x + ((e.clientX - rect.left) / rect.width) * vb.w;
+      const fy = vb.y + ((e.clientY - rect.top) / rect.height) * vb.h;
+      zoomBy(e.deltaY > 0 ? 1.08 : 1 / 1.08, { x: fx, y: fy });
+    }
+    svg.addEventListener("wheel", handleWheelNative, { passive: false });
+    return () => svg.removeEventListener("wheel", handleWheelNative);
+  }, []);
 
   function handlePointerDown(e: PointerEvent<SVGSVGElement>) {
     dragRef.current = { startX: e.clientX, startY: e.clientY, startViewBox: viewBox };
@@ -331,7 +348,6 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
         className="h-[560px] w-full cursor-grab touch-none active:cursor-grabbing md:h-[680px]"
         role="img"
         aria-label="Skills grouped by category, and connected to each other by the projects and roles that used them together — pannable and zoomable"
-        onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
