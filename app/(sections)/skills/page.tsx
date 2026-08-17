@@ -53,7 +53,7 @@ export default function SkillsPage() {
       <PageHeading eyebrow="Skills">My Expertise</PageHeading>
 
       <div className="mt-6 flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[3.8px]">
+        <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[6px]">
           <button
             type="button"
             onClick={() => setView("graph")}
@@ -94,7 +94,7 @@ export default function SkillsPage() {
             />
           </button>
         ) : (
-          <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[3.8px]">
+          <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[6px]">
             <button
               type="button"
               onClick={() => setGraphMode("category")}

@@ -48,7 +48,7 @@ export default function AcademicsPage() {
         className="mt-8 max-w-2xl [animation:tab-panel-in_0.5s_ease-out] motion-reduce:[animation:none]"
       >
         {tab === "overview" && (
-          <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
+          <div className="rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[6px] md:p-8">
             <div className="flex items-start gap-5">
               <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-white sm:h-28 sm:w-28">
                 <Image
@@ -109,7 +109,7 @@ export default function AcademicsPage() {
             {education.achievements.map((achievement) => (
               <div
                 key={achievement.title}
-                className="flex items-start gap-4 rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px]"
+                className="flex items-start gap-4 rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px]"
               >
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-tag-bg text-lg"

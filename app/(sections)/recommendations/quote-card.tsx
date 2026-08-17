@@ -7,7 +7,7 @@ export function QuoteCard({ preview }: { preview: PreviewQuote }) {
     : undefined;
 
   return (
-    <div className="mb-4 break-inside-avoid rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px]">
+    <div className="mb-4 break-inside-avoid rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[6px]">
       <QuoteIcon className="h-6 w-6 text-accent" />
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
         {preview.quote}

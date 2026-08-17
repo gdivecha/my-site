@@ -34,8 +34,11 @@ html {
   /* dial nav rail track */
   --dial-rail-color: rgba(92, 88, 120, 0.18);
 
-  /* translucent card tint (Skills, Experience, Portfolio, Pill) */
-  --color-card-tint: rgba(48, 49, 81, 0.15);
+  /* translucent card tint (Skills, Experience, Portfolio, Pill) — the
+     resting state is the hover tint's own color nudged very slightly
+     toward neutral grey (desaturated a touch), so hovering still shifts
+     to the same purple-leaning tone as before. */
+  --color-card-tint: rgba(66, 66, 82, 0.3);
   --color-card-tint-hover: rgba(58, 59, 96, 0.3);
 
   /* Tag chip background (skill/tech tags) */
@@ -66,16 +69,26 @@ html {
      page, so that variant uses a visible purple wash instead. */
   --color-graph-node-bg: #2b2a42;
 
-  /* Watermark text */
-  --color-watermark-text: #f8f7fc;
-  --watermark-text-opacity: 0.045;
+  /* Utility icon buttons (search/sound/theme/shortcuts, top-left) —
+     same as panel by default here; light mode below darkens it a touch
+     since pure white there was blending into the page background. */
+  --color-icon-btn: var(--color-panel);
+  /* Icon button hover — the muted card-tint-hover navy barely reads as
+     purple against the near-black panel behind it, so this uses the
+     accent color itself at low opacity instead, distinct from
+     --color-card-tint-hover (shared with the cards elsewhere). */
+  --color-icon-btn-hover: rgba(109, 95, 232, 0.18);
+
+  /* Watermark text — a visible purple tint (accent-soft) rather than
+     plain near-white ink, so it reads as branded rather than a flat
+     gray smear against the dark background. */
+  --color-watermark-text: #a79ff0;
+  --watermark-text-opacity: 0.11;
   /* Loading shimmer's color (see .watermark-plane--bright below) — the
      palette's own darker purple, the same value in both themes (not
      redefined in the light-theme block below, so it carries through
      unchanged there too). Still unmistakably lighter than
-     --color-watermark-text above: at 0.045/0.095 opacity that near-
-     white/tinted text barely reads as visible at all, so the bar to
-     clear is low. */
+     --color-watermark-text above. */
   --color-watermark-wave: var(--color-accent-deep);
 }
 
@@ -100,8 +113,10 @@ html {
   /* dial nav rail track */
   --dial-rail-color: rgba(133, 118, 195, 0.27);
 
-  /* translucent card tint — white wash instead of the dark hue, same opacity */
-  --color-card-tint: rgba(255, 255, 255, 0.03);
+  /* translucent card tint — resting state has no tint color at all here,
+     just the backdrop-blur itself (still applied via the same class on
+     each card); hover brings in the purple tint. */
+  --color-card-tint: transparent;
   --color-card-tint-hover: rgba(109, 95, 232, 0.11);
 
   /* Tag chip background — panel-alt is too close to the page background
@@ -126,6 +141,16 @@ html {
   /* Tech logo tile background — pure white in light mode */
   --color-tech-icon-bg: #ffffff;
 
+  /* Utility icon buttons — pure white (panel) blended straight into the
+     page background here, so this darkens the resting fill a touch;
+     still lighter than the panel-alt hover so hovering still reads as
+     a change. */
+  --color-icon-btn: #f7f6fb;
+
+  /* Icon button hover — same purple as the resting-state light-mode
+     value used elsewhere (card-tint-hover), kept unchanged here. */
+  --color-icon-btn-hover: rgba(109, 95, 232, 0.11);
+
   /* Skills graph category-node fill — same fix as tag-bg above, and for
      the same reason (panel-alt is nearly invisible against the page
      here). Solid, not translucent — this sits directly on the page with
@@ -135,7 +160,7 @@ html {
 
   /* Watermark text — a slight purple tint instead of plain near-black ink */
   --color-watermark-text: #8f81ef;
-  --watermark-text-opacity: 0.095;
+  --watermark-text-opacity: 0.16;
 }
 
 /* Résumé preview image (Portfolio page): it's a plain white-page render of
@@ -179,6 +204,8 @@ html {
   --color-base: var(--color-base);
   --color-panel: var(--color-panel);
   --color-panel-alt: var(--color-panel-alt);
+  --color-icon-btn: var(--color-icon-btn);
+  --color-icon-btn-hover: var(--color-icon-btn-hover);
   --color-line: var(--color-line);
 
   --color-accent: var(--color-accent);

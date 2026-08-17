@@ -11,7 +11,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
   return (
     <Link
       href={`/experience/${experience.id}`}
-      className="group block rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+      className="group block rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h3 className="inline-flex items-center gap-1.5 text-base font-semibold text-ink transition-colors group-hover:text-accent-soft">

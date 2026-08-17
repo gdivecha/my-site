@@ -12,7 +12,7 @@ export function CourseCard({ course }: { course: Course }) {
       type="button"
       onClick={() => setOpen((o) => !o)}
       aria-pressed={open}
-      className="group flex h-36 w-full flex-col items-start gap-2 overflow-hidden rounded-2xl border border-line bg-card-tint p-4 text-left backdrop-blur-[3.8px] transition-colors duration-300 ease-out hover:border-accent/40 hover:bg-card-tint-hover"
+      className="group flex h-36 w-full flex-col items-start gap-2 overflow-hidden rounded-2xl border border-line bg-card-tint p-4 text-left backdrop-blur-[6px] transition-colors duration-300 ease-out hover:border-accent/40 hover:bg-card-tint-hover"
     >
       <div className="flex w-full items-start justify-between">
         <span className="text-2xl" aria-hidden="true">

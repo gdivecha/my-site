@@ -33,7 +33,7 @@ export default function PortfolioPage() {
     <PageShell watermark="PORTFOLIO">
       <PageHeading eyebrow="Portfolio">My Résumé</PageHeading>
 
-      <div className="mt-6 flex max-w-2xl flex-wrap divide-x divide-line overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px]">
+      <div className="mt-6 flex max-w-2xl flex-wrap divide-x divide-line overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[6px]">
         {stats.map((stat) => (
           <div key={stat.label} className="min-w-[5.5rem] flex-1 px-2 py-4 text-center sm:px-4">
             <p className="font-display text-xl font-bold tabular-nums text-accent-soft sm:text-3xl">
@@ -56,7 +56,7 @@ export default function PortfolioPage() {
           toolbar issues the live embed had. Regenerate with
           `qlmanage -t -s 1600 -o public public/resume.pdf` (then rename
           the output) whenever resume.pdf changes. */}
-      <div className="mt-6 max-w-2xl overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[3.8px]">
+      <div className="mt-6 max-w-2xl overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[6px]">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
           <div className="flex min-w-0 items-center gap-2 text-xs text-ink-soft">
             <FileIcon className="h-4 w-4 shrink-0 text-accent-soft" />

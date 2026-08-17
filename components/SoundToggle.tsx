@@ -32,7 +32,7 @@ export function SoundToggle({
       onClick={toggle}
       aria-label={muted ? "Unmute dial sound" : "Mute dial sound"}
       aria-pressed={muted}
-      className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-panel text-ink-soft transition-colors hover:bg-panel-alt hover:text-ink ${className}`}
+      className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-icon-btn text-ink-soft transition-colors hover:bg-icon-btn-hover hover:text-ink ${className}`}
       style={style}
     >
       {muted ? (

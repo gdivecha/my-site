@@ -13,7 +13,7 @@ export default function ContactPage() {
     <PageShell watermark="CONTACT">
       <PageHeading eyebrow="Contact">Let&apos;s talk</PageHeading>
 
-      <div className="mt-8 max-w-xl rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] md:p-8">
+      <div className="mt-8 max-w-xl rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[6px] md:p-8">
         <p className="text-sm leading-relaxed text-ink-soft">
           Open to full-time roles, freelance work, or just talking shop
           about something you&apos;re building. Reach out directly:

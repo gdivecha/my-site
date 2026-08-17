@@ -144,7 +144,7 @@ export default function HomePage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <Link
               href={`/projects/${featuredProject.slug}`}
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
             >
               <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
                 Featured project
@@ -160,7 +160,7 @@ export default function HomePage() {
 
             <Link
               href="/experience"
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
             >
               <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
                 Featured role
@@ -176,7 +176,7 @@ export default function HomePage() {
 
             <Link
               href="/recommendations"
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
             >
               <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
                 What people say

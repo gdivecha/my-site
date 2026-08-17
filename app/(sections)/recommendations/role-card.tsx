@@ -17,7 +17,7 @@ export function RoleCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="group rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[3.8px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover">
+    <div className="group rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover">
       <button
         type="button"
         onClick={onToggle}
