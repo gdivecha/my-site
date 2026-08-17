@@ -19,67 +19,84 @@ const WAVE_CYCLE_MS = 6000;
 export function PageShell({
   watermark,
   children,
-  simulateDelayMs,
+  ready = true,
 }: {
   watermark: string;
   children: ReactNode;
-  /** Adds an artificial delay on top of the normal reveal timing —
-   * exists purely so /loading-demo can make a page genuinely, honestly
-   * slow to load (not a re-implemented mockup) and let DialNav's real
-   * lock and this component's real shimmer both react to it for real.
-   * No real page passes this. */
-  simulateDelayMs?: number;
+  /** Set this false while a page has real async work in flight that its
+   * content genuinely depends on (a client-side fetch, etc.), then flip
+   * it true once that resolves — DialNav's real lock and this
+   * component's real shimmer react to it exactly like they'd react to
+   * any other genuinely slow load. Defaults to true: every page's
+   * content today is already resolved by the time this mounts, so by
+   * default content follows the same base entrance schedule it always
+   * has. */
+  ready?: boolean;
 }) {
   // Deliberately two separate states, not one: the watermark itself
   // must always appear at or before the content, never after — so its
   // own timing (watermarkVisible) only ever reflects the entrance
   // choreography's own base wait, while contentVisible additionally
-  // waits on simulateDelayMs. On ordinary navigation the base wait is
-  // already ~0, so in practice the watermark shows right when a tab is
+  // waits on `ready`. On ordinary navigation the base wait is already
+  // ~0, so in practice the watermark shows right when a tab is
   // selected; only a genuinely slow page's *content* lags behind it.
   const [watermarkVisible, setWatermarkVisible] = useState(false);
   const [contentVisible, setContentVisible] = useState(false);
   const [waving, setWaving] = useState(false);
   // Timestamp the shimmer actually started at, so its release can be
   // aligned to a genuine loop boundary instead of an arbitrary moment
-  // mid-sweep — null whenever it isn't showing.
+  // mid-sweep — null whenever it isn't showing. Lives across renders of
+  // the effect below (not reset when `ready` flips), since the
+  // ready-again run needs to know how long ago the not-ready run armed
+  // it in order to compute that same remainder.
   const waveStartedAt = useRef<number | null>(null);
 
+  // The watermark's own reveal — the sidebar's entrance cascade on a
+  // genuine first load, ~0 on ordinary navigation. Independent of
+  // `ready`: this is the one timer a slow page's content deliberately
+  // does NOT get to push out further.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setWatermarkVisible(true);
+      return;
+    }
+    const baseRemaining = Math.max(
+      0,
+      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+    );
+    const timer = setTimeout(() => setWatermarkVisible(true), baseRemaining);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Content readiness — reruns whenever `ready` itself changes, so a
+  // real async resolution (not just mount) can drive this.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setContentVisible(true);
       notifyPageReady();
       return;
     }
 
-    // How long until the watermark itself appears — the sidebar's own
-    // entrance cascade on a genuine first load, ~0 on ordinary
-    // navigation (real elapsed time already exceeds it by then), and
-    // never anything more than that: this is the one timer
-    // simulateDelayMs deliberately does NOT touch.
     const baseRemaining = Math.max(
       0,
       SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
     );
-    // How long until the actual *content* is ready — same base wait,
-    // plus whatever this specific page adds on top.
-    const contentRemaining = baseRemaining + (simulateDelayMs ?? 0);
 
-    const watermarkTimer = setTimeout(
-      () => setWatermarkVisible(true),
-      baseRemaining
-    );
+    if (!ready) {
+      // Not ready yet: the shimmer only actually shows if content is
+      // still not ready REASONABLE_LOAD_WAIT_MS after the watermark
+      // itself appeared — a normal load resolves (ready flips true)
+      // long before this fires and it never appears at all.
+      const waveStartTimer = setTimeout(() => {
+        waveStartedAt.current = performance.now();
+        setWaving(true);
+      }, baseRemaining + REASONABLE_LOAD_WAIT_MS);
+      return () => clearTimeout(waveStartTimer);
+    }
 
-    // The shimmer only actually shows if content is still not ready
-    // REASONABLE_LOAD_WAIT_MS after the watermark itself appeared — a
-    // normal load resolves long before this fires and it never appears
-    // at all.
-    const waveStartTimer = setTimeout(() => {
-      waveStartedAt.current = performance.now();
-      setWaving(true);
-    }, baseRemaining + REASONABLE_LOAD_WAIT_MS);
-
+    // Ready: reveal content once the base entrance wait has elapsed —
+    // ~immediately if `ready` only just turned true after that wait
+    // already passed, since baseRemaining recomputes fresh above.
     let waveEndTimer: ReturnType<typeof setTimeout> | null = null;
     const contentTimer = setTimeout(() => {
       setContentVisible(true);
@@ -87,9 +104,7 @@ export function PageShell({
       // waits on this instead of guessing from paint timing.
       notifyPageReady();
       if (waveStartedAt.current === null) {
-        // Shimmer never started — nothing to finish, just cancel its
-        // timer so it doesn't fire after we're already done.
-        clearTimeout(waveStartTimer);
+        // Shimmer never started — nothing to finish.
         return;
       }
       // Shimmer is already mid-sweep: let it complete its current loop
@@ -101,16 +116,13 @@ export function PageShell({
         setWaving(false);
         waveStartedAt.current = null;
       }, remainder);
-    }, contentRemaining);
+    }, baseRemaining);
 
     return () => {
-      clearTimeout(watermarkTimer);
-      clearTimeout(waveStartTimer);
       clearTimeout(contentTimer);
       if (waveEndTimer) clearTimeout(waveEndTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [ready]);
 
   return (
     <div
