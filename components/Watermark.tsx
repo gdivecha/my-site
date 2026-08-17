@@ -31,6 +31,24 @@ export function Watermark({
   const fieldRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const [repeats, setRepeats] = useState(INITIAL_REPEATS);
+  // When this component first mounts — i.e. the moment the dim plane's own
+  // rows start their scroll animation — so the bright plane (mounted much
+  // later, only once waving starts) can work out how far into that same
+  // animation the dim plane already is.
+  const mountedAtRef = useRef(performance.now());
+  // How far into the shared scroll cycle the dim plane already was at the
+  // instant the bright plane mounts — captured once per waving session
+  // (not recomputed on every re-render while it's true, which would jump
+  // the position each time), reset back to null once waving ends so the
+  // next time it starts, this is captured fresh again.
+  const brightSyncElapsedRef = useRef<number | null>(null);
+  if (waving) {
+    if (brightSyncElapsedRef.current === null) {
+      brightSyncElapsedRef.current = performance.now() - mountedAtRef.current;
+    }
+  } else {
+    brightSyncElapsedRef.current = null;
+  }
 
   // Two things measured off the same rendered copy: how many repetitions
   // are actually needed to outrun the viewport (so the loop never runs
@@ -83,13 +101,13 @@ export function Watermark({
   // ref can only ever point at one live DOM node, and the resize
   // measurement only needs one reference sample regardless of how many
   // copies of the markup exist.
-  function renderRows(attachRef: boolean) {
+  function renderRows(attachRef: boolean, trackStyle?: React.CSSProperties) {
     return Array.from({ length: ROWS }).map((_, row) => (
       <div
         key={row}
         className={`watermark-row${row % 2 === 1 ? " watermark-row--reverse" : ""}`}
       >
-        <div className="watermark-row__track">
+        <div className="watermark-row__track" style={trackStyle}>
           {[0, 1].map((copy) => (
             <div
               className="watermark-row__copy"
@@ -124,7 +142,16 @@ export function Watermark({
       {waving && (
         <div className="watermark-bright-clip" aria-hidden="true">
           <div className="watermark-plane watermark-plane--bright">
-            {renderRows(false)}
+            {/* Phase-locks this freshly-mounted copy's own scroll animation
+                to wherever the always-mounted dim copy's identical
+                animation already is — without this, the two copies' text
+                drifts out of horizontal sync (dim mounted at page load,
+                this one only mounts once waving starts), so wherever the
+                mask reveals bright text it visibly doubles/ghosts against
+                the dim glyphs around it instead of lining up with them. */}
+            {renderRows(false, {
+              animationDelay: `-${brightSyncElapsedRef.current ?? 0}ms`,
+            })}
           </div>
         </div>
       )}
