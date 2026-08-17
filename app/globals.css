@@ -436,28 +436,39 @@ html {
      trailing edge exits — a much larger mask-size (300%, originally)
      meant most of each cycle was spent with the band already off-
      screen, reading as a pause even though the animation itself never
-     paused. The ramp (42%-58%) is the band's actual width. */
+     paused.
+
+     The ramp (46%-54%) is deliberately much narrower than it first was
+     (42%-58%) — this plane is a 150vmax square (oversized on purpose,
+     so it still fully covers the screen once rotated), and percentage
+     stops are relative to *that*, not the viewport. The original 16-
+     point-wide ramp worked out to roughly a third of the actual screen
+     width once mask-size scaled it up — reading as half the page
+     abruptly flipping bright, not a band sweeping through it. This is
+     about half that width. The slower duration below gives that
+     narrower ramp real time to visibly transition rather than
+     resolving in a snap. */
   mask-image: linear-gradient(
     90deg,
     transparent 0%,
-    transparent 42%,
+    transparent 46%,
     black 50%,
-    transparent 58%,
+    transparent 54%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     90deg,
     transparent 0%,
-    transparent 42%,
+    transparent 46%,
     black 50%,
-    transparent 58%,
+    transparent 54%,
     transparent 100%
   );
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
   mask-size: 140% 100%;
   -webkit-mask-size: 140% 100%;
-  animation: watermark-shimmer-mask 4.5s linear infinite;
+  animation: watermark-shimmer-mask 6s linear infinite;
 }
 
 .watermark-plane--bright .watermark-row__copy span {
@@ -465,10 +476,18 @@ html {
   opacity: 1;
 }
 
+/* from is deliberately far enough right that the band is still fully
+   transparent (off past the field's own right edge) the instant this
+   animation starts — otherwise, since this class only mounts when
+   waving flips true, the very first frame could already show real
+   brightness with no chance to actually see it arrive, reading as a
+   pop rather than an entrance. to is unchanged from before, so the
+   exit position (and its handoff into .watermark-bright-clip's
+   fade-out zone) stays exactly as already tuned. */
 @keyframes watermark-shimmer-mask {
   from {
-    mask-position: -20% 0;
-    -webkit-mask-position: -20% 0;
+    mask-position: -95% 0;
+    -webkit-mask-position: -95% 0;
   }
   to {
     mask-position: 120% 0;

@@ -14,7 +14,7 @@ import { notifyPageReady } from "@/lib/page-ready";
  * globals.css — used to let an in-progress sweep finish its current
  * cycle rather than cutting off mid-sweep once the page is actually
  * ready (see below). */
-const WAVE_CYCLE_MS = 4500;
+const WAVE_CYCLE_MS = 6000;
 
 export function PageShell({
   watermark,
