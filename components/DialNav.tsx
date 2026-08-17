@@ -200,30 +200,33 @@ export function DialNav({
   const programmatic = useRef(false);
   const hasMounted = useRef(false);
 
-  // Covers the dial with a fast, blurred "hunting for a station" spin
-  // through its own tab labels from mount until the page's own entrance
-  // cascade has actually finished — the same SIDEBAR_CASCADE_DONE_MS
-  // moment PageShell waits for before revealing a page's content, so the
-  // dial "locks in" on the real tab at the exact instant the rest of the
-  // page becomes ready, not on some unrelated timer. DialNav itself
-  // never unmounts across client-side navigation (it lives in the
-  // persistent (sections) layout), so this can only ever play once, on
-  // a genuine first load — exactly where a "still loading" cue belongs.
+  // Locks the dial (real lock — see the pointer-events-none tie-in
+  // below — plus the inline lock icon next to the focused tab) from
+  // mount, staying locked straight through into the load-time nudge
+  // below with no gap in between: if motion is enabled, THIS effect
+  // never releases it — the nudge effect is what eventually does, once
+  // its swings finish — so there's no window where someone could
+  // reselect a tab between "page ready" and "nudge done". Only when
+  // motion is disabled (no nudge will ever run) does this effect release
+  // it itself, once the page's own entrance cascade has actually
+  // finished (the same SIDEBAR_CASCADE_DONE_MS moment PageShell waits
+  // for before revealing a page's content). DialNav itself never
+  // unmounts across client-side navigation (it lives in the persistent
+  // (sections) layout), so this initial lock can only ever happen once,
+  // on a genuine first load.
   const [seeking, setSeeking] = useState(true);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setSeeking(false);
-      return;
+      const remaining = Math.max(
+        0,
+        SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+      );
+      const timer = window.setTimeout(() => {
+        setSeeking(false);
+        playDialTick();
+      }, remaining);
+      return () => window.clearTimeout(timer);
     }
-    const remaining = Math.max(
-      0,
-      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
-    );
-    const timer = window.setTimeout(() => {
-      setSeeking(false);
-      playDialTick();
-    }, remaining);
-    return () => window.clearTimeout(timer);
   }, []);
 
   // Re-locks on every later navigation too, not just the first load —
