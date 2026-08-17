@@ -393,6 +393,19 @@ export function DialNav({
     };
   }, [nudgeDelayMs]);
 
+  // While the dial is locked, the page itself shouldn't be scrollable
+  // either — otherwise the mouse wheel/trackpad can still move the
+  // underlying page while the dial visibly refuses to respond, which
+  // reads as broken rather than "still loading".
+  useEffect(() => {
+    if (!seeking) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [seeking]);
+
   // Cmd+Up / Cmd+Down step to the previous/next tab, from anywhere on the page.
   useEffect(() => {
     function handleKeydown(event: KeyboardEvent) {
@@ -400,6 +413,10 @@ export function DialNav({
       if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
       const target = event.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+      // Same lock the dial itself observes (pointer-events-none, above) —
+      // a keyboard shortcut shouldn't be able to do what a click/scroll
+      // currently can't.
+      if (seeking) return;
 
       event.preventDefault();
       const direction = event.key === "ArrowUp" ? -1 : 1;
@@ -407,13 +424,14 @@ export function DialNav({
       setFocusedRaw(nextRaw);
       lastTickedRawRef.current = nextRaw;
       scrollToRaw(nextRaw, true);
+      playDialTick();
       const nextItem = navItems[mod(nextRaw, N)];
       if (nextItem && nextItem.href !== pathname) router.push(nextItem.href);
     }
 
     window.addEventListener("keydown", handleKeydown);
     return () => window.removeEventListener("keydown", handleKeydown);
-  }, [pathname, router, scrollToRaw]);
+  }, [pathname, router, scrollToRaw, seeking]);
 
   function handleScroll() {
     const el = scrollRef.current;
