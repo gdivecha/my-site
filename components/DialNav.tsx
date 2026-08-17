@@ -3,9 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { APP_LOADED_AT } from "@/lib/app-load-time";
 import { isDialSoundMuted } from "@/lib/dial-sound";
 import { navItems } from "@/lib/data/nav";
-import { NUDGE_START_DELAY_MS } from "@/lib/entrance-timing";
+import { LockIcon } from "./icons";
+import {
+  NUDGE_START_DELAY_MS,
+  SIDEBAR_CASCADE_DONE_MS,
+} from "@/lib/entrance-timing";
 
 const N = navItems.length;
 const ROW_HEIGHT = 36;
@@ -15,6 +20,10 @@ const VISIBLE_ROWS = VISIBLE_NEIGHBORS * 2 + 1;
 const CONTAINER_HEIGHT = ROW_HEIGHT * VISIBLE_ROWS;
 const EDGE_PADDING = (CONTAINER_HEIGHT - ROW_HEIGHT) / 2;
 const SETTLE_DELAY = 160;
+/** How long a newly selected tab's page gets to become available before
+ * the lock icon shows at all — a normal, fast navigation never reaches
+ * this and shows nothing; it's only for a genuine stall. */
+const REASONABLE_LOAD_WAIT_MS = 200;
 /** Render the list 3x so scrolling past the first/last item wraps seamlessly. */
 const COPIES = 3;
 const RAIL_WIDTH = 22;
@@ -190,6 +199,71 @@ export function DialNav({
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmatic = useRef(false);
   const hasMounted = useRef(false);
+
+  // Covers the dial with a fast, blurred "hunting for a station" spin
+  // through its own tab labels from mount until the page's own entrance
+  // cascade has actually finished — the same SIDEBAR_CASCADE_DONE_MS
+  // moment PageShell waits for before revealing a page's content, so the
+  // dial "locks in" on the real tab at the exact instant the rest of the
+  // page becomes ready, not on some unrelated timer. DialNav itself
+  // never unmounts across client-side navigation (it lives in the
+  // persistent (sections) layout), so this can only ever play once, on
+  // a genuine first load — exactly where a "still loading" cue belongs.
+  const [seeking, setSeeking] = useState(true);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setSeeking(false);
+      return;
+    }
+    const remaining = Math.max(
+      0,
+      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+    );
+    const timer = window.setTimeout(() => {
+      setSeeking(false);
+      playDialTick();
+    }, remaining);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  // Re-locks on every later navigation too, not just the first load —
+  // but only actually shows the lock if the new tab's page is genuinely
+  // slow to become available. For this site's local, synchronous pages
+  // that's essentially never (a double rAF below confirms a real paint
+  // almost immediately), so most navigations show nothing at all; the
+  // lock only appears if REASONABLE_LOAD_WAIT_MS passes first — a real
+  // stall, not routine per-navigation flicker. isFirstPathChange skips
+  // exactly the mount's own run of this effect, which the effect above
+  // already owns.
+  const isFirstPathChange = useRef(true);
+  useEffect(() => {
+    if (isFirstPathChange.current) {
+      isFirstPathChange.current = false;
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let didShowLock = false;
+    const showLockTimer = window.setTimeout(() => {
+      didShowLock = true;
+      setSeeking(true);
+    }, REASONABLE_LOAD_WAIT_MS);
+
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        window.clearTimeout(showLockTimer);
+        setSeeking(false);
+        if (didShowLock) playDialTick();
+      });
+    });
+    return () => {
+      window.clearTimeout(showLockTimer);
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+    };
+  }, [pathname]);
+
   // Index into the tripled list — always kept near the middle copy.
   const [focusedRaw, setFocusedRaw] = useState(
     () => N + findActiveIndex(pathname)
@@ -288,6 +362,15 @@ export function DialNav({
       if (!el) return;
       programmatic.current = true;
       setPeeking(true);
+      // Also a genuine lock, not just the visual cue: the nudge is
+      // directly driving el.scrollTop itself via rAF the whole time it
+      // runs, and real scroll/click input arriving mid-swing would fight
+      // that animation. seeking already gates both the lock icon (next
+      // to the real focused tab, which doesn't change during the swing)
+      // and pointer-events-none on the scroll container — reusing it
+      // here covers the nudge with the same actual lock, not a second
+      // one.
+      setSeeking(true);
       const rest = el.scrollTop;
 
       animate(rest, rest - SWING, 360, easeOutSine, () => {
@@ -297,6 +380,7 @@ export function DialNav({
               animate(rest + SWING, rest, 600, easeInOutSine, () => {
                 programmatic.current = false;
                 setPeeking(false);
+                setSeeking(false);
               });
             });
           });
@@ -405,7 +489,7 @@ export function DialNav({
       {/* Static pill-shaped rail: always centered on the focused row. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-2 top-0 rounded-full"
+        className="pointer-events-none absolute left-0 top-0 rounded-full"
         style={{
           width: RAIL_WIDTH,
           height: CONTAINER_HEIGHT,
@@ -417,13 +501,28 @@ export function DialNav({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`no-scrollbar relative overflow-y-auto ${
+        className={`no-scrollbar relative overflow-x-hidden overflow-y-auto ${
           peeking ? "" : "snap-y snap-mandatory"
+        } ${
+          // The seeking overlay above is itself pointer-events-none (it
+          // has to be, to stay purely decorative) — without this, the
+          // real rows underneath stayed fully scrollable/clickable the
+          // whole time, just invisibly, while it looked locked. This is
+          // the actual lock; the overlay is only ever what makes it
+          // visible.
+          seeking ? "pointer-events-none" : ""
         }`}
         style={{
           height: CONTAINER_HEIGHT,
           maskImage: FADE_MASK_IMAGE,
           WebkitMaskImage: FADE_MASK_IMAGE,
+          // Setting overflow-y alone quietly computes overflow-x to
+          // auto too (a CSS spec quirk), which let a horizontal
+          // trackpad swipe or shift+wheel nudge the dial sideways —
+          // explicit overflow-x-hidden above covers mouse/trackpad
+          // input; touch-action further stops touchscreen panning from
+          // moving it on the x-axis, leaving y untouched.
+          touchAction: "pan-y",
         }}
       >
         <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
@@ -441,7 +540,7 @@ export function DialNav({
                   scrollToRaw(rawIndex, true);
                 }}
                 aria-current={focused ? "page" : undefined}
-                className="flex w-full shrink-0 snap-center items-center gap-3 pl-2 pr-2"
+                className="flex w-full shrink-0 snap-center items-center gap-3 pr-2"
                 style={{ height: ROW_HEIGHT, scrollSnapStop: "always" }}
               >
                 <span
@@ -455,13 +554,19 @@ export function DialNav({
                   />
                 </span>
                 <span
-                  className={`text-sm uppercase tracking-wide transition-all duration-200 ${
+                  className={`flex items-center gap-2 text-sm uppercase tracking-wide transition-all duration-200 ${
                     focused
                       ? "font-semibold text-ink"
                       : "font-medium text-dial-inactive"
                   }`}
                 >
                   {item.label}
+                  {focused && seeking && (
+                    <LockIcon
+                      aria-hidden="true"
+                      className="h-3 w-3 shrink-0 text-ink-faint"
+                    />
+                  )}
                 </span>
               </Link>
             );
@@ -469,6 +574,7 @@ export function DialNav({
         )}
         <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
       </div>
+
     </nav>
   );
 }
