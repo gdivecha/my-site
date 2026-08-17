@@ -69,6 +69,14 @@ html {
   /* Watermark text */
   --color-watermark-text: #f8f7fc;
   --watermark-text-opacity: 0.045;
+  /* Loading shimmer's color (see .watermark-plane--bright below) — the
+     palette's own darker purple, the same value in both themes (not
+     redefined in the light-theme block below, so it carries through
+     unchanged there too). Still unmistakably lighter than
+     --color-watermark-text above: at 0.045/0.095 opacity that near-
+     white/tinted text barely reads as visible at all, so the bar to
+     clear is low. */
+  --color-watermark-wave: var(--color-accent-deep);
 }
 
 :root[data-theme="light"] {
@@ -438,30 +446,31 @@ html {
      screen, reading as a pause even though the animation itself never
      paused.
 
-     The ramp (46%-54%) is deliberately much narrower than it first was
-     (42%-58%) — this plane is a 150vmax square (oversized on purpose,
-     so it still fully covers the screen once rotated), and percentage
-     stops are relative to *that*, not the viewport. The original 16-
-     point-wide ramp worked out to roughly a third of the actual screen
-     width once mask-size scaled it up — reading as half the page
-     abruptly flipping bright, not a band sweeping through it. This is
-     about half that width. The slower duration below gives that
-     narrower ramp real time to visibly transition rather than
-     resolving in a snap. */
+     The ramp (44%-56%) sets both the band's width and how gradually it
+     falls off — there's no flat opaque core, just a linear fade from
+     transparent up to full and back down, so widening this zone makes
+     it simultaneously wider *and* softer-edged, easing into the
+     background rather than cutting off sharply. This plane is a
+     150vmax square (oversized on purpose, so it still fully covers the
+     screen once rotated) and these percentages are relative to *that*,
+     not the viewport — a first pass at 16 points wide worked out to
+     roughly a third of the actual screen, reading as half the page
+     abruptly flipping bright; this sits between that and a later,
+     narrower 8-point pass that read as too sharp/thin the other way. */
   mask-image: linear-gradient(
     90deg,
     transparent 0%,
-    transparent 46%,
+    transparent 44%,
     black 50%,
-    transparent 54%,
+    transparent 56%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     90deg,
     transparent 0%,
-    transparent 46%,
+    transparent 44%,
     black 50%,
-    transparent 54%,
+    transparent 56%,
     transparent 100%
   );
   mask-repeat: no-repeat;
@@ -472,7 +481,7 @@ html {
 }
 
 .watermark-plane--bright .watermark-row__copy span {
-  color: var(--color-accent-soft);
+  color: var(--color-watermark-wave);
   opacity: 1;
 }
 
