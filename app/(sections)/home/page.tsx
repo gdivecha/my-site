@@ -4,6 +4,10 @@ import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { Pill } from "@/components/Pill";
 import { ArrowRightIcon, DownloadIcon } from "@/components/icons";
+import {
+  certificationSortDate,
+  certifications,
+} from "@/lib/data/certifications";
 import { experiences } from "@/lib/data/experience";
 import { profile } from "@/lib/data/profile";
 import { projects } from "@/lib/data/projects";
@@ -23,6 +27,12 @@ const featuredRole = experiences.find((e) => e.id === "amazon-fba-inbound")!;
 // Engineer) is short enough to read as a complete sentence in the card
 // instead of trailing off.
 const featuredQuote = previewQuotes.find((q) => q.id === "preview-4")!;
+// Most recently earned by date, not data-entry order — the Udemy entry
+// (no date yet, see lib/data/certifications.ts) sorts as "oldest" via
+// certificationSortDate's 0-fallback, so it's correctly excluded here.
+const featuredCert = certifications.reduce((latest, c) =>
+  certificationSortDate(c) > certificationSortDate(latest) ? c : latest
+);
 
 export default function HomePage() {
   return (
@@ -141,7 +151,7 @@ export default function HomePage() {
             Elsewhere on this site
           </h2>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Link
               href={`/projects/${featuredProject.slug}`}
               className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
@@ -184,6 +194,22 @@ export default function HomePage() {
               </p>
               <p className="mt-2 line-clamp-3 text-xs italic leading-relaxed text-ink-soft">
                 &ldquo;{featuredQuote.quote}&rdquo;
+              </p>
+            </Link>
+
+            <Link
+              href="/certifications"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+            >
+              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
+                Certifications
+                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+              </p>
+              <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+                {certifications.length} credentials earned
+              </p>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-faint">
+                Most recently: {featuredCert.name}
               </p>
             </Link>
           </div>
