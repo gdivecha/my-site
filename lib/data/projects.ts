@@ -1,4 +1,4 @@
-export type ProjectCategory = "full-stack" | "backend" | "hackathon";
+export type ProjectCategory = "full-stack" | "backend" | "hardware";
 
 export type ProjectDetailBlock = {
   title: string;
@@ -13,148 +13,212 @@ export type Project = {
   category: ProjectCategory;
   tags: string[];
   videoUrl?: string;
+  /** Optional — when present, the detail page links out to the source. */
+  repoUrl?: string;
   details: ProjectDetailBlock[];
 };
 
-// Placeholder content — swap in real projects, descriptions, and media.
+// Array order is chronological (most recent first) — see home/page.tsx's
+// featuredProject, which just takes the first entry.
 export const projects: Project[] = [
   {
-    id: "1",
-    slug: "shelfie",
-    name: "Shelfie",
+    id: "relianet",
+    slug: "relianet",
+    name: "ReliaNet: Distributed Truth-Seeking Network",
     description:
-      "A full-stack app for tracking a personal library and sharing reading lists with friends.",
-    category: "full-stack",
-    tags: ["Next.js", "TypeScript", "PostgreSQL", "Tailwind"],
-    videoUrl: "#",
-    details: [
-      {
-        title: "The problem",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the problem this project set out to solve.",
-      },
-      {
-        title: "The approach",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the technical approach and key decisions.",
-      },
-      {
-        title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result, metrics, or what shipped.",
-      },
-    ],
-  },
-  {
-    id: "2",
-    slug: "queueup",
-    name: "QueueUp",
-    description:
-      "A REST API and worker system for fair, rate-limited task scheduling across tenants.",
+      "A 5-node distributed key-value store built for disaster response - staying consistent and available even through a 40% simultaneous node loss.",
     category: "backend",
-    tags: ["Node.js", "Redis", "Docker", "AWS"],
+    tags: ["Python", "FastAPI", "gRPC", "RabbitMQ", "Docker", "Streamlit"],
+    repoUrl: "https://github.com/gdivecha/ReliaNet",
     details: [
       {
-        title: "The problem",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the problem this project set out to solve.",
+        title: "Picture this",
+        text: "A storm knocks out a city's internet, or a server room floods. If every emergency alert, casualty report, and news update lived on one computer, that one computer going down means everyone loses access at the worst possible moment. ReliaNet's whole premise: never let anything important live in only one place.",
       },
       {
-        title: "The approach",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the technical approach and key decisions.",
+        title: "Five notebooks, one truth",
+        text: "Instead of one server, ReliaNet spreads the same data across 5 independent computers, each keeping its own copy - like 5 people writing the same note in 5 separate notebooks the moment it's written. To read something back, it doesn't trust just one notebook - it asks a majority of the 5 what they've got, and only accepts an answer once most of them agree. One broken or lying notebook can't fool the group.",
       },
       {
-        title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result, metrics, or what shipped.",
+        title: "Built to survive",
+        text: "We tested this by actually killing servers mid-operation. Unplug one node - traffic instantly reroutes, zero downtime. Kill 2 of the 5 at once (a simulated disaster wiping out 40% of the network) - the system notices, redraws \"majority\" from 3 votes down to 2, and keeps running with no help from us. Make one node painfully slow - it gets 1.5 seconds to respond, then gets skipped, so one bad connection can't freeze everyone else. And a node that comes back online after being knocked out compares notes with the others and catches itself up automatically in about 12 seconds.",
+      },
+      {
+        title: "Why it matters",
+        text: "For a disaster-response or news network, that means one destroyed server, one power outage, or one cut cable can't silence the whole system - the same kind of resilience real-world systems like DNS lean on, built from scratch by a team of four for a university distributed-systems course.",
       },
     ],
   },
   {
-    id: "3",
-    slug: "hackthenorth-2024",
-    name: "SousChef",
+    id: "nexora",
+    slug: "nexora",
+    name: "Nexora",
     description:
-      "Built in 36 hours - an AI recipe assistant that plans meals from what's already in your fridge.",
-    category: "hackathon",
-    tags: ["Python", "OpenAI API", "React", "Hackathon"],
-    videoUrl: "#",
-    details: [
-      {
-        title: "The problem",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the problem this project set out to solve.",
-      },
-      {
-        title: "The approach",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the technical approach and key decisions.",
-      },
-      {
-        title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result - awards, demos, or next steps.",
-      },
-    ],
-  },
-  {
-    id: "4",
-    slug: "pulse",
-    name: "Pulse",
-    description:
-      "A full-stack analytics dashboard for indie developers to track product usage in real time.",
-    category: "full-stack",
-    tags: ["React", "GraphQL", "MongoDB", "Vercel"],
-    details: [
-      {
-        title: "The problem",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the problem this project set out to solve.",
-      },
-      {
-        title: "The approach",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the technical approach and key decisions.",
-      },
-      {
-        title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result, metrics, or what shipped.",
-      },
-    ],
-  },
-  {
-    id: "5",
-    slug: "ledger-lite",
-    name: "Ledger Lite",
-    description:
-      "A lightweight double-entry bookkeeping API built for small studio teams.",
+      "A custom Discord bot built for community collaboration - role-based tools, member insights, and interactive slash commands.",
     category: "backend",
-    tags: ["C#", ".NET", "SQL Server", "Azure"],
+    tags: ["JavaScript", "Discord.js", "Discord Bot"],
     details: [
       {
-        title: "The problem",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the problem this project set out to solve.",
-      },
-      {
-        title: "The approach",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the technical approach and key decisions.",
-      },
-      {
-        title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result, metrics, or what shipped.",
+        title: "Overview",
+        text: "Nexora is a custom-built Discord bot crafted from the ground up to enhance community collaboration through powerful role-based tools, member insights, and interactive slash commands.",
       },
     ],
   },
   {
-    id: "6",
-    slug: "hackwestern-2023",
-    name: "Wayfound",
+    id: "apply-bot",
+    slug: "apply-bot",
+    name: "App.ly",
     description:
-      "Built in 24 hours - an accessible indoor-navigation app for large campus buildings.",
-    category: "hackathon",
-    tags: ["React Native", "TypeScript", "Hackathon"],
+      "A Discord bot for posting and tracking job opportunities, with slash commands for sharing jobs, personal stats, and a contributor leaderboard.",
+    category: "backend",
+    tags: ["JavaScript", "Discord.js", "Discord Bot"],
     details: [
       {
-        title: "The problem",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the problem this project set out to solve.",
+        title: "Overview",
+        text: "ApplyBot is a custom server bot for posting and tracking job opportunities. /postjob shares a job with full details, /myjobstats shows a user's own posting stats, and /leaderboard surfaces the top contributors.",
+      },
+    ],
+  },
+  {
+    id: "food-hub-system",
+    slug: "food-hub-system",
+    name: "Food Hub System",
+    description:
+      "A full-stack microservices app for grocery-style food ordering, with a JWT-authenticated auth service behind a layered architecture.",
+    category: "full-stack",
+    tags: ["Java", "JDBC", "Servlets & JSP", "Docker", "Kubernetes", "Google Cloud"],
+    details: [
+      {
+        title: "Overview",
+        text: "We created a Food Hub System capable of behaving similarly to an online grocery pickup system, where a user orders available food items through a GUI provided by the front-end microservice, working in combination with an authentication microservice that uses JWT to authenticate and authorize users before allowing access to different pages.",
       },
       {
-        title: "The approach",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the technical approach and key decisions.",
+        title: "Architecture",
+        text: "Other related microservices were developed after designing the software architecture using layered Client, Business, Persistence, and Data layers - an introduction to full-stack web development using Java, JDBC, Servlets, JSPs, JSTL, JAX-B, Docker, Kubernetes, Google Cloud, HTML, CSS, and XML.",
+      },
+    ],
+  },
+  {
+    id: "hotel-management-rdbms",
+    slug: "hotel-management-rdbms",
+    name: "Hotel Management RDBMS",
+    description:
+      "A relational database management system with a JavaFX GUI for handling hotel booking and guest data.",
+    category: "backend",
+    tags: ["Java", "JavaFX", "SQL"],
+    details: [
+      {
+        title: "Overview",
+        text: "We created a relational database management system using SQL and JavaFX for the GUI, to simulate a hotel management system used to carry out many of the data-handling activities of running a hotel.",
+      },
+    ],
+  },
+  {
+    id: "straysafe",
+    slug: "straysafe",
+    name: "StraySAFE - Missing Pet Tracker System",
+    description:
+      "A pet-monitoring website for reporting missing pets and tracking them when the community finds them.",
+    category: "full-stack",
+    tags: ["HTML", "CSS", "MATLAB"],
+    details: [
+      {
+        title: "Overview",
+        text: "StraySAFE is a pet-monitoring system that allows you to enlist missing pets and keep track of your pet when someone reports finding it in the community. Along with animal control, the website raises awareness in the pet community about missing pets.",
       },
       {
-        title: "The outcome",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Placeholder copy describing the result - awards, demos, or next steps.",
+        title: "Why it exists",
+        text: "Statistics gathered via MATLAB showed the urgency of pets going missing, motivating the need for a website like this. It's a scalable project intended to keep being polished for future implementation in apps people use daily.",
+      },
+    ],
+  },
+  {
+    id: "cramers-calculator",
+    slug: "cramers-calculator",
+    name: "Mini Project: Cramer's Calculator",
+    description:
+      "A Java + JavaFX calculator that recursively computes the determinant of a square matrix.",
+    category: "backend",
+    tags: ["Java", "JavaFX"],
+    details: [
+      {
+        title: "Overview",
+        text: "This project's source code, in my side-project repository on GitHub, contains the Cramer's Calculator I developed using Java and JavaFX. Its functionality centers on a recursive algorithm I built to find the determinant of a given square matrix - a real learning curve right after finishing an Algorithms and Data Structures course, putting recursive-method design to the test.",
+      },
+    ],
+  },
+  {
+    id: "tamacord",
+    slug: "tamacord",
+    name: "Tamacord - The New Gen Tamagotchi Simulator",
+    description:
+      "A Discord virtual pet that simulates hunger, hygiene, and happiness, backed by Google Cloud Storage.",
+    category: "backend",
+    tags: ["Python", "Discord API", "Google Cloud"],
+    details: [
+      {
+        title: "Overview",
+        text: "Tamacord is a virtual pet that lets the user perform basic interactions between the owner and itself, using Google's cloud storage platform to give a unique pet to each Discord user. It simulates three needs the user has to manage - hunger, hygiene, and happiness - handled by clicking the relevant buttons.",
+      },
+    ],
+  },
+  {
+    id: "bookstore-gui",
+    slug: "bookstore-gui",
+    name: "Building a GUI for a Bookstore Application",
+    description:
+      "A JavaFX bookstore GUI built around design patterns, UML modeling, and black/white-box testing.",
+    category: "backend",
+    tags: ["Java", "JavaFX", "UML Design"],
+    details: [
+      {
+        title: "Overview",
+        text: "As the culmination of the course \"Object-Oriented Engineering Analysis and Design,\" this project applied modern software practices - design patterns (Observer, State, Singleton, etc.), encapsulation, polymorphism, hashcodes, high cohesion & low coupling, UML diagrams (class, use case), use-case descriptions, and black-box/white-box testing - to build a fully-functional GUI using JavaFX and Java, as a collaborative team effort.",
+      },
+    ],
+  },
+  {
+    id: "multi-stage-amplifier",
+    slug: "multi-stage-amplifier",
+    name: "Designing a Multi-stage Amplifier",
+    description:
+      "A multi-stage transistor amplifier designed and simulated in Multisim to meet a target specification.",
+    category: "hardware",
+    tags: ["Multisim", "Circuit Design"],
+    details: [
+      {
+        title: "Overview",
+        text: "The Electronic Circuits I course focused on developing an understanding of semiconductor circuits - diodes (PN junctions), bipolar junction transistors, and MOSFETs, and their uses in current mirrors and amplifiers. The goal of this project was to design a multi-stage amplifier meeting a given specification, requiring extensive knowledge of emitter degeneration, small-signal analysis, CE/CC/CB amplifier stages, load-line analysis, and more.",
+      },
+    ],
+  },
+  {
+    id: "fully-functioning-microprocessor",
+    slug: "fully-functioning-microprocessor",
+    name: "Fully-functioning Microprocessor",
+    description:
+      "A general-purpose microprocessor built in VHDL with an ALU, decoder, latches, and a finite state machine.",
+    category: "hardware",
+    tags: ["VHDL", "Quartus", "Digital Logic"],
+    details: [
+      {
+        title: "Overview",
+        text: "Built a general-purpose microprocessor containing an Arithmetic Logic Unit. It uses the functionality of a basic ALU, a decoder, latches, and a finite state machine to perform logical operations and tasks as simple as addition or subtraction.",
+      },
+    ],
+  },
+  {
+    id: "traffic-light-system",
+    slug: "traffic-light-system",
+    name: "Replicating a Traffic Light System",
+    description:
+      "A miniature breadboard traffic light system built around a timer IC and basic circuit logic.",
+    category: "hardware",
+    tags: ["C++", "Circuit Design"],
+    details: [
+      {
+        title: "Overview",
+        text: "Developed a miniature traffic light system using a breadboard and other basic circuit components, including a timer and a PIC chip. As an introduction to circuit design with little prior programming knowledge, this project was genuinely challenging - working in a group helped bring innovative solutions to the problems we ran into.",
       },
     ],
   },

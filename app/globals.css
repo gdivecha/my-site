@@ -69,6 +69,13 @@ html {
      page, so that variant uses a visible purple wash instead. */
   --color-graph-node-bg: #2b2a42;
 
+  /* ReliaNet project breakdown's "How it works" step icons — matches the
+     Skills graph's category-node styling (same bg + icon color) in dark
+     mode, so the two read as the same visual language. Light mode
+     (below) keeps its own separate treatment. */
+  --color-step-icon-bg: #2b2a42;
+  --color-step-icon-fg: #a79ff0;
+
   /* Utility icon buttons (search/sound/theme/shortcuts, top-left) —
      same as panel by default here; light mode below darkens it a touch
      since pure white there was blending into the page background. */
@@ -125,6 +132,11 @@ html {
 
   /* Sidebar roles line — the dark-mode lavender is too washed out here. */
   --color-roles-text: #4b3dc4;
+
+  /* ReliaNet step icons — matches the Skills graph's category-node
+     styling (same bg + icon color) in light mode too. */
+  --color-step-icon-bg: #e2dff7;
+  --color-step-icon-fg: #5b4bd6;
 
   /* Contact form input background */
   --color-input-bg: #ffffff;
