@@ -10,11 +10,11 @@ export const navItems: NavItem[] = [
   { label: "Projects", href: "/projects" },
   { label: "Academics", href: "/academics" },
   { label: "Portfolio", href: "/portfolio" },
+  { label: "Certifications", href: "/certifications" },
   { label: "Recommendations", href: "/recommendations" },
   // Hidden for now — pages still exist, just not linked from the dial.
   // Re-add here to bring them back.
   // { label: "Open Source", href: "/open-source" },
-  // { label: "Certifications", href: "/certifications" },
   // { label: "Bonus", href: "/bonus" },
   { label: "Contact", href: "/contact" },
 ];
