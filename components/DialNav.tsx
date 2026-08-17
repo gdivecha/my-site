@@ -154,6 +154,66 @@ function emitDialTick(ctx: AudioContext) {
   osc.stop(ctx.currentTime + snapDuration);
 }
 
+/** Lingers the lock icon in the DOM just long enough to play an exit
+ * animation instead of vanishing the instant `show` flips false — plain
+ * conditional rendering has no exit transition at all, since the element
+ * is gone before any CSS could animate it. Enter uses a slight overshoot
+ * (a "back out" easing curve) so it reads as a small organic pop rather
+ * than a mechanical fade; exit is a plain, quicker fade+shrink with no
+ * overshoot, like settling rather than springing. */
+function AnimatedLock({ show }: { show: boolean }) {
+  const [rendered, setRendered] = useState(show);
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      setRendered(true);
+      // Mount in the "hidden" state first, then flip to "entered" a couple
+      // of frames later — flipping both in the same commit gives the
+      // browser nothing to animate from (no prior painted frame at the
+      // hidden state to transition away from). A single rAF can still
+      // land in the same frame as the mount's own paint depending on
+      // timing, so this nests two: the first guarantees we're past that
+      // paint, the second is where the class flip actually happens.
+      let raf2 = 0;
+      const raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => setEntered(true));
+      });
+      return () => {
+        cancelAnimationFrame(raf1);
+        cancelAnimationFrame(raf2);
+      };
+    }
+    setEntered(false);
+  }, [show]);
+
+  if (!rendered) return null;
+
+  // Plain inline styles rather than swapping Tailwind utility classes —
+  // this animation only has two states and needs to be unambiguous about
+  // exactly which properties transition and for how long.
+  return (
+    <LockIcon
+      aria-hidden="true"
+      className="h-3 w-3 shrink-0 text-ink-faint"
+      style={{
+        transformOrigin: "50% 50%",
+        opacity: entered ? 1 : 0,
+        transform: entered
+          ? "scale(1) rotate(0deg)"
+          : "scale(0.4) rotate(-25deg)",
+        transition: entered
+          ? "transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 260ms ease-out"
+          : "transform 220ms ease-in, opacity 200ms ease-in",
+      }}
+      onTransitionEnd={(event) => {
+        if (event.propertyName !== "opacity") return;
+        if (!show) setRendered(false);
+      }}
+    />
+  );
+}
+
 function playDialTick() {
   if (isDialSoundMuted()) return;
   try {
@@ -578,12 +638,7 @@ export function DialNav({
                   }`}
                 >
                   {item.label}
-                  {focused && seeking && (
-                    <LockIcon
-                      aria-hidden="true"
-                      className="h-3 w-3 shrink-0 text-ink-faint"
-                    />
-                  )}
+                  {focused && <AnimatedLock show={seeking} />}
                 </span>
               </Link>
             );
