@@ -6,9 +6,11 @@ import { useRouter, usePathname } from "next/navigation";
 import { APP_LOADED_AT } from "@/lib/app-load-time";
 import { isDialSoundMuted } from "@/lib/dial-sound";
 import { navItems } from "@/lib/data/nav";
+import { onPageReady } from "@/lib/page-ready";
 import { LockIcon } from "./icons";
 import {
   NUDGE_START_DELAY_MS,
+  REASONABLE_LOAD_WAIT_MS,
   SIDEBAR_CASCADE_DONE_MS,
 } from "@/lib/entrance-timing";
 
@@ -20,10 +22,6 @@ const VISIBLE_ROWS = VISIBLE_NEIGHBORS * 2 + 1;
 const CONTAINER_HEIGHT = ROW_HEIGHT * VISIBLE_ROWS;
 const EDGE_PADDING = (CONTAINER_HEIGHT - ROW_HEIGHT) / 2;
 const SETTLE_DELAY = 160;
-/** How long a newly selected tab's page gets to become available before
- * the lock icon shows at all — a normal, fast navigation never reaches
- * this and shows nothing; it's only for a genuine stall. */
-const REASONABLE_LOAD_WAIT_MS = 200;
 /** Render the list 3x so scrolling past the first/last item wraps seamlessly. */
 const COPIES = 3;
 const RAIL_WIDTH = 22;
@@ -231,13 +229,14 @@ export function DialNav({
 
   // Re-locks on every later navigation too, not just the first load —
   // but only actually shows the lock if the new tab's page is genuinely
-  // slow to become available. For this site's local, synchronous pages
-  // that's essentially never (a double rAF below confirms a real paint
-  // almost immediately), so most navigations show nothing at all; the
-  // lock only appears if REASONABLE_LOAD_WAIT_MS passes first — a real
-  // stall, not routine per-navigation flicker. isFirstPathChange skips
-  // exactly the mount's own run of this effect, which the effect above
-  // already owns.
+  // slow to become available. Waits on the real "this page is ready"
+  // signal from PageShell (onPageReady) rather than guessing from paint
+  // timing, so it's tied to the same readiness this site's pages
+  // actually use — for local, synchronous pages that's essentially
+  // instant, so most navigations show nothing at all; the lock only
+  // appears if REASONABLE_LOAD_WAIT_MS passes first, a real stall, not
+  // routine per-navigation flicker. isFirstPathChange skips exactly the
+  // mount's own run of this effect, which the effect above already owns.
   const isFirstPathChange = useRef(true);
   useEffect(() => {
     if (isFirstPathChange.current) {
@@ -252,18 +251,15 @@ export function DialNav({
       setSeeking(true);
     }, REASONABLE_LOAD_WAIT_MS);
 
-    let secondFrame = 0;
-    const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => {
-        window.clearTimeout(showLockTimer);
-        setSeeking(false);
-        if (didShowLock) playDialTick();
-      });
+    const unsubscribe = onPageReady(() => {
+      window.clearTimeout(showLockTimer);
+      setSeeking(false);
+      if (didShowLock) playDialTick();
     });
+
     return () => {
       window.clearTimeout(showLockTimer);
-      cancelAnimationFrame(firstFrame);
-      cancelAnimationFrame(secondFrame);
+      unsubscribe();
     };
   }, [pathname]);
 

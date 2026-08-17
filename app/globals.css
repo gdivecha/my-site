@@ -402,6 +402,122 @@ html {
   }
 }
 
+/* Right-side "still loading" cue (PageShell.tsx): the real (dim)
+   watermark below is completely untouched — this is a second, identical
+   copy of it (same rows/repeats, rendered by Watermark.tsx), in a
+   bright accent color, sitting exactly on top. On its own that second
+   copy would just look like a solid bright watermark; mask-image is
+   what turns it into "one light band revealing whatever text it
+   currently crosses": a single linear-gradient (transparent, opaque,
+   transparent), applied once to this whole plane — not per row, not
+   per repeat, not per word — so it's one continuous shape in one
+   element's coordinate space, geometrically incapable of being "several
+   independent shimmers" the way animating many separate elements was.
+   Same 150vmax/centered/-18deg formula as .watermark-plane itself, so
+   it shares the exact tilt and stays correct at any viewport size —
+   nothing here is measured or approximated per repeat. Wherever the
+   mask is opaque, the bright copy's own text shows through (only where
+   that copy actually has a glyph — empty gaps stay transparent either
+   way); everywhere else the mask hides it completely, letting the real
+   dim watermark underneath show as normal. (An earlier attempt tried
+   background-attachment: fixed for a shared coordinate space directly
+   on the text — confirmed, by testing, to silently fail to paint at all
+   through a rotated ancestor; this sidesteps that entirely by masking a
+   whole second layer instead of trying to sync many small ones.) */
+.watermark-plane--bright {
+  /* Position/size/rotation deliberately not repeated here — this class
+     is always applied alongside the base .watermark-plane rule (see
+     Watermark.tsx), which already provides them, so both stay in sync
+     by construction instead of by duplicated values. */
+  pointer-events: none;
+  /* mask-size close to 100% (140%, just enough overshoot for the band to
+     fully enter/exit without an abrupt edge clip) means the next
+     pulse's leading edge is already entering as the previous one's
+     trailing edge exits — a much larger mask-size (300%, originally)
+     meant most of each cycle was spent with the band already off-
+     screen, reading as a pause even though the animation itself never
+     paused. The ramp (42%-58%) is the band's actual width. */
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 42%,
+    black 50%,
+    transparent 58%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 42%,
+    black 50%,
+    transparent 58%,
+    transparent 100%
+  );
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: 140% 100%;
+  -webkit-mask-size: 140% 100%;
+  animation: watermark-shimmer-mask 4.5s linear infinite;
+}
+
+.watermark-plane--bright .watermark-row__copy span {
+  color: var(--color-accent-soft);
+  opacity: 1;
+}
+
+@keyframes watermark-shimmer-mask {
+  from {
+    mask-position: -20% 0;
+    -webkit-mask-position: -20% 0;
+  }
+  to {
+    mask-position: 120% 0;
+    -webkit-mask-position: 120% 0;
+  }
+}
+
+/* Where the pulse is actually *allowed* to be visible, separate from
+   its own shape/motion above: a second, non-moving mask on a wrapper
+   around just .watermark-plane--bright (not on .watermark-field, which
+   would also affect the always-visible dim watermark). Field-local ~59%
+   approximates the midpoint between the sidebar/content partition and
+   the page's right edge, and ~18% is the partition itself (the same
+   point .watermark-field's own left-edge fade already resolves to, see
+   above) — so the pulse reads at full strength across the right portion
+   of the content area, then fades away as it approaches the partition,
+   reaching zero exactly there rather than continuing into space where
+   the watermark doesn't otherwise exist. Nested masks intersect by
+   construction (a child's mask can only ever further restrict what its
+   parent's mask already allows through), so this combines cleanly with
+   the band's own shape without needing multi-layer mask-composite
+   tricks. (An approximation of the true viewport position, not exact
+   pixel math — the plane's own -18deg rotation means there's no
+   perfectly clean formula here, only a reasonable one.) */
+.watermark-bright-clip {
+  position: absolute;
+  inset: 0;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 18%,
+    black 59%,
+    black 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 18%,
+    black 59%,
+    black 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watermark-plane--bright {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .watermark-row__track {
     animation: none;

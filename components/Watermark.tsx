@@ -17,7 +17,17 @@ const MIN_REPEATS = 4;
 const MAX_REPEATS = 40;
 const PIXELS_PER_SECOND = 9;
 
-export function Watermark({ text }: { text: string }) {
+export function Watermark({
+  text,
+  waving = false,
+}: {
+  text: string;
+  /** Reveals a second, bright copy of this same watermark through a
+   * single traveling mask band — see .watermark-plane--bright in
+   * globals.css, and PageShell.tsx's own "reasonable wait" threshold
+   * for when this actually gets set. */
+  waving?: boolean;
+}) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const [repeats, setRepeats] = useState(INITIAL_REPEATS);
@@ -67,30 +77,57 @@ export function Watermark({ text }: { text: string }) {
     };
   }, [text, repeats]);
 
-  return (
-    <div className="watermark-field" ref={fieldRef} aria-hidden="true">
-      <div className="watermark-plane">
-        {Array.from({ length: ROWS }).map((_, row) => (
-          <div
-            key={row}
-            className={`watermark-row${row % 2 === 1 ? " watermark-row--reverse" : ""}`}
-          >
-            <div className="watermark-row__track">
-              {[0, 1].map((copy) => (
-                <div
-                  className="watermark-row__copy"
-                  key={copy}
-                  ref={row === 0 && copy === 0 ? copyRef : undefined}
-                >
-                  {Array.from({ length: repeats }).map((_, i) => (
-                    <span key={i}>{text}</span>
-                  ))}
-                </div>
+  // Shared by both the real (dim) plane and the bright duplicate — the
+  // exact same rows/repeats/track structure, so the two stay pixel-
+  // aligned. attachRef is only ever true for the real plane's copy: a
+  // ref can only ever point at one live DOM node, and the resize
+  // measurement only needs one reference sample regardless of how many
+  // copies of the markup exist.
+  function renderRows(attachRef: boolean) {
+    return Array.from({ length: ROWS }).map((_, row) => (
+      <div
+        key={row}
+        className={`watermark-row${row % 2 === 1 ? " watermark-row--reverse" : ""}`}
+      >
+        <div className="watermark-row__track">
+          {[0, 1].map((copy) => (
+            <div
+              className="watermark-row__copy"
+              key={copy}
+              ref={
+                attachRef && row === 0 && copy === 0 ? copyRef : undefined
+              }
+            >
+              {Array.from({ length: repeats }).map((_, i) => (
+                <span key={i}>{text}</span>
               ))}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+    ));
+  }
+
+  return (
+    <div className="watermark-field" ref={fieldRef} aria-hidden="true">
+      <div className="watermark-plane">{renderRows(true)}</div>
+      {/* Same content, same position/rotation, in a bright accent color
+          — see .watermark-plane--bright in globals.css for how the mask
+          on this one turns it into a single traveling light band rather
+          than a second static watermark. .watermark-bright-clip is a
+          second, non-moving mask scoped to just this layer (not
+          .watermark-field, which would also affect the always-visible
+          dim watermark) — it's what fades the pulse out as it
+          approaches the sidebar/content partition. Only ever mounted
+          while waving, so there's zero extra cost the rest of the
+          time. */}
+      {waving && (
+        <div className="watermark-bright-clip" aria-hidden="true">
+          <div className="watermark-plane watermark-plane--bright">
+            {renderRows(false)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

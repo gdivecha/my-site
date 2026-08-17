@@ -72,6 +72,13 @@ export const SIDEBAR_CASCADE_DONE_MS =
  * use this alias for clarity at the call site). */
 export const ICONS_DELAY_MS = SIDEBAR_CASCADE_DONE_MS;
 
+/** How long something (a newly selected dial tab, a page's own content)
+ * gets to become available before any "still loading" cue shows at all
+ * — normal, fast loads never reach this and show nothing; it's only for
+ * a genuine stall. Shared between DialNav's lock icon and PageShell's
+ * watermark wave so both agree on what "reasonable" means. */
+export const REASONABLE_LOAD_WAIT_MS = 200;
+
 /** The dial itself appears on schedule, in the cascade above — but its
  * load-time nudge is deferred until the page's own content (which waits
  * for SIDEBAR_CASCADE_DONE_MS, then takes ENTRANCE_MS to fade in) has
