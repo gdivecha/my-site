@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { TechLogo } from "@/components/TechIcon";
 import { CodeBracketsIcon } from "@/components/icons";
 import type { SkillCategory } from "@/lib/data/skills";
@@ -34,6 +34,12 @@ const GAP_SLOT_FRACTION = 0.5;
 // trackpad/mouse scroll gesture reads as a deliberate spin, not a hair-
 // trigger flick.
 const ROTATION_PER_DELTA = 0.15;
+// Degrees the wheel turns per pixel of pointer drag — the touch/pointer
+// equivalent of ROTATION_PER_DELTA above, for devices with no wheel to
+// spin (phones, tablets, anything touch-only). Tuned so dragging roughly
+// a third of the graph's width reads as a deliberate spin, matching the
+// wheel's own feel rather than being hair-trigger or sluggish.
+const DRAG_ROTATION_PER_PX = 0.4;
 
 type Point = { x: number; y: number };
 
@@ -127,6 +133,30 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
   const [rotationOffset, setRotationOffset] = useState(0);
   const { categoryNodes, skillNodes } = useGraphLayout(categories, rotationOffset);
   const [hovered, setHovered] = useState<{ label: string } & Point>();
+  // Touch/pointer-drag rotation — the wheel listener below has no touch
+  // equivalent, so without this the whole wheel is inert on any
+  // touch-only device (nodes visible, but nothing off-angle ever
+  // reachable). Purely additive: the existing wheel-based rotation on
+  // desktop is untouched, this is just a second, coexisting input method,
+  // same relationship the connection graph's own pointer-drag pan has to
+  // its wheel-driven zoom.
+  const dragRef = useRef<{ startX: number; startRotation: number } | null>(null);
+
+  function handlePointerDown(e: PointerEvent<SVGSVGElement>) {
+    dragRef.current = { startX: e.clientX, startRotation: rotationOffset };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function handlePointerMove(e: PointerEvent<SVGSVGElement>) {
+    const drag = dragRef.current;
+    if (!drag) return;
+    setRotationOffset(drag.startRotation + (e.clientX - drag.startX) * DRAG_ROTATION_PER_PX);
+  }
+
+  function handlePointerUp(e: PointerEvent<SVGSVGElement>) {
+    dragRef.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  }
 
   const categoryPos = new Map(categoryNodes.map((n) => [n.category.id, n]));
 
@@ -184,9 +214,13 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
       <div className="relative mx-auto mt-12 w-full max-w-[min(48rem,72vh)]">
         <svg
           viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="w-full"
+          className="w-full touch-none cursor-grab active:cursor-grabbing"
           role="img"
-          aria-label="Skills grouped by category, shown as a network graph you can spin by scrolling over it"
+          aria-label="Skills grouped by category, shown as a network graph you can spin by scrolling or dragging"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
         >
           <defs>
           {/* Same two stops as the .text-gradient name treatment in the

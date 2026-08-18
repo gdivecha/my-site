@@ -16,11 +16,13 @@ import {
 
 const N = navItems.length;
 const ROW_HEIGHT = 36;
-/** Rows visible above/below the centered item before fading out completely. */
-const VISIBLE_NEIGHBORS = 4;
-const VISIBLE_ROWS = VISIBLE_NEIGHBORS * 2 + 1;
-const CONTAINER_HEIGHT = ROW_HEIGHT * VISIBLE_ROWS;
-const EDGE_PADDING = (CONTAINER_HEIGHT - ROW_HEIGHT) / 2;
+// Load-bearing for every scroll-position calculation below (scrollToRaw,
+// handleScroll, handleScrollEnd, the nudge's SWING) — deliberately NOT
+// made viewport-dependent like VISIBLE_NEIGHBORS/CONTAINER_HEIGHT/
+// EDGE_PADDING below, since changing it would mean rederiving all of
+// that math per-viewport too. Also comfortably clears WCAG 2.5.8 (AA)'s
+// 24px minimum tap-target size on its own, so there's no accessibility
+// reason to shrink it on small screens either.
 const SETTLE_DELAY = 160;
 /** Render the list 3x so scrolling past the first/last item wraps seamlessly. */
 const COPIES = 3;
@@ -257,6 +259,28 @@ export function DialNav({
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmatic = useRef(false);
   const hasMounted = useRef(false);
+
+  // Below md (768px — the same breakpoint Sidebar itself switches on:
+  // that's where it stops being a fixed, full-height column and starts
+  // stacking in normal document flow above page content), the dial's
+  // fixed 324px height is real vertical space a mobile visitor has to
+  // scroll past before reaching anything else. Shrinking the visible
+  // window there (5 rows instead of 9) keeps the dial itself — its row
+  // height, tap targets, and every scroll-position calculation above —
+  // completely untouched; only how much of it shows at once changes.
+  const [isCompact, setIsCompact] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsCompact(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  /** Rows visible above/below the centered item before fading out completely. */
+  const VISIBLE_NEIGHBORS = isCompact ? 2 : 4;
+  const VISIBLE_ROWS = VISIBLE_NEIGHBORS * 2 + 1;
+  const CONTAINER_HEIGHT = ROW_HEIGHT * VISIBLE_ROWS;
+  const EDGE_PADDING = (CONTAINER_HEIGHT - ROW_HEIGHT) / 2;
 
   // Locks the dial (real lock — see the pointer-events-none tie-in
   // below — plus the inline lock icon next to the focused tab) from

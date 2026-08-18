@@ -228,7 +228,7 @@ export default async function ProjectDetailPage({
         {/* Cycles through the full list (wrapping at both ends) rather
             than just linking back to /projects — lets someone browse
             the whole set without leaving the detail view each time. */}
-        <div className="mt-14 grid grid-cols-2 gap-4">
+        <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Link
             href={`/projects/${prevProject.slug}`}
             className="group flex flex-col items-start gap-1 rounded-2xl border border-line bg-card-tint p-4 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"

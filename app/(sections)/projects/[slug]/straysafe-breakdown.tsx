@@ -78,7 +78,7 @@ export function StraySafeBreakdown() {
               Report a Lost Pet
             </p>
           </div>
-          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+          <dl className="mt-4 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
             {REPORT_FIELDS.map((field) => (
               <div key={field.label}>
                 <dt className="text-[10px] font-semibold uppercase tracking-widest text-ink-faint">
