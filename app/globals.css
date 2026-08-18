@@ -62,6 +62,12 @@ html {
   /* Tech logo tile background (Skills page) */
   --color-tech-icon-bg: var(--color-panel-alt);
 
+  /* Connection graph: spotlit skill node's tile background — same as the
+     resting tile here, since the opacity fade on every non-spotlit node
+     already reads as a clear highlight against the near-black page. Light
+     mode (below) needs its own value: see that block for why. */
+  --color-tech-icon-bg-spotlit: var(--color-tech-icon-bg);
+
   /* Skills graph category-node fill — panel-alt reads fine here in dark
      mode, but needs its own tuning in both directions: a touch lighter
      than panel-alt here so the node lifts off the near-black background;
@@ -152,6 +158,13 @@ html {
 
   /* Tech logo tile background — pure white in light mode */
   --color-tech-icon-bg: #ffffff;
+
+  /* Connection graph: spotlit skill node's tile background — pure white
+     doesn't shift at all when the opacity fade above is this close to the
+     page's own near-white base, so the highlighted tile needs a visible
+     tint of its own. Panel-alt's soft grayish wash reads as "lifted" next
+     to the plain white resting tiles around it. */
+  --color-tech-icon-bg-spotlit: var(--color-panel-alt);
 
   /* Utility icon buttons — pure white (panel) blended straight into the
      page background here, so this darkens the resting fill a touch;
@@ -295,6 +308,7 @@ html {
   --color-dial-inactive: var(--color-dial-inactive);
   --color-input-placeholder: var(--color-input-placeholder);
   --color-tech-icon-bg: var(--color-tech-icon-bg);
+  --color-tech-icon-bg-spotlit: var(--color-tech-icon-bg-spotlit);
   --color-input-bg: var(--color-input-bg);
   --color-graph-node-bg: var(--color-graph-node-bg);
 

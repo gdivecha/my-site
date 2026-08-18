@@ -49,9 +49,10 @@ export function ProjectCard({ project }: { project: Project }) {
         </span>
       </div>
 
-      <h3 className="mt-3 inline-flex items-center gap-1.5 text-base font-semibold text-ink transition-colors group-hover:text-accent-soft">
+      <h3 className="mt-3 text-base font-semibold text-ink transition-colors group-hover:text-accent-soft">
         {project.name}
-        <ArrowRightIcon className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+        {" "}
+        <ArrowRightIcon className="ml-0.5 inline h-3.5 w-3.5 -translate-x-1 align-middle opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
       </h3>
       <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-soft">
         {project.description}

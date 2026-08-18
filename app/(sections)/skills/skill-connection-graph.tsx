@@ -778,7 +778,11 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
                 height={SKILL_NODE_SIZE}
                 className="overflow-visible"
               >
-                <div className="flex h-full w-full items-center justify-center rounded-2xl bg-tech-icon-bg p-3 shadow-sm">
+                <div
+                  className={`flex h-full w-full items-center justify-center rounded-2xl p-3 shadow-sm ${
+                    isSpotlitNode(n.skill.name) ? "bg-tech-icon-bg-spotlit" : "bg-tech-icon-bg"
+                  }`}
+                >
                   <TechLogo skill={n.skill} className="h-9 w-9" fallbackTextClassName="text-sm" />
                 </div>
               </foreignObject>
