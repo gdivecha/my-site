@@ -40,8 +40,26 @@ export function PageHeading({
         return;
       }
 
-      const headingHeight = headingEl.getBoundingClientRect().height;
-      const top = sidebarBottom - headingHeight;
+      // The *first* line's bottom is what should land on sidebarBottom,
+      // not the bottom of the whole heading box — those are the same
+      // thing for every title that fits on one line (true everywhere
+      // else on the site), but a title long enough to wrap (e.g.
+      // StraySAFE's) has a taller box, and using its full height here
+      // would push the first line a whole line-height too high to make
+      // the *second* line's bottom hit the target instead. Computed
+      // line-height already resolves to a px value even though the
+      // class below sets it as a unitless multiplier.
+      const lineHeightRaw = parseFloat(
+        getComputedStyle(headingEl).lineHeight
+      );
+      // Falls back to the full box height (the old behavior) on the off
+      // chance line-height ever resolves to "normal" instead of a px
+      // value — still correct for the common single-line case, just not
+      // for a wrapped title.
+      const lineHeight = Number.isNaN(lineHeightRaw)
+        ? headingEl.getBoundingClientRect().height
+        : lineHeightRaw;
+      const top = sidebarBottom - lineHeight;
       document.documentElement.style.setProperty(
         "--sidebar-title-top",
         `${top}px`

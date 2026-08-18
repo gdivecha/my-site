@@ -1,15 +1,33 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { Tag } from "@/components/Pill";
-import { ArrowLeftIcon, GithubIcon, PlayIcon } from "@/components/icons";
+import { ArrowLeftIcon, ArrowRightIcon, GithubIcon, PlayIcon } from "@/components/icons";
 import { projects } from "@/lib/data/projects";
+import { ProjectBackLink } from "./back-link";
 import { ReliaNetBreakdown } from "./relianet-breakdown";
+import { StraySafeBreakdown } from "./straysafe-breakdown";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
+
+// Projects big enough to earn their own hand-built breakdown instead of
+// the generic title+paragraph detail blocks every other project uses.
+const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
+  relianet: () => <ReliaNetBreakdown />,
+  straysafe: () => <StraySafeBreakdown />,
+};
+
+// Hero frame is where a demo video will eventually go — hidden for these
+// specifically until one's on hand, rather than showing an empty
+// placeholder box with nothing to click. A separate list from
+// CUSTOM_BREAKDOWNS above since the two are related but not the same
+// toggle — a future custom breakdown might still want the hero.
+const HIDDEN_HERO_SLUGS = new Set(["relianet", "straysafe"]);
 
 export default async function ProjectDetailPage({
   params,
@@ -20,21 +38,20 @@ export default async function ProjectDetailPage({
   const project = projects.find((p) => p.slug === slug);
   if (!project) notFound();
 
+  const heroHidden = HIDDEN_HERO_SLUGS.has(project.slug);
+
+  // Wraps around at both ends, so "next" from the last project loops
+  // back to the first rather than dead-ending.
+  const index = projects.findIndex((p) => p.slug === project.slug);
+  const prevProject = projects[(index - 1 + projects.length) % projects.length];
+  const nextProject = projects[(index + 1) % projects.length];
+
   return (
     <PageShell watermark="PROJECTS">
-      <Link
-        href="/projects"
-        className="inline-flex items-center gap-1.5 text-xs text-ink-faint transition-colors hover:text-ink-soft"
-      >
-        <ArrowLeftIcon className="h-3.5 w-3.5" />
-        Projects
-      </Link>
+      <ProjectBackLink />
 
-      <div className="mt-6 max-w-3xl">
-        {/* Hero frame is where a demo video will eventually go — hidden
-            for ReliaNet specifically until that's on hand, rather than
-            showing an empty placeholder box with nothing to click. */}
-        {project.slug !== "relianet" &&
+      <div className="max-w-3xl">
+        {!heroHidden &&
           (project.videoUrl ? (
             <a
               href={project.videoUrl === "#" ? undefined : project.videoUrl}
@@ -57,13 +74,9 @@ export default async function ProjectDetailPage({
             <ImagePlaceholder label={project.name} className="aspect-video" />
           ))}
 
-        <h2
-          className={`font-display text-3xl font-bold text-ink sm:text-4xl ${
-            project.slug === "relianet" ? "" : "mt-8"
-          }`}
-        >
-          {project.name}
-        </h2>
+        <div className={heroHidden ? "" : "mt-8"}>
+          <PageHeading eyebrow="Projects">{project.name}</PageHeading>
+        </div>
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">
           {project.description}
         </p>
@@ -84,8 +97,8 @@ export default async function ProjectDetailPage({
           </a>
         )}
 
-        {project.slug === "relianet" ? (
-          <ReliaNetBreakdown />
+        {CUSTOM_BREAKDOWNS[project.slug] ? (
+          CUSTOM_BREAKDOWNS[project.slug]()
         ) : (
           <div className="mt-14 flex flex-col gap-14">
             {project.details.map((block, i) => (
@@ -111,6 +124,42 @@ export default async function ProjectDetailPage({
             ))}
           </div>
         )}
+
+        {/* Cycles through the full list (wrapping at both ends) rather
+            than just linking back to /projects — lets someone browse
+            the whole set without leaving the detail view each time. */}
+        <div className="mt-14 grid grid-cols-2 gap-4">
+          <Link
+            href={`/projects/${prevProject.slug}`}
+            className="group flex flex-col items-start gap-1 rounded-2xl border border-line bg-card-tint p-4 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+          >
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-faint">
+              <ArrowLeftIcon
+                className="h-3 w-3 transition-transform duration-150 group-hover:-translate-x-1"
+                aria-hidden="true"
+              />
+              Previous
+            </span>
+            <span className="line-clamp-1 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+              {prevProject.name}
+            </span>
+          </Link>
+          <Link
+            href={`/projects/${nextProject.slug}`}
+            className="group flex flex-col items-end gap-1 rounded-2xl border border-line bg-card-tint p-4 text-right backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+          >
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-ink-faint">
+              Next
+              <ArrowRightIcon
+                className="h-3 w-3 transition-transform duration-150 group-hover:translate-x-1"
+                aria-hidden="true"
+              />
+            </span>
+            <span className="line-clamp-1 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+              {nextProject.name}
+            </span>
+          </Link>
+        </div>
       </div>
     </PageShell>
   );
