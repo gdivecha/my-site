@@ -69,7 +69,7 @@ export const skillCategories: SkillCategory[] = [
     label: "Cloud Computing",
     group: "engineering",
     skills: [
-      { name: "AWS", abbr: "AWS", color: "#FF9900" },
+      { name: "AWS", abbr: "AWS", icon: "Aws", color: "#FF9900" },
       { name: "Azure", abbr: "Az", icon: "Azure", color: "#0089D6" },
       { name: "Docker", abbr: "Dk", icon: "Docker" },
       { name: "Vercel", abbr: "Vc", icon: "Vercel", monochrome: true },
