@@ -258,6 +258,18 @@ html {
   border-color: rgba(20, 18, 40, 0.16);
 }
 
+/* Skills connection-graph frame: border-line's default alpha (6% white in
+   dark, 10% black in light) all but disappears against this box's flat
+   bg-base fill, since there's no card-tint/blur behind it to add
+   contrast — so it gets a stronger border of its own, in both themes,
+   rather than darkening border-line everywhere it's used. */
+:root:not([data-theme="light"]) .graph-frame {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+:root[data-theme="light"] .graph-frame {
+  border-color: rgba(20, 18, 40, 0.18);
+}
+
 @theme inline {
   --color-base: var(--color-base);
   --color-panel: var(--color-panel);

@@ -5,8 +5,17 @@ import { skillCategories } from "./skills";
 export type SkillEdge = {
   source: string;
   target: string;
-  /** How many actual projects/roles used both skills together. */
+  /** How many actual projects/roles used both skills together. Always 0
+   * for a curated edge (see `real` below) — it carries no such count. */
   weight: number;
+  /** False only for a curated edge — a well-known technology relationship
+   * (React powers Next.js, JUnit tests Java, TypeScript is a typed
+   * superset of JavaScript) added because it's objectively true of the
+   * technologies themselves, independent of whether they ever happened
+   * to be tagged on the same project or role. Real project/role
+   * co-occurrence always wins if both exist for the same pair — this
+   * only fills in pairs with no real edge at all. */
+  real: boolean;
 };
 
 export type CategoryEdge = {
@@ -44,11 +53,49 @@ function engineeringCategories() {
   return skillCategories.filter((c) => c.group === "engineering");
 }
 
-/** Real skill-to-skill connections only: two skills that were both tagged
- * on the same actual project or role. Nothing fabricated, and no
- * same-category fallback here anymore — once category nodes sit in the
- * graph (see the page component), every skill is already connected via
- * its own category, so this list only needs to carry genuine signal. */
+// Well-known technology relationships that hold regardless of whether the
+// two ever happened to be tagged on the same project or role — a library
+// that requires a framework (Material UI needs React), a test runner for
+// a specific language (JUnit tests Java), a strict superset (TypeScript
+// over JavaScript). Deliberately narrow: only pairs where the
+// relationship is a plain technical fact, not a vague "these are both
+// nice tools" association. Only ever fills a gap — see addCuratedEdges.
+const CURATED_RELATED_PAIRS: [string, string][] = [
+  ["TypeScript", "JavaScript"],
+  ["TypeScript", "Node.js"],
+  ["TypeScript", "React"],
+  ["Next.js", "React"],
+  ["Material UI", "React"],
+  ["Tailwind CSS", "CSS3"],
+  ["Axios", "JavaScript"],
+  ["Jest", "JavaScript"],
+  ["Jest", "React"],
+  ["JUnit", "Java"],
+  ["Postman", "REST APIs"],
+  ["Cursor", "Claude Code"],
+];
+
+function addCuratedEdges(realEdges: SkillEdge[], knownSkillNames: Set<string>): SkillEdge[] {
+  const seen = new Set(realEdges.map((e) => [e.source, e.target].sort().join("|||")));
+  const curated: SkillEdge[] = [];
+  for (const [a, b] of CURATED_RELATED_PAIRS) {
+    if (!knownSkillNames.has(a) || !knownSkillNames.has(b)) continue;
+    const key = [a, b].sort().join("|||");
+    if (seen.has(key)) continue; // a real edge for this pair already exists — never override it
+    seen.add(key);
+    curated.push({ source: a, target: b, weight: 0, real: false });
+  }
+  return [...realEdges, ...curated];
+}
+
+/** Real skill-to-skill connections (two skills tagged on the same actual
+ * project or role) plus a small curated layer of well-known technology
+ * relationships that real tag co-occurrence alone misses — e.g.
+ * TypeScript and Node.js were never tagged together on the same project
+ * here, even though the relationship between them is obviously real.
+ * Once category nodes sit in the graph (see the page component), every
+ * skill is already connected via its own category, so both layers here
+ * only need to carry genuine, specific signal on top of that. */
 export function buildSkillConnections(): SkillEdge[] {
   const knownSkillNames = new Set(
     engineeringCategories().flatMap((c) => c.skills.map((s) => s.name))
@@ -67,10 +114,12 @@ export function buildSkillConnections(): SkillEdge[] {
   projects.forEach((p) => addCoOccurrences(p.tags));
   experiences.forEach((e) => addCoOccurrences(e.tags));
 
-  return Array.from(weights.entries()).map(([key, weight]) => {
+  const realEdges = Array.from(weights.entries()).map(([key, weight]) => {
     const [source, target] = key.split("|||");
-    return { source, target, weight };
+    return { source, target, weight, real: true };
   });
+
+  return addCuratedEdges(realEdges, knownSkillNames);
 }
 
 /** How categories connect to each other: category A links to category B

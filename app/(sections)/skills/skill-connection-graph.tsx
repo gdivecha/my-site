@@ -137,7 +137,13 @@ function useHybridLayout(categories: SkillCategory[]) {
       simEdges.push({
         a: idToIndex.get(e.source)!,
         b: idToIndex.get(e.target)!,
-        weight: e.weight,
+        // A curated edge's weight is always 0 (see SkillEdge's own
+        // comment) — floored to 1 here so it still pulls its two nodes
+        // together in the simulation instead of exerting zero spring
+        // force and just crossing the canvas as a straight line to
+        // wherever repulsion happened to leave them, same fix already
+        // applied to categoryEdges below.
+        weight: Math.max(1, e.weight),
         distance: LINK_DISTANCE,
         strength: LINK_STRENGTH,
       })
@@ -276,10 +282,61 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   const [legendOpen, setLegendOpen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; startViewBox: ViewBox } | null>(null);
+  // Which single edge (by its two node ids) the pointer is currently over —
+  // drives the "spotlight" effect below: that edge and its two endpoints
+  // stay at full strength, everything else fades back. null means nothing
+  // is hovered, so the graph reads at its normal resting opacities.
+  const [hoverEdge, setHoverEdge] = useState<{ a: string; b: string } | null>(null);
 
   const categoryPos = new Map(categoryNodes.map((n) => [n.category.id, n]));
   const skillPos = new Map(skillNodes.map((n) => [n.skill.name, n]));
   const zoomedOut = viewBox.w > LOD_VIEW_THRESHOLD;
+
+  // True while any edge is hovered — every opacity calculation below
+  // branches on this so nothing dims itself when there's simply nothing
+  // being hovered yet.
+  const spotlighting = hoverEdge !== null;
+  function isSpotlitEdge(a: string, b: string) {
+    return (
+      hoverEdge !== null &&
+      ((hoverEdge.a === a && hoverEdge.b === b) || (hoverEdge.a === b && hoverEdge.b === a))
+    );
+  }
+  function isSpotlitNode(id: string) {
+    return hoverEdge !== null && (hoverEdge.a === id || hoverEdge.b === id);
+  }
+  // Faded-out level for anything not currently spotlit — just a light
+  // touch, not a real dim, so the rest of the graph's shape and colors
+  // stay easy to read while one edge is singled out.
+  const FADE = 0.48;
+  function edgeOpacity(base: number, a: string, b: string) {
+    if (!spotlighting) return base;
+    return isSpotlitEdge(a, b) ? 1 : base * FADE;
+  }
+  function nodeOpacity(id: string) {
+    if (!spotlighting) return 1;
+    return isSpotlitNode(id) ? 1 : FADE;
+  }
+  // A visible line thin enough to look right at rest is too thin to
+  // reliably hover — this renders a fat, fully transparent line right on
+  // top of it purely to catch the pointer, plus a slight strokeWidth bump
+  // on the visible line itself once it's the spotlit one, so the hovered
+  // edge reads as genuinely emphasized rather than just "less faded than
+  // its neighbors."
+  function EdgeHitArea({ x1, y1, x2, y2, a, b }: { x1: number; y1: number; x2: number; y2: number; a: string; b: string }) {
+    return (
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke="transparent"
+        strokeWidth={14}
+        onMouseEnter={() => setHoverEdge({ a, b })}
+        onMouseLeave={() => setHoverEdge((cur) => (cur && cur.a === a && cur.b === b ? null : cur))}
+      />
+    );
+  }
 
   function zoomBy(factor: number, focus?: Point) {
     setViewBox((vb) => {
@@ -320,6 +377,21 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
     return () => svg.removeEventListener("wheel", handleWheelNative);
   }, []);
 
+  // The frame itself is sized to fit within one viewport (see the
+  // h-[min(...)] classes below), so there's nothing to gain by letting the
+  // page scroll while this view is mounted — same call the category graph
+  // already makes, but without forcing scroll position: unlike that view,
+  // this one doesn't rely on the page being pinned to a specific spot for
+  // its own wheel-to-zoom math, so there's no equivalent scrollTo needed
+  // here, just the lock. Restores normal scrolling on unmount.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   function handlePointerDown(e: PointerEvent<SVGSVGElement>) {
     dragRef.current = { startX: e.clientX, startY: e.clientY, startViewBox: viewBox };
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -341,17 +413,23 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-base">
+    <div className="graph-frame relative w-full overflow-hidden rounded-2xl border border-line bg-base">
       <svg
         ref={svgRef}
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
-        className="h-[560px] w-full cursor-grab touch-none active:cursor-grabbing md:h-[680px]"
+        className="h-[min(560px,56vh)] w-full cursor-grab touch-none active:cursor-grabbing md:h-[min(680px,62vh)]"
         role="img"
         aria-label="Skills grouped by category, and connected to each other by the projects and roles that used them together — pannable and zoomable"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
+        // Catch-all: an individual edge's own onMouseLeave (see
+        // EdgeHitArea) can miss firing when the pointer exits fast enough,
+        // leaving the spotlight stuck on. This fires whenever the cursor
+        // leaves the graph entirely, regardless of which child last had
+        // it, so the spotlight can never get stranded on.
+        onMouseLeave={() => setHoverEdge(null)}
       >
         <defs>
           <linearGradient id="connGraphRoot" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -380,25 +458,33 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
           fill="url(#connGraphGrid)"
         />
 
-        {/* Five line types, five colors, all drawn from the site's
-            existing tokens (no new hues invented) so each kind of
-            relationship reads apart from the others at a glance — see
-            the legend button for what each one means. */}
+        {/* Six line types. Every accent shade (accent, accent-soft,
+            accent-deep) means one specific real relationship; ink-faint
+            (solid for structural, dashed for inferred) covers everything
+            that isn't a real, specific claim. All drawn from the site's
+            existing tokens — no new hues invented — so each kind of
+            relationship reads apart from the others at a glance. See the
+            legend button for what each one means. */}
 
         {/* Root → category spokes: the graph's starting point and the
             structure everything else hangs off of. */}
-        <g className="stroke-ink-faint">
-          {categoryNodes.map((c) => (
-            <line
-              key={c.category.id}
-              x1={CENTER}
-              y1={CENTER}
-              x2={c.x}
-              y2={c.y}
-              strokeWidth={LINE_WIDTH}
-              opacity={0.4}
-            />
-          ))}
+        <g className="stroke-ink-faint transition-opacity duration-150" fill="none">
+          {categoryNodes.map((c) => {
+            const lit = isSpotlitEdge("__root__", c.category.id);
+            return (
+              <g key={c.category.id}>
+                <EdgeHitArea x1={CENTER} y1={CENTER} x2={c.x} y2={c.y} a="__root__" b={c.category.id} />
+                <line
+                  x1={CENTER}
+                  y1={CENTER}
+                  x2={c.x}
+                  y2={c.y}
+                  strokeWidth={lit ? LINE_WIDTH * 2 : LINE_WIDTH}                  opacity={edgeOpacity(0.55, "__root__", c.category.id)}
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+              </g>
+            );
+          })}
         </g>
 
         {/* Category ↔ category: how the categories themselves relate,
@@ -409,41 +495,50 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
             const a = categoryPos.get(edge.source);
             const b = categoryPos.get(edge.target);
             if (!a || !b) return null;
+            const lit = isSpotlitEdge(edge.source, edge.target);
             return (
-              <line
-                key={`${edge.source}-${edge.target}`}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-                strokeWidth={LINE_WIDTH}
-                opacity={0.5}
-              />
+              <g key={`${edge.source}-${edge.target}`}>
+                <EdgeHitArea x1={a.x} y1={a.y} x2={b.x} y2={b.y} a={edge.source} b={edge.target} />
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  strokeWidth={lit ? LINE_WIDTH * 2 : LINE_WIDTH}                  opacity={edgeOpacity(0.6, edge.source, edge.target)}
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+              </g>
             );
           })}
         </g>
 
         {/* Bridge edges: a category with zero real cross-links of its
             own, linked to the graph's most-connected category so it
-            isn't a stray island. A distinct color (not just faint/dashed
-            purple) since it's a genuinely different kind of claim —
-            inferred, not observed. */}
-        <g className="stroke-accent-contact" fill="none">
+            isn't a stray island. Muted ink, not an accent color — every
+            accent shade already means a specific real relationship
+            elsewhere in this graph, so an inferred/guessed link
+            deliberately reads as "no real color assigned" instead of
+            fighting for a hue that isn't actually free. Dashed is what
+            actually carries the "inferred, not observed" distinction. */}
+        <g className="stroke-ink-faint" fill="none">
           {categoryEdges.filter((e) => !e.real).map((edge) => {
             const a = categoryPos.get(edge.source);
             const b = categoryPos.get(edge.target);
             if (!a || !b) return null;
+            const lit = isSpotlitEdge(edge.source, edge.target);
             return (
-              <line
-                key={`${edge.source}-${edge.target}`}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-                strokeWidth={LINE_WIDTH}
-                opacity={0.4}
-                strokeDasharray="10 10"
-              />
+              <g key={`${edge.source}-${edge.target}`}>
+                <EdgeHitArea x1={a.x} y1={a.y} x2={b.x} y2={b.y} a={edge.source} b={edge.target} />
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  strokeWidth={lit ? LINE_WIDTH * 2 : LINE_WIDTH}                  opacity={edgeOpacity(0.6, edge.source, edge.target)}
+                  strokeDasharray="10 10"
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+              </g>
             );
           })}
         </g>
@@ -453,53 +548,92 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
           {skillNodes.map((n) => {
             const home = categoryPos.get(n.categoryId);
             if (!home) return null;
+            const lit = isSpotlitEdge(n.categoryId, n.skill.name);
             return (
-              <line
-                key={`house-${n.skill.name}`}
-                x1={home.x}
-                y1={home.y}
-                x2={n.x}
-                y2={n.y}
-                strokeWidth={LINE_WIDTH}
-                opacity={0.3}
-              />
+              <g key={`house-${n.skill.name}`}>
+                <EdgeHitArea x1={home.x} y1={home.y} x2={n.x} y2={n.y} a={n.categoryId} b={n.skill.name} />
+                <line
+                  x1={home.x}
+                  y1={home.y}
+                  x2={n.x}
+                  y2={n.y}
+                  strokeWidth={lit ? LINE_WIDTH * 2 : LINE_WIDTH}                  opacity={edgeOpacity(0.45, n.categoryId, n.skill.name)}
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+              </g>
             );
           })}
         </g>
 
-        {/* Skill ↔ skill: real project/role co-occurrence only. */}
+        {/* Skill ↔ skill: real project/role co-occurrence. */}
         <g className="stroke-accent" fill="none">
-          {skillEdges.map((edge) => {
+          {skillEdges.filter((e) => e.real).map((edge) => {
             const a = skillPos.get(edge.source);
             const b = skillPos.get(edge.target);
             if (!a || !b) return null;
+            const lit = isSpotlitEdge(edge.source, edge.target);
             return (
-              <line
-                key={`${edge.source}-${edge.target}`}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-                strokeWidth={LINE_WIDTH}
-                opacity={0.55}
-              />
+              <g key={`${edge.source}-${edge.target}`}>
+                <EdgeHitArea x1={a.x} y1={a.y} x2={b.x} y2={b.y} a={edge.source} b={edge.target} />
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  strokeWidth={lit ? LINE_WIDTH * 2 : LINE_WIDTH}                  opacity={edgeOpacity(0.7, edge.source, edge.target)}
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+              </g>
+            );
+          })}
+        </g>
+
+        {/* Skill ↔ skill: curated technology relationships (e.g. React
+            powers Next.js) — same muted-ink dashed treatment as a
+            category bridge edge, since it's the same kind of claim: a
+            known fact about the technologies, not an observed project
+            pairing. */}
+        <g className="stroke-ink-faint" fill="none">
+          {skillEdges.filter((e) => !e.real).map((edge) => {
+            const a = skillPos.get(edge.source);
+            const b = skillPos.get(edge.target);
+            if (!a || !b) return null;
+            const lit = isSpotlitEdge(edge.source, edge.target);
+            return (
+              <g key={`${edge.source}-${edge.target}`}>
+                <EdgeHitArea x1={a.x} y1={a.y} x2={b.x} y2={b.y} a={edge.source} b={edge.target} />
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  strokeWidth={lit ? LINE_WIDTH * 2 : LINE_WIDTH}                  opacity={edgeOpacity(0.65, edge.source, edge.target)}
+                  strokeDasharray="6 6"
+                  className="pointer-events-none transition-opacity duration-150"
+                />
+              </g>
             );
           })}
         </g>
 
         {/* Root node */}
-        <circle cx={CENTER} cy={CENTER} r={ROOT_RADIUS} fill="url(#connGraphRoot)" />
-        {!zoomedOut && (
-          <text
-            x={CENTER}
-            y={CENTER}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-[var(--color-base)] text-[24px] font-bold"
-          >
-            Skills
-          </text>
-        )}
+        <g
+          opacity={nodeOpacity("__root__")}
+          className="transition-opacity duration-150"
+        >
+          <circle cx={CENTER} cy={CENTER} r={ROOT_RADIUS} fill="url(#connGraphRoot)" />
+          {!zoomedOut && (
+            <text
+              x={CENTER}
+              y={CENTER}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-[var(--color-base)] text-[24px] font-bold"
+            >
+              Skills
+            </text>
+          )}
+        </g>
 
         {/* Category nodes — a distinctly-colored, larger dot once zoomed
             out (still a fixed size, same as every other dot at this
@@ -517,6 +651,8 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
               key={n.category.id}
               onMouseEnter={() => setHovered({ label: n.category.label, x: n.x, y: n.y })}
               onMouseLeave={() => setHovered(undefined)}
+              opacity={nodeOpacity(n.category.id)}
+              className="transition-opacity duration-150"
             >
               {zoomedOut ? (
                 <circle cx={n.x} cy={n.y} r={DOT_RADIUS} className="fill-accent-soft" />
@@ -557,6 +693,8 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
             key={n.skill.name}
             onMouseEnter={() => setHovered({ label: n.skill.name, x: n.x, y: n.y })}
             onMouseLeave={() => setHovered(undefined)}
+            opacity={nodeOpacity(n.skill.name)}
+            className="transition-opacity duration-150"
           >
             {zoomedOut ? (
               <circle cx={n.x} cy={n.y} r={DOT_RADIUS} className="fill-accent" />
@@ -640,11 +778,15 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
               <span className="text-ink-soft">Skills — the starting point</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 shrink-0 rounded-full bg-graph-node-bg" />
+              <span
+                className={`h-3 w-3 shrink-0 rounded-full ${zoomedOut ? "bg-accent-soft" : "bg-graph-node-bg"}`}
+              />
               <span className="text-ink-soft">A category</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 shrink-0 rounded-md bg-tech-icon-bg" />
+              <span
+                className={`h-3 w-3 shrink-0 rounded-md ${zoomedOut ? "bg-accent" : "bg-tech-icon-bg"}`}
+              />
               <span className="text-ink-soft">A skill</span>
             </div>
             <div className="flex items-center gap-2">
@@ -665,10 +807,10 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="h-0.5 w-4 shrink-0 bg-accent-contact"
-                style={{ backgroundImage: "repeating-linear-gradient(90deg, var(--color-accent-contact) 0 4px, transparent 4px 8px)" }}
+                className="h-0.5 w-4 shrink-0"
+                style={{ backgroundImage: "repeating-linear-gradient(90deg, var(--color-ink-faint) 0 4px, transparent 4px 8px)" }}
               />
-              <span className="text-ink-soft">Inferred — no direct data, linked to stay connected</span>
+              <span className="text-ink-soft">Inferred — a known relationship, not from project data directly</span>
             </div>
           </div>
         </div>

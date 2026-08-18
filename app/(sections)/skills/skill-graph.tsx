@@ -18,7 +18,14 @@ const ROOT_RADIUS = 76;
 const CATEGORY_RING = 343;
 const CATEGORY_NODE_RADIUS = 57;
 const SKILL_RING = 814;
-const SKILL_NODE_SIZE = 89;
+// Capped by the actual geometry, not a guess: with 44 skills across 11
+// categories, the tightest same-category neighbors land ~103px apart
+// center-to-center at SKILL_RING's current radius — a fixed ceiling
+// rotation can't change, since spinning the wheel moves every node
+// rigidly together. 110-120 (tried earlier) mathematically overlapped
+// in those tightest spots; 100 keeps real margin under that ceiling.
+// Going bigger than this needs SKILL_RING itself pushed outward instead.
+const SKILL_NODE_SIZE = 100;
 // Half-width gap between each category's skill cluster and the next —
 // smaller than a full slot's worth of angular space, reclaiming room
 // that would otherwise sit empty so the leaves themselves can be bigger.
@@ -277,14 +284,14 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
               />
               <circle cx={n.x} cy={n.y} r={CATEGORY_NODE_RADIUS} className="fill-graph-node-bg" />
               <foreignObject
-                x={n.x - 19}
-                y={n.y - 19}
-                width={38}
-                height={38}
+                x={n.x - 25}
+                y={n.y - 25}
+                width={50}
+                height={50}
                 className="pointer-events-none overflow-visible"
               >
-                <div className="flex h-[38px] w-[38px] items-center justify-center text-accent-soft">
-                  <CategoryIcon className="h-9 w-9" />
+                <div className="flex h-[50px] w-[50px] items-center justify-center text-accent-soft">
+                  <CategoryIcon className="h-12 w-12" />
                 </div>
               </foreignObject>
             </g>
@@ -317,11 +324,11 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
               height={SKILL_NODE_SIZE}
               className="overflow-visible"
             >
-              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-tech-icon-bg p-3 shadow-sm transition-shadow duration-150 hover:shadow-md">
+              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-tech-icon-bg p-2 shadow-sm transition-shadow duration-150 hover:shadow-md">
                 <TechLogo
                   skill={n.skill}
-                  className="h-16 w-16"
-                  fallbackTextClassName="text-lg"
+                  className="h-[82px] w-[82px]"
+                  fallbackTextClassName="text-xl"
                 />
               </div>
             </foreignObject>
