@@ -12,6 +12,10 @@ export type Project = {
   description: string;
   category: ProjectCategory;
   tags: string[];
+  /** 1-5, judged on scope/complexity — team size, architecture, breadth
+   * of the stack involved. Used only for the Projects page's "By scale"
+   * sort, never displayed directly. */
+  scale: number;
   videoUrl?: string;
   /** Optional — when present, the detail page links out to the source. */
   repoUrl?: string;
@@ -28,6 +32,7 @@ export const projects: Project[] = [
     description:
       "A 5-node distributed key-value store built for disaster response - staying consistent and available even through a 40% simultaneous node loss.",
     category: "backend",
+    scale: 5,
     tags: ["Python", "FastAPI", "gRPC", "RabbitMQ", "Docker", "Streamlit"],
     repoUrl: "https://github.com/gdivecha/ReliaNet",
     details: [
@@ -56,6 +61,7 @@ export const projects: Project[] = [
     description:
       "A custom Discord bot built for community collaboration - role-based tools, member insights, and interactive slash commands.",
     category: "backend",
+    scale: 2,
     tags: ["JavaScript", "Discord.js", "Discord Bot"],
     details: [
       {
@@ -71,6 +77,7 @@ export const projects: Project[] = [
     description:
       "A Discord bot for posting and tracking job opportunities, with slash commands for sharing jobs, personal stats, and a contributor leaderboard.",
     category: "backend",
+    scale: 2,
     tags: ["JavaScript", "Discord.js", "Discord Bot"],
     details: [
       {
@@ -86,6 +93,7 @@ export const projects: Project[] = [
     description:
       "A full-stack microservices app for grocery-style food ordering, with a JWT-authenticated auth service behind a layered architecture.",
     category: "full-stack",
+    scale: 4,
     tags: ["Java", "JDBC", "Servlets & JSP", "Docker", "Kubernetes", "Google Cloud"],
     details: [
       {
@@ -105,6 +113,7 @@ export const projects: Project[] = [
     description:
       "A relational database management system with a JavaFX GUI for handling hotel booking and guest data.",
     category: "backend",
+    scale: 3,
     tags: ["Java", "JavaFX", "SQL"],
     details: [
       {
@@ -120,15 +129,21 @@ export const projects: Project[] = [
     description:
       "A pet-monitoring website for reporting missing pets and tracking them when the community finds them.",
     category: "full-stack",
-    tags: ["HTML", "CSS", "MATLAB"],
+    scale: 3,
+    tags: ["HTML", "CSS", "JavaScript", "Figma", "MATLAB"],
+    repoUrl: "https://github.com/gdivecha/WildHacks2-StraySAFE",
     details: [
       {
         title: "Overview",
-        text: "StraySAFE is a pet-monitoring system that allows you to enlist missing pets and keep track of your pet when someone reports finding it in the community. Along with animal control, the website raises awareness in the pet community about missing pets.",
+        text: "Built at WildHacks by a team of four, StraySAFE is a pet-monitoring system that lets an owner report a missing pet and lets anyone in the community who finds a stray report that too - reconnecting pets with their owners instead of relying on scattered flyers and social posts.",
       },
       {
         title: "Why it exists",
-        text: "Statistics gathered via MATLAB showed the urgency of pets going missing, motivating the need for a website like this. It's a scalable project intended to keep being polished for future implementation in apps people use daily.",
+        text: "Before writing any code, the team ran statistics in MATLAB on how often pets actually go missing, confirming there was a real, urgent gap worth solving rather than assuming one.",
+      },
+      {
+        title: "How it's built",
+        text: "A 12-page HTML/CSS/JavaScript flow - signup, login, a detailed \"report missing\" form (breed, microchip number, last seen location, photo), and a status page - mocked up in Figma first. Accounts and pet reports are stored directly in the browser via localStorage rather than a real backend, a deliberate hackathon-scope tradeoff.",
       },
     ],
   },
@@ -139,6 +154,7 @@ export const projects: Project[] = [
     description:
       "A Java + JavaFX calculator that recursively computes the determinant of a square matrix.",
     category: "backend",
+    scale: 1,
     tags: ["Java", "JavaFX"],
     details: [
       {
@@ -154,6 +170,7 @@ export const projects: Project[] = [
     description:
       "A Discord virtual pet that simulates hunger, hygiene, and happiness, backed by Google Cloud Storage.",
     category: "backend",
+    scale: 2,
     tags: ["Python", "Discord API", "Google Cloud"],
     details: [
       {
@@ -169,6 +186,7 @@ export const projects: Project[] = [
     description:
       "A JavaFX bookstore GUI built around design patterns, UML modeling, and black/white-box testing.",
     category: "backend",
+    scale: 3,
     tags: ["Java", "JavaFX", "UML Design"],
     details: [
       {
@@ -184,6 +202,7 @@ export const projects: Project[] = [
     description:
       "A multi-stage transistor amplifier designed and simulated in Multisim to meet a target specification.",
     category: "hardware",
+    scale: 2,
     tags: ["Multisim", "Circuit Design"],
     details: [
       {
@@ -199,6 +218,7 @@ export const projects: Project[] = [
     description:
       "A general-purpose microprocessor built in VHDL with an ALU, decoder, latches, and a finite state machine.",
     category: "hardware",
+    scale: 3,
     tags: ["VHDL", "Quartus", "Digital Logic"],
     details: [
       {
@@ -214,6 +234,7 @@ export const projects: Project[] = [
     description:
       "A miniature breadboard traffic light system built around a timer IC and basic circuit logic.",
     category: "hardware",
+    scale: 1,
     tags: ["C++", "Circuit Design"],
     details: [
       {

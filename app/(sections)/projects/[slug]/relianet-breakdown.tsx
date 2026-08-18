@@ -86,20 +86,24 @@ const STEPS = [
 
 const TESTS = [
   {
-    action: "Killed the entry node mid-write",
-    result: "Traffic rerouted automatically - zero downtime.",
+    command: "$ docker stop node-1",
+    note: "kills the entry node mid-write",
+    result: "traffic rerouted automatically — zero downtime",
   },
   {
-    action: "Killed 2 of 5 nodes at once (40% of the network)",
-    result: "Quorum recalculated from 3 down to 2; reads and writes kept working.",
+    command: "$ make stop4and5",
+    note: "kills 2 of 5 nodes at once (40% of the cluster)",
+    result: "quorum recalculated 3 → 2 — reads/writes kept working",
   },
   {
-    action: "Forced one node to lag 3 seconds",
-    result: "The 1.5s timeout skipped it - the rest of the cluster wasn't slowed down.",
+    command: "# inject 3s of lag on node-3",
+    note: null,
+    result: "the 1.5s gRPC timeout skipped it — rest of the cluster unaffected",
   },
   {
-    action: "Brought a stale node back online",
-    result: "It self-healed and rejoined the quorum in about 12 seconds.",
+    command: "# restart a node holding stale data",
+    note: null,
+    result: "self-healed and rejoined the quorum in ~12s",
   },
 ];
 
@@ -229,24 +233,23 @@ export function ReliaNetBreakdown() {
         <h3 className="text-lg font-semibold text-ink">
           Verified by breaking it on purpose
         </h3>
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {TESTS.map((test) => (
-            <div
-              key={test.action}
-              className="rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px]"
-            >
-              <p className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
-                We did this
-              </p>
-              <p className="mt-1.5 text-sm font-medium text-ink">
-                {test.action}
-              </p>
-              <p className="mt-3 inline-flex items-start gap-1.5 text-sm leading-relaxed text-ink-soft">
-                <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-soft" aria-hidden="true" />
-                {test.result}
-              </p>
-            </div>
-          ))}
+        <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[6px]">
+          <div className="border-b border-line bg-tag-bg px-5 py-2.5">
+            <p className="font-mono text-xs text-ink-faint">chaos-tests.log</p>
+          </div>
+          <div className="flex flex-col divide-y divide-line">
+            {TESTS.map((test) => (
+              <div key={test.command} className="px-5 py-4 font-mono text-sm">
+                <p className="text-accent-soft">
+                  {test.command}
+                  {test.note && (
+                    <span className="text-ink-faint"> # {test.note}</span>
+                  )}
+                </p>
+                <p className="mt-1.5 text-ink-soft">→ {test.result}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
