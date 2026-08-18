@@ -151,6 +151,7 @@ export function PageShell({
           the transform transition animates normally from its earlier,
           already-rendered translate-y-2 starting position. */}
       <div
+        data-page-content
         className={`relative z-10 transition-transform ease-out ${
           contentVisible ? "translate-y-0" : "translate-y-2 invisible"
         }`}

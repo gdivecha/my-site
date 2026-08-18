@@ -210,6 +210,7 @@ export function Sidebar() {
           the page's right-side content rather than the copyright line
           showing up early alongside the social icons above it. */}
       <p
+        data-copyright
         className={`absolute bottom-8 left-8 text-xs text-ink-faint transition-all ease-out md:bottom-10 md:left-12 lg:left-16 ${
           iconsVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
         }`}
