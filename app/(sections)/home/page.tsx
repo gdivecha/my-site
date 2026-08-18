@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
@@ -34,30 +35,10 @@ const featuredCert = certifications.reduce((latest, c) =>
   certificationSortDate(c) > certificationSortDate(latest) ? c : latest
 );
 
-// A closing tag cloud, sized by real frequency across every project's own
-// tags — not a curated list like the Skills page, just an honest tally of
-// what actually shows up most. Recomputes itself as projects are added,
-// so it's never manually maintained or allowed to go stale.
-const tagCounts = new Map<string, number>();
-for (const p of projects) {
-  for (const tag of p.tags) {
-    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-  }
-}
-const topTags = [...tagCounts.entries()]
-  .sort((a, b) => b[1] - a[1])
-  .slice(0, 10);
-const maxTagCount = topTags[0]?.[1] ?? 1;
-
-// Three visual weight tiers off the real count, not a fixed per-tag list —
-// so a brand-new tag that shows up on several future projects will
-// naturally earn its way into the heavier tiers on its own.
-function tagWeightClass(count: number): string {
-  const ratio = count / maxTagCount;
-  if (ratio >= 0.9) return "text-lg font-semibold text-ink";
-  if (ratio >= 0.55) return "text-sm font-medium text-ink-soft";
-  return "text-xs text-ink-faint";
-}
+export const metadata: Metadata = {
+  title: "Home",
+  description: profile.tagline,
+};
 
 export default function HomePage() {
   return (
@@ -258,28 +239,6 @@ export default function HomePage() {
                 </p>
               </Link>
             </div>
-          </div>
-        </div>
-
-        {/* A different kind of closer than the cards above — not another
-            "go explore" link, just an honest reading of the data: real
-            tag frequency across every project, sized by how often each
-            one actually shows up. No curation, no manual list — this is
-            what the project data says, whatever that turns out to be. */}
-        <div className="w-full">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
-            What actually shows up most
-          </h2>
-          <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-2">
-            {topTags.map(([tag, count]) => (
-              <span
-                key={tag}
-                className={`leading-none transition-colors ${tagWeightClass(count)}`}
-                title={`${count} project${count === 1 ? "" : "s"}`}
-              >
-                {tag}
-              </span>
-            ))}
           </div>
         </div>
       </div>
