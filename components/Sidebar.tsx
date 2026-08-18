@@ -10,6 +10,7 @@ import {
   SIDEBAR_STAGE_DELAYS as STAGE_DELAYS,
   SOCIALS_STAGGER_MS,
 } from "@/lib/entrance-timing";
+import { CopyLinkIcon } from "./CopyLinkIcon";
 import { DialNav } from "./DialNav";
 import { DevpostIcon, GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
@@ -108,7 +109,7 @@ export function Sidebar() {
   return (
     <aside className="relative z-20 border-b border-line md:fixed md:inset-y-0 md:left-0 md:w-[clamp(360px,40vw,640px)] md:border-b-0 md:overflow-y-auto">
       <div className="absolute left-8 top-8 flex gap-2 md:left-12 md:top-10 lg:left-16">
-        {[SearchModal, SoundToggle, ThemeToggle, KeyboardShortcuts].map((Icon, i) => (
+        {[SearchModal, SoundToggle, ThemeToggle, KeyboardShortcuts, CopyLinkIcon].map((Icon, i) => (
           <Icon
             key={i}
             className={
