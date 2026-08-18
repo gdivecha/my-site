@@ -282,28 +282,57 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   const [legendOpen, setLegendOpen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; startViewBox: ViewBox } | null>(null);
-  // Which single edge (by its two node ids) the pointer is currently over —
-  // drives the "spotlight" effect below: that edge and its two endpoints
-  // stay at full strength, everything else fades back. null means nothing
-  // is hovered, so the graph reads at its normal resting opacities.
-  const [hoverEdge, setHoverEdge] = useState<{ a: string; b: string } | null>(null);
+  // What's currently spotlit: either one hovered edge (that edge + its two
+  // endpoints), or one hovered node (that node + every node it's directly
+  // connected to, plus every edge between them) — drives the fade/full-
+  // strength split below. null means nothing is hovered, so the graph
+  // reads at its normal resting opacities.
+  type Spotlight =
+    | { kind: "edge"; a: string; b: string }
+    | { kind: "node"; id: string; neighbors: Set<string> };
+  const [spotlight, setSpotlight] = useState<Spotlight | null>(null);
 
   const categoryPos = new Map(categoryNodes.map((n) => [n.category.id, n]));
   const skillPos = new Map(skillNodes.map((n) => [n.skill.name, n]));
   const zoomedOut = viewBox.w > LOD_VIEW_THRESHOLD;
 
-  // True while any edge is hovered — every opacity calculation below
+  // Every node's direct neighbors, across all four edge types (root↔
+  // category, category↔category, category↔skill, skill↔skill) — the one
+  // thing a node-hover spotlight needs that an edge-hover doesn't, so it's
+  // only built here rather than threaded through the render loop below.
+  const neighborsOf = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    function link(a: string, b: string) {
+      if (!map.has(a)) map.set(a, new Set());
+      if (!map.has(b)) map.set(b, new Set());
+      map.get(a)!.add(b);
+      map.get(b)!.add(a);
+    }
+    categoryNodes.forEach((c) => link("__root__", c.category.id));
+    categoryEdges.forEach((e) => link(e.source, e.target));
+    skillNodes.forEach((n) => link(n.categoryId, n.skill.name));
+    skillEdges.forEach((e) => link(e.source, e.target));
+    return map;
+  }, [categoryNodes, categoryEdges, skillNodes, skillEdges]);
+
+  // True while anything is hovered — every opacity calculation below
   // branches on this so nothing dims itself when there's simply nothing
   // being hovered yet.
-  const spotlighting = hoverEdge !== null;
+  const spotlighting = spotlight !== null;
   function isSpotlitEdge(a: string, b: string) {
+    if (!spotlight) return false;
+    if (spotlight.kind === "edge") {
+      return (spotlight.a === a && spotlight.b === b) || (spotlight.a === b && spotlight.b === a);
+    }
     return (
-      hoverEdge !== null &&
-      ((hoverEdge.a === a && hoverEdge.b === b) || (hoverEdge.a === b && hoverEdge.b === a))
+      (a === spotlight.id && spotlight.neighbors.has(b)) ||
+      (b === spotlight.id && spotlight.neighbors.has(a))
     );
   }
   function isSpotlitNode(id: string) {
-    return hoverEdge !== null && (hoverEdge.a === id || hoverEdge.b === id);
+    if (!spotlight) return false;
+    if (spotlight.kind === "edge") return spotlight.a === id || spotlight.b === id;
+    return id === spotlight.id || spotlight.neighbors.has(id);
   }
   // Faded-out level for anything not currently spotlit — just a light
   // touch, not a real dim, so the rest of the graph's shape and colors
@@ -322,7 +351,10 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   // top of it purely to catch the pointer, plus a slight strokeWidth bump
   // on the visible line itself once it's the spotlit one, so the hovered
   // edge reads as genuinely emphasized rather than just "less faded than
-  // its neighbors."
+  // its neighbors." No mouseenter/mouseleave here — the data-edge-a/-b
+  // markers are read by the single pointermove hit-test on the svg
+  // instead (see updateSpotlightFromPointer), which is what actually
+  // drives the spotlight.
   function EdgeHitArea({ x1, y1, x2, y2, a, b }: { x1: number; y1: number; x2: number; y2: number; a: string; b: string }) {
     return (
       <line
@@ -332,8 +364,8 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
         y2={y2}
         stroke="transparent"
         strokeWidth={14}
-        onMouseEnter={() => setHoverEdge({ a, b })}
-        onMouseLeave={() => setHoverEdge((cur) => (cur && cur.a === a && cur.b === b ? null : cur))}
+        data-edge-a={a}
+        data-edge-b={b}
       />
     );
   }
@@ -400,11 +432,48 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   function handlePointerMove(e: PointerEvent<SVGSVGElement>) {
     const drag = dragRef.current;
     const svg = svgRef.current;
-    if (!drag || !svg) return;
-    const rect = svg.getBoundingClientRect();
-    const dx = ((e.clientX - drag.startX) / rect.width) * drag.startViewBox.w;
-    const dy = ((e.clientY - drag.startY) / rect.height) * drag.startViewBox.h;
-    setViewBox({ ...drag.startViewBox, x: drag.startViewBox.x - dx, y: drag.startViewBox.y - dy });
+    if (drag && svg) {
+      const rect = svg.getBoundingClientRect();
+      const dx = ((e.clientX - drag.startX) / rect.width) * drag.startViewBox.w;
+      const dy = ((e.clientY - drag.startY) / rect.height) * drag.startViewBox.h;
+      setViewBox({ ...drag.startViewBox, x: drag.startViewBox.x - dx, y: drag.startViewBox.y - dy });
+      return;
+    }
+    updateSpotlightFromPointer(e);
+  }
+
+  // The single source of truth for what's spotlit — reads whatever is
+  // actually under the cursor on every move, via data-edge-a/-b and
+  // data-node-id markers, instead of trusting a matching mouseenter and
+  // mouseleave pair to both fire on the right element. That per-element
+  // enter/leave approach genuinely got stuck: an edge's own onMouseLeave
+  // could fail to fire (fast pointer movement over a 1.4px-wide hit
+  // target, an in-between re-render swapping which DOM node is under the
+  // cursor, etc.) and leave that edge spotlit indefinitely, even with the
+  // pointer sitting over empty canvas well inside the frame. Re-deriving
+  // the answer fresh on every single move is self-correcting by
+  // construction — there's no stale "leave never fired" state to get
+  // stuck in, because nothing is ever trusted to persist between events.
+  function updateSpotlightFromPointer(e: PointerEvent<SVGSVGElement>) {
+    const target = e.target as Element;
+    const edgeEl = target.closest("[data-edge-a]");
+    if (edgeEl) {
+      const a = edgeEl.getAttribute("data-edge-a")!;
+      const b = edgeEl.getAttribute("data-edge-b")!;
+      setSpotlight((cur) => (cur?.kind === "edge" && cur.a === a && cur.b === b ? cur : { kind: "edge", a, b }));
+      return;
+    }
+    const nodeEl = target.closest("[data-node-id]");
+    if (nodeEl) {
+      const id = nodeEl.getAttribute("data-node-id")!;
+      setSpotlight((cur) =>
+        cur?.kind === "node" && cur.id === id
+          ? cur
+          : { kind: "node", id, neighbors: neighborsOf.get(id) ?? new Set() }
+      );
+      return;
+    }
+    setSpotlight((cur) => (cur === null ? cur : null));
   }
 
   function handlePointerUp(e: PointerEvent<SVGSVGElement>) {
@@ -429,7 +498,7 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
         // leaving the spotlight stuck on. This fires whenever the cursor
         // leaves the graph entirely, regardless of which child last had
         // it, so the spotlight can never get stranded on.
-        onMouseLeave={() => setHoverEdge(null)}
+        onMouseLeave={() => setSpotlight(null)}
       >
         <defs>
           <linearGradient id="connGraphRoot" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -620,6 +689,7 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
         <g
           opacity={nodeOpacity("__root__")}
           className="transition-opacity duration-150"
+          data-node-id="__root__"
         >
           <circle cx={CENTER} cy={CENTER} r={ROOT_RADIUS} fill="url(#connGraphRoot)" />
           {!zoomedOut && (
@@ -653,6 +723,7 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
               onMouseLeave={() => setHovered(undefined)}
               opacity={nodeOpacity(n.category.id)}
               className="transition-opacity duration-150"
+              data-node-id={n.category.id}
             >
               {zoomedOut ? (
                 <circle cx={n.x} cy={n.y} r={DOT_RADIUS} className="fill-accent-soft" />
@@ -695,6 +766,7 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
             onMouseLeave={() => setHovered(undefined)}
             opacity={nodeOpacity(n.skill.name)}
             className="transition-opacity duration-150"
+            data-node-id={n.skill.name}
           >
             {zoomedOut ? (
               <circle cx={n.x} cy={n.y} r={DOT_RADIUS} className="fill-accent" />
