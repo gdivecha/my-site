@@ -7,8 +7,11 @@ import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { Tag } from "@/components/Pill";
 import { ArrowLeftIcon, ArrowRightIcon, GithubIcon, PlayIcon } from "@/components/icons";
 import { projects } from "@/lib/data/projects";
+import { ApplyBotBreakdown } from "./applybot-breakdown";
 import { ProjectBackLink } from "./back-link";
+import { BookstoreBreakdown } from "./bookstore-breakdown";
 import { FoodHubBreakdown } from "./foodhub-breakdown";
+import { NexoraBreakdown } from "./nexora-breakdown";
 import { ReliaNetBreakdown } from "./relianet-breakdown";
 import { StraySafeBreakdown } from "./straysafe-breakdown";
 
@@ -22,6 +25,9 @@ const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
   relianet: () => <ReliaNetBreakdown />,
   straysafe: () => <StraySafeBreakdown />,
   "food-hub-system": () => <FoodHubBreakdown />,
+  "bookstore-gui": () => <BookstoreBreakdown />,
+  nexora: () => <NexoraBreakdown />,
+  "apply-bot": () => <ApplyBotBreakdown />,
 };
 
 // Hero frame is where a demo video will eventually go — hidden for these
@@ -29,7 +35,14 @@ const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
 // placeholder box with nothing to click. A separate list from
 // CUSTOM_BREAKDOWNS above since the two are related but not the same
 // toggle — a future custom breakdown might still want the hero.
-const HIDDEN_HERO_SLUGS = new Set(["relianet", "straysafe", "food-hub-system"]);
+const HIDDEN_HERO_SLUGS = new Set([
+  "relianet",
+  "straysafe",
+  "food-hub-system",
+  "bookstore-gui",
+  "nexora",
+  "apply-bot",
+]);
 
 export default async function ProjectDetailPage({
   params,

@@ -59,14 +59,15 @@ export const projects: Project[] = [
     slug: "nexora",
     name: "Nexora",
     description:
-      "A custom Discord bot built for community collaboration - role-based tools, member insights, and interactive slash commands.",
+      "A Discord role-management bot built around set operations - find who has every one of a set of roles, who has either of two, or diff two members' roles directly.",
     category: "backend",
     scale: 2,
-    tags: ["JavaScript", "Discord.js", "Discord Bot"],
+    tags: ["JavaScript", "Discord.js", "Node.js", "Express"],
+    repoUrl: "https://github.com/gdivecha/Nexora",
     details: [
       {
         title: "Overview",
-        text: "Nexora is a custom-built Discord bot crafted from the ground up to enhance community collaboration through powerful role-based tools, member insights, and interactive slash commands.",
+        text: "Nexora gives Discord moderators three slash commands for querying member roles: /converge finds everyone who has every role in a set (up to 12), /crossrole finds everyone with either of two roles, and /rolediff compares exactly what two members' roles have in common and don't.",
       },
     ],
   },
@@ -75,14 +76,15 @@ export const projects: Project[] = [
     slug: "apply-bot",
     name: "App.ly",
     description:
-      "A Discord bot for posting and tracking job opportunities, with slash commands for sharing jobs, personal stats, and a contributor leaderboard.",
+      "A Discord bot for posting and tracking job opportunities - every listing becomes a trackable post, with live stats and a leaderboard derived entirely from the channel's own message history.",
     category: "backend",
     scale: 2,
-    tags: ["JavaScript", "Discord.js", "Discord Bot"],
+    tags: ["JavaScript", "Discord.js", "Node.js"],
+    repoUrl: "https://github.com/gdivecha/App.ly",
     details: [
       {
         title: "Overview",
-        text: "ApplyBot is a custom server bot for posting and tracking job opportunities. /postjob shares a job with full details, /myjobstats shows a user's own posting stats, and /leaderboard surfaces the top contributors.",
+        text: "App.ly is a job-posting bot for a career-focused Discord server. /postjob shares a listing with an auto-added checkmark reaction that doubles as an \"I applied\" signal, while /stats, /leaderboard, and /rivals re-scan the channel's message history live to derive posting and application stats - no database involved.",
       },
     ],
   },
@@ -104,22 +106,6 @@ export const projects: Project[] = [
       {
         title: "Architecture",
         text: "Four layers, each only talking to the one below it: GUI (JSP/HTML pages), Business (servlets handling HTTP requests), Assistance (plain data-transfer objects), and Persistence (JDBC-backed CRUD classes) sitting on top of a 4-table MySQL schema - a classic layered enterprise-Java shape, deployed on Apache Tomcat via Maven.",
-      },
-    ],
-  },
-  {
-    id: "hotel-management-rdbms",
-    slug: "hotel-management-rdbms",
-    name: "Hotel Management RDBMS",
-    description:
-      "A relational database management system with a JavaFX GUI for handling hotel booking and guest data.",
-    category: "backend",
-    scale: 3,
-    tags: ["Java", "JavaFX", "SQL"],
-    details: [
-      {
-        title: "Overview",
-        text: "We created a relational database management system using SQL and JavaFX for the GUI, to simulate a hotel management system used to carry out many of the data-handling activities of running a hotel.",
       },
     ],
   },
@@ -185,14 +171,19 @@ export const projects: Project[] = [
     slug: "bookstore-gui",
     name: "Building a GUI for a Bookstore Application",
     description:
-      "A JavaFX bookstore GUI built around design patterns, UML modeling, and black/white-box testing.",
+      "A JavaFX bookstore app with a points-based rewards system, built around three real design patterns: Singleton, Observer, and State.",
     category: "backend",
     scale: 3,
-    tags: ["Java", "JavaFX", "UML Design"],
+    tags: ["Java", "JavaFX", "Design Patterns", "UML"],
+    repoUrl: "https://github.com/gdivecha/Bookstore-App",
     details: [
       {
         title: "Overview",
-        text: "As the culmination of the course \"Object-Oriented Engineering Analysis and Design,\" this project applied modern software practices - design patterns (Observer, State, Singleton, etc.), encapsulation, polymorphism, hashcodes, high cohesion & low coupling, UML diagrams (class, use case), use-case descriptions, and black-box/white-box testing - to build a fully-functional GUI using JavaFX and Java, as a collaborative team effort.",
+        text: "As the culmination of COE528 - Object-Oriented Engineering Analysis and Design, this project applied design patterns (Singleton, Observer, State), UML modeling (class and use-case diagrams), and black-box/white-box testing to build a working JavaFX desktop app for a bookstore, as a team effort.",
+      },
+      {
+        title: "How it works",
+        text: "An Owner (Singleton) manages a shared Inventory (also a Singleton) of books and a list of Customer accounts. A Customer checks out one of two ways - paying full price and earning loyalty points, or redeeming banked points for a discount - and either path notifies the Inventory as an Observer, rather than reaching into it directly. A Customer's status (Silver or Gold) is its own State-pattern object that flips automatically once their points cross a threshold.",
       },
     ],
   },
