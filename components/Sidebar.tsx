@@ -122,12 +122,14 @@ export function Sidebar() {
       </div>
       <div className="flex h-full flex-col justify-center gap-8 px-8 py-12 md:px-12 md:py-16 lg:px-16">
         <div>
-          {/* The entrance animation lives on the inner span, not the h1
-              itself — the h1 is what nameRef measures for the page-heading
-              bottom-alignment sync above, and that only runs once on
-              mount, so an animated transform directly on the h1 would get
-              measured mid-slide instead of at its settled position. */}
-          <h1
+          {/* Not an h1 — it's identical on every route, so the page's own
+              PageHeading (or equivalent) is the real h1 per route instead.
+              The entrance animation lives on the inner span, not this
+              element itself — this is what nameRef measures for the
+              page-heading bottom-alignment sync above, and that only runs
+              once on mount, so an animated transform directly on it would
+              get measured mid-slide instead of at its settled position. */}
+          <p
             ref={nameRef}
             className="font-display text-[30px] font-bold leading-tight md:text-[36px] lg:text-[48px]"
           >
@@ -142,7 +144,7 @@ export function Sidebar() {
                 {profile.name}
               </Link>
             </span>
-          </h1>
+          </p>
           {/* Grid-stacks an invisible placeholder under the real content so
               this line always reserves its final height, even before
               RoleReveal has mounted — otherwise the empty paragraph

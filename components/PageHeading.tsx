@@ -80,12 +80,12 @@ export function PageHeading({
       >
         {eyebrow}
       </p>
-      <h2
+      <h1
         ref={headingRef}
         className="mt-2 font-display text-[36px] font-bold leading-tight text-ink sm:text-[48px]"
       >
         {children}
-      </h2>
+      </h1>
     </>
   );
 }

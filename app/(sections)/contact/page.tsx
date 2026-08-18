@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { profile } from "@/lib/data/profile";
 import { CopyEmailButton } from "./copy-email-button";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description: `Reach out to ${profile.name} directly — open to full-time roles, freelance work, or just talking shop.`,
+};
 
 // Standing in for the form (see contact-form.tsx) until that has a real
 // backend to send to — a form that looks like it works but silently goes

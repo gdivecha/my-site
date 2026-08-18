@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
 import { StubSection } from "@/components/StubSection";
+
+export const metadata: Metadata = {
+  title: "Open Source",
+  description:
+    "A running log of open-source contributions and side projects is on its way.",
+};
 
 export default function OpenSourcePage() {
   return (

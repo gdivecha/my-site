@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,6 +25,23 @@ import { VideoEmbed } from "./video-embed";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const project = projects.find((p) => p.slug === slug);
+  if (!project) return { title: "Project not found" };
+
+  return {
+    title: project.name,
+    description: project.description,
+    openGraph: { title: project.name, description: project.description },
+    alternates: { canonical: `/projects/${project.slug}` },
+  };
 }
 
 // Extracts a playable embed URL from a youtube.com/youtu.be link so the

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,6 +10,25 @@ import { durationText, experiences } from "@/lib/data/experience";
 
 export function generateStaticParams() {
   return experiences.map((e) => ({ id: e.id }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const experience = experiences.find((e) => e.id === id);
+  if (!experience) return { title: "Experience not found" };
+
+  const title = `${experience.role} at ${experience.company}`;
+  const description = experience.summary[0];
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+    alternates: { canonical: `/experience/${experience.id}` },
+  };
 }
 
 export default async function ExperienceDetailPage({
@@ -52,9 +72,9 @@ export default async function ExperienceDetailPage({
           )}
 
           <div className="min-w-0">
-            <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">
               {experience.role}
-            </h2>
+            </h1>
             <p
               className="mt-1 text-sm font-medium sm:text-base"
               style={{ color: "#616297" }}

@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { experiences } from "@/lib/data/experience";
 import { ExperienceCard } from "./experience-card";
+
+export const metadata: Metadata = {
+  title: "Experience",
+  description:
+    "Internship experience across Amazon, Dayforce, and Prestar, working on scalable cloud infrastructure and real-time systems.",
+};
 
 export default function ExperiencePage() {
   // Full-time and freelance filters are hidden for now — this always shows

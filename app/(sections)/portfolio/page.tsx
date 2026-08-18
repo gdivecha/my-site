@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { DownloadIcon, FileIcon } from "@/components/icons";
 import { experiences } from "@/lib/data/experience";
+import { profile } from "@/lib/data/profile";
 import { projects } from "@/lib/data/projects";
+
+export const metadata: Metadata = {
+  title: "Portfolio",
+  description: `${profile.tagline} Résumé, career stats, and downloadable PDF.`,
+};
 
 // Every number here is derived from the real data files, never hardcoded —
 // same convention as durationText() in lib/data/experience.ts. Companies/
