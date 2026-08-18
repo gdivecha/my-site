@@ -85,7 +85,7 @@ export default function ProjectsPage() {
                 className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
                   active
                     ? "border-accent/50 bg-accent text-white"
-                    : "border-line bg-panel text-ink-faint hover:text-ink-soft"
+                    : "filter-pill border-line bg-panel text-ink-faint hover:text-ink-soft"
                 }`}
               >
                 {f.label}

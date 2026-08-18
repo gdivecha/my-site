@@ -10,24 +10,58 @@ import { projects } from "@/lib/data/projects";
 import { ApplyBotBreakdown } from "./applybot-breakdown";
 import { ProjectBackLink } from "./back-link";
 import { BookstoreBreakdown } from "./bookstore-breakdown";
+import { CramersBreakdown } from "./cramers-breakdown";
+import { FacialRecognitionBreakdown } from "./facial-recognition-breakdown";
 import { FoodHubBreakdown } from "./foodhub-breakdown";
+import { MicroprocessorBreakdown } from "./microprocessor-breakdown";
+import { MultistageAmpBreakdown } from "./multistage-amp-breakdown";
 import { NexoraBreakdown } from "./nexora-breakdown";
 import { ReliaNetBreakdown } from "./relianet-breakdown";
+import { SecureBankingBreakdown } from "./secure-banking-breakdown";
 import { StraySafeBreakdown } from "./straysafe-breakdown";
+import { TamacordBreakdown } from "./tamacord-breakdown";
+import { VideoEmbed } from "./video-embed";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
 
+// Extracts a playable embed URL from a youtube.com/youtu.be link so the
+// hero frame can play the video inline instead of just linking out to it.
+// Returns null for anything else (including the "#" placeholder), which
+// keeps the existing link-out behavior for non-YouTube video URLs.
+function getYouTubeEmbedUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "youtu.be") {
+      return `https://www.youtube.com/embed${parsed.pathname}`;
+    }
+    if (parsed.hostname.replace(/^www\./, "") === "youtube.com") {
+      const id = parsed.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}`;
+      if (parsed.pathname.startsWith("/embed/")) return url;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 // Projects big enough to earn their own hand-built breakdown instead of
 // the generic title+paragraph detail blocks every other project uses.
 const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
+  "facial-recognition-attendance-system": () => <FacialRecognitionBreakdown />,
   relianet: () => <ReliaNetBreakdown />,
   straysafe: () => <StraySafeBreakdown />,
   "food-hub-system": () => <FoodHubBreakdown />,
   "bookstore-gui": () => <BookstoreBreakdown />,
   nexora: () => <NexoraBreakdown />,
   "apply-bot": () => <ApplyBotBreakdown />,
+  tamacord: () => <TamacordBreakdown />,
+  "multi-stage-amplifier": () => <MultistageAmpBreakdown />,
+  "fully-functioning-microprocessor": () => <MicroprocessorBreakdown />,
+  "cramers-calculator": () => <CramersBreakdown />,
+  "secure-banking-system": () => <SecureBankingBreakdown />,
 };
 
 // Hero frame is where a demo video will eventually go — hidden for these
@@ -36,12 +70,17 @@ const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
 // CUSTOM_BREAKDOWNS above since the two are related but not the same
 // toggle — a future custom breakdown might still want the hero.
 const HIDDEN_HERO_SLUGS = new Set([
+  "facial-recognition-attendance-system",
   "relianet",
   "straysafe",
   "food-hub-system",
   "bookstore-gui",
   "nexora",
   "apply-bot",
+  "multi-stage-amplifier",
+  "fully-functioning-microprocessor",
+  "cramers-calculator",
+  "secure-banking-system",
 ]);
 
 export default async function ProjectDetailPage({
@@ -54,6 +93,10 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   const heroHidden = HIDDEN_HERO_SLUGS.has(project.slug);
+  const embedUrl =
+    !heroHidden && project.videoUrl && project.videoUrl !== "#"
+      ? getYouTubeEmbedUrl(project.videoUrl)
+      : null;
 
   // Wraps around at both ends, so "next" from the last project loops
   // back to the first rather than dead-ending.
@@ -67,6 +110,7 @@ export default async function ProjectDetailPage({
 
       <div className="max-w-3xl">
         {!heroHidden &&
+          !embedUrl &&
           (project.videoUrl ? (
             <a
               href={project.videoUrl === "#" ? undefined : project.videoUrl}
@@ -89,7 +133,7 @@ export default async function ProjectDetailPage({
             <ImagePlaceholder label={project.name} className="aspect-video" />
           ))}
 
-        <div className={heroHidden ? "" : "mt-8"}>
+        <div className={heroHidden || embedUrl ? "" : "mt-8"}>
           <PageHeading eyebrow="Projects">{project.name}</PageHeading>
         </div>
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">
@@ -100,16 +144,39 @@ export default async function ProjectDetailPage({
             <Tag key={tag}>{tag}</Tag>
           ))}
         </div>
-        {project.repoUrl && (
-          <a
-            href={project.repoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent"
-          >
-            <GithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            View source
-          </a>
+        {project.repoUrls ? (
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+            {project.repoUrls.map((repo) => (
+              <a
+                key={repo.url}
+                href={repo.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent"
+              >
+                <GithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                {repo.label}
+              </a>
+            ))}
+          </div>
+        ) : (
+          project.repoUrl && (
+            <a
+              href={project.repoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent"
+            >
+              <GithubIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              View source
+            </a>
+          )
+        )}
+
+        {embedUrl && (
+          <div className="mt-8">
+            <VideoEmbed src={embedUrl} title={`${project.name} - video`} />
+          </div>
         )}
 
         {CUSTOM_BREAKDOWNS[project.slug] ? (

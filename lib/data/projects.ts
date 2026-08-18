@@ -19,12 +19,37 @@ export type Project = {
   videoUrl?: string;
   /** Optional — when present, the detail page links out to the source. */
   repoUrl?: string;
+  /** For multi-repo projects (one repo per service) — renders a labeled
+   * source link per entry instead of the single repoUrl link above. */
+  repoUrls?: { label: string; url: string }[];
   details: ProjectDetailBlock[];
 };
 
 // Array order is chronological (most recent first) — see home/page.tsx's
 // featuredProject, which just takes the first entry.
 export const projects: Project[] = [
+  {
+    id: "facial-recognition-attendance-system",
+    slug: "facial-recognition-attendance-system",
+    name: "Facial Recognition Attendance System",
+    description:
+      "A four-service attendance platform - a React frontend, a Node.js orchestration backend, a dedicated MongoDB microservice, and a Flask computer-vision service - that only records attendance once a live snapshot clears an 80% match rate against a student's stored reference photos.",
+    category: "full-stack",
+    scale: 5,
+    tags: ["React", "Node.js", "MongoDB", "Flask", "TensorFlow", "Docker"],
+    repoUrls: [
+      { label: "Frontend", url: "https://github.com/gdivecha/FacialRecognitionAttendanceSystem-Frontend" },
+      { label: "Backend", url: "https://github.com/gdivecha/FacialRecognitionAttendanceSystem-Backend" },
+      { label: "Database", url: "https://github.com/gdivecha/FacialRecognitionAttendanceSystem-Database" },
+      { label: "CompVision", url: "https://github.com/Malshalab/FacialRecognitionAttendanceSystem-ComputerVision" },
+    ],
+    details: [
+      {
+        title: "Overview",
+        text: "Built with a team of five for a computer vision course, this system replaces manual roll call with a live webcam capture: a professor takes a snapshot, and it's only accepted as attendance once it's compared against every reference photo on file for that student and clears an 80% match threshold. Four independent services - frontend, backend, database, and a computer-vision microservice - talk to each other over authenticated REST APIs instead of sharing a codebase.",
+      },
+    ],
+  },
   {
     id: "relianet",
     slug: "relianet",
@@ -101,7 +126,7 @@ export const projects: Project[] = [
     details: [
       {
         title: "Overview",
-        text: "Built for COE692 with a lab partner, Food Hub System behaves like an online grocery-pickup service: a customer browses a catalog of food items, adds them to a cart, and checks out, while an employee manages the catalog and user accounts on the other side.",
+        text: "Built for COE692 with a partner, Food Hub System behaves like an online grocery-pickup service: a customer browses a catalog of food items, adds them to a cart, and checks out, while an employee manages the catalog and user accounts on the other side.",
       },
       {
         title: "Architecture",
@@ -139,14 +164,15 @@ export const projects: Project[] = [
     slug: "cramers-calculator",
     name: "Mini Project: Cramer's Calculator",
     description:
-      "A Java + JavaFX calculator that recursively computes the determinant of a square matrix.",
+      "A Java + JavaFX calculator that solves a system of equations via Cramer's Rule, using a recursive cofactor expansion to compute each determinant.",
     category: "backend",
     scale: 1,
     tags: ["Java", "JavaFX"],
+    repoUrl: "https://github.com/gdivecha/Side-Projects/tree/main/CramersCalculatorProject",
     details: [
       {
         title: "Overview",
-        text: "This project's source code, in my side-project repository on GitHub, contains the Cramer's Calculator I developed using Java and JavaFX. Its functionality centers on a recursive algorithm I built to find the determinant of a given square matrix - a real learning curve right after finishing an Algorithms and Data Structures course, putting recursive-method design to the test.",
+        text: "A self-directed side project built right after finishing a JavaFX bookstore app and a Data Structures & Algorithms course: enter an n-by-n system of equations, and it solves for every variable using Cramer's Rule, backed by a recursive determinant function - a deliberate exercise in recursive-method design.",
       },
     ],
   },
@@ -155,14 +181,16 @@ export const projects: Project[] = [
     slug: "tamacord",
     name: "Tamacord - The New Gen Tamagotchi Simulator",
     description:
-      "A Discord virtual pet that simulates hunger, hygiene, and happiness, backed by Google Cloud Storage.",
+      "A Discord Tamagotchi whose hunger, hygiene, and happiness decay in real time - each stat computed live from actual elapsed seconds, persisted as a CSV in Google Cloud Storage.",
     category: "backend",
-    scale: 2,
-    tags: ["Python", "Discord API", "Google Cloud"],
+    scale: 3,
+    tags: ["Python", "Nextcord", "Google Cloud"],
+    repoUrl: "https://github.com/FriitzTM/RUhacks2022",
+    videoUrl: "https://www.youtube.com/watch?v=hP8ix0KbYhw",
     details: [
       {
         title: "Overview",
-        text: "Tamacord is a virtual pet that lets the user perform basic interactions between the owner and itself, using Google's cloud storage platform to give a unique pet to each Discord user. It simulates three needs the user has to manage - hunger, hygiene, and happiness - handled by clicking the relevant buttons.",
+        text: "Built at RU Hacks 2022 by a team of four, Tamacord is a Discord virtual pet with three needs - hunger, hygiene, and happiness - each decaying on real elapsed time rather than a timer loop, managed through Feed/Wash/Pet buttons and persisted per-user in Google Cloud Storage.",
       },
     ],
   },
@@ -192,14 +220,14 @@ export const projects: Project[] = [
     slug: "multi-stage-amplifier",
     name: "Designing a Multi-stage Amplifier",
     description:
-      "A multi-stage transistor amplifier designed and simulated in Multisim to meet a target specification.",
+      "A two-stage BJT amplifier (CE + CC) hand-derived and validated in Multisim against nine simultaneous specs - gain, input resistance, quiescent current, and a distortion-free swing.",
     category: "hardware",
     scale: 2,
-    tags: ["Multisim", "Circuit Design"],
+    tags: ["Multisim", "BJT Amplifiers", "Analog Design"],
     details: [
       {
         title: "Overview",
-        text: "The Electronic Circuits I course focused on developing an understanding of semiconductor circuits - diodes (PN junctions), bipolar junction transistors, and MOSFETs, and their uses in current mirrors and amplifiers. The goal of this project was to design a multi-stage amplifier meeting a given specification, requiring extensive knowledge of emitter degeneration, small-signal analysis, CE/CC/CB amplifier stages, load-line analysis, and more.",
+        text: "A 2-week individual design project built around a single BJT circuit that had to simultaneously satisfy a full page of specifications - voltage gain, input resistance, quiescent current, output swing, and more - using only components from the course kit, validated first by hand and then in Multisim.",
       },
     ],
   },
@@ -208,30 +236,31 @@ export const projects: Project[] = [
     slug: "fully-functioning-microprocessor",
     name: "Fully-functioning Microprocessor",
     description:
-      "A general-purpose microprocessor built in VHDL with an ALU, decoder, latches, and a finite state machine.",
+      "A VHDL microprocessor combining D latches, a Moore FSM, a 4:16 decoder, and three interchangeable ALU cores - each built to a different assigned instruction set - simulated and waveform-verified in Quartus.",
     category: "hardware",
     scale: 3,
-    tags: ["VHDL", "Quartus", "Digital Logic"],
+    tags: ["VHDL", "Quartus", "FPGA", "Digital Logic"],
     details: [
       {
         title: "Overview",
-        text: "Built a general-purpose microprocessor containing an Arithmetic Logic Unit. It uses the functionality of a basic ALU, a decoder, latches, and a finite state machine to perform logical operations and tasks as simple as addition or subtraction.",
+        text: "A cumulative digital logic project: two D latches hold the operands, a Moore finite state machine paired with a 4:16 decoder generates a one-hot operation call every clock cycle, and an ALU core executes whichever of nine functions that call selects - built and simulated three separate times against three different assigned instruction sets.",
       },
     ],
   },
   {
-    id: "traffic-light-system",
-    slug: "traffic-light-system",
-    name: "Replicating a Traffic Light System",
+    id: "secure-banking-system",
+    slug: "secure-banking-system",
+    name: "Secure Banking System",
     description:
-      "A miniature breadboard traffic light system built around a timer IC and basic circuit logic.",
-    category: "hardware",
-    scale: 1,
-    tags: ["C++", "Circuit Design"],
+      "A from-scratch secure banking client-server system - a hand-rolled authenticated key exchange establishes per-session keys, then every deposit, withdrawal, and balance check is individually encrypted and authenticated over the wire.",
+    category: "backend",
+    scale: 4,
+    tags: ["Python", "PyCryptodome", "Sockets", "Tkinter"],
+    repoUrl: "https://github.com/gdivecha/Secure-Banking-System",
     details: [
       {
         title: "Overview",
-        text: "Developed a miniature traffic light system using a breadboard and other basic circuit components, including a timer and a PIC chip. As an introduction to circuit design with little prior programming knowledge, this project was genuinely challenging - working in a group helped bring innovative solutions to the problems we ran into.",
+        text: "A simulated bank server and ATM client talking over raw TCP sockets, with security built by hand rather than borrowed from a library: a password-based handshake derives fresh session keys, every transaction is encrypted and HMAC-authenticated individually, and every action is written to a separately-encrypted audit log.",
       },
     ],
   },

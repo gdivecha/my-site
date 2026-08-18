@@ -58,7 +58,7 @@ const ENTITIES = [
  * that directly - a literal stacked diagram of the request's path
  * through the system, rather than ReliaNet's architecture grid or
  * StraySAFE's flyer-and-tracks. Real class/servlet names throughout,
- * pulled from the actual lab report and source tree. */
+ * pulled from the actual project report and source tree. */
 export function FoodHubBreakdown() {
   return (
     <div className="mt-14 flex flex-col gap-14">
@@ -214,7 +214,7 @@ export function FoodHubBreakdown() {
       </div>
 
       <p className="max-w-xl text-sm leading-relaxed text-ink-soft">
-        Built with a lab partner for COE692, split across the four layers
+        Built with a partner for COE692, split across the four layers
         above so each person could own a piece of the stack. Two small
         rules do a lot of the real work: placing an order deducts the
         quantity ordered from that item&apos;s available stock, and each

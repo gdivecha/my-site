@@ -198,6 +198,11 @@ html {
 }
 .resume-preview-wrap {
   position: relative;
+  /* Contains the descendant image's filter to its own stacking context —
+     see .circuit-diagram-wrap's identical comment below for why this
+     matters whenever a plain `filter` shares a page with backdrop-filter
+     cards. */
+  isolation: isolate;
 }
 .resume-preview-wrap::after {
   content: "";
@@ -210,6 +215,47 @@ html {
 }
 :root[data-theme="light"] .resume-preview-wrap::after {
   display: none;
+}
+
+/* Multi-stage amplifier schematic (Projects page): the same white-page-scan
+   problem as the résumé preview above, so the same fix — see that comment
+   for how invert()/hue-rotate()/contrast() combine, and why the wrap's
+   soft-light accent tint is layered on top. */
+.circuit-diagram-image {
+  filter: invert(1) hue-rotate(180deg) contrast(0.8);
+}
+:root[data-theme="light"] .circuit-diagram-image {
+  filter: none;
+}
+.circuit-diagram-wrap {
+  position: relative;
+  /* Contains the descendant image's filter to its own stacking context —
+     a plain `filter` elsewhere on the page can otherwise corrupt
+     backdrop-filter compositing for unrelated .card-tint blur elements
+     in the same stacking context (a real Chromium rendering bug, not a
+     spec requirement). */
+  isolation: isolate;
+}
+.circuit-diagram-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  mix-blend-mode: soft-light;
+  opacity: 0.18;
+  pointer-events: none;
+}
+:root[data-theme="light"] .circuit-diagram-wrap::after {
+  display: none;
+}
+
+/* Projects page category-filter pills, light mode only: border-line's 10%
+   alpha reads clearly against a card's transparent/blurred backdrop, but
+   nearly disappears against this pill's solid white fill — so it gets a
+   slightly stronger border of its own here, rather than changing the
+   shared token and darkening every card's border along with it. */
+:root[data-theme="light"] .filter-pill {
+  border-color: rgba(20, 18, 40, 0.16);
 }
 
 @theme inline {
