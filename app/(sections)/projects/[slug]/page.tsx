@@ -8,6 +8,7 @@ import { Tag } from "@/components/Pill";
 import { ArrowLeftIcon, ArrowRightIcon, GithubIcon, PlayIcon } from "@/components/icons";
 import { projects } from "@/lib/data/projects";
 import { ProjectBackLink } from "./back-link";
+import { FoodHubBreakdown } from "./foodhub-breakdown";
 import { ReliaNetBreakdown } from "./relianet-breakdown";
 import { StraySafeBreakdown } from "./straysafe-breakdown";
 
@@ -20,6 +21,7 @@ export function generateStaticParams() {
 const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
   relianet: () => <ReliaNetBreakdown />,
   straysafe: () => <StraySafeBreakdown />,
+  "food-hub-system": () => <FoodHubBreakdown />,
 };
 
 // Hero frame is where a demo video will eventually go — hidden for these
@@ -27,7 +29,7 @@ const CUSTOM_BREAKDOWNS: Record<string, () => ReactNode> = {
 // placeholder box with nothing to click. A separate list from
 // CUSTOM_BREAKDOWNS above since the two are related but not the same
 // toggle — a future custom breakdown might still want the hero.
-const HIDDEN_HERO_SLUGS = new Set(["relianet", "straysafe"]);
+const HIDDEN_HERO_SLUGS = new Set(["relianet", "straysafe", "food-hub-system"]);
 
 export default async function ProjectDetailPage({
   params,

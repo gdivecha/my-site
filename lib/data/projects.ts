@@ -91,18 +91,19 @@ export const projects: Project[] = [
     slug: "food-hub-system",
     name: "Food Hub System",
     description:
-      "A full-stack microservices app for grocery-style food ordering, with a JWT-authenticated auth service behind a layered architecture.",
+      "A layered Java web app for ordering food online - JSP and Servlets over a MySQL schema, with separate customer and employee roles.",
     category: "full-stack",
     scale: 4,
-    tags: ["Java", "JDBC", "Servlets & JSP", "Docker", "Kubernetes", "Google Cloud"],
+    tags: ["Java", "JSP", "Servlets", "JDBC", "MySQL"],
+    repoUrl: "https://github.com/vishnupan819/FoodHubWebApp",
     details: [
       {
         title: "Overview",
-        text: "We created a Food Hub System capable of behaving similarly to an online grocery pickup system, where a user orders available food items through a GUI provided by the front-end microservice, working in combination with an authentication microservice that uses JWT to authenticate and authorize users before allowing access to different pages.",
+        text: "Built for COE692 with a lab partner, Food Hub System behaves like an online grocery-pickup service: a customer browses a catalog of food items, adds them to a cart, and checks out, while an employee manages the catalog and user accounts on the other side.",
       },
       {
         title: "Architecture",
-        text: "Other related microservices were developed after designing the software architecture using layered Client, Business, Persistence, and Data layers - an introduction to full-stack web development using Java, JDBC, Servlets, JSPs, JSTL, JAX-B, Docker, Kubernetes, Google Cloud, HTML, CSS, and XML.",
+        text: "Four layers, each only talking to the one below it: GUI (JSP/HTML pages), Business (servlets handling HTTP requests), Assistance (plain data-transfer objects), and Persistence (JDBC-backed CRUD classes) sitting on top of a 4-table MySQL schema - a classic layered enterprise-Java shape, deployed on Apache Tomcat via Maven.",
       },
     ],
   },
