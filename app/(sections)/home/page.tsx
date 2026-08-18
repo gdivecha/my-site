@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
-import { Pill } from "@/components/Pill";
+import { Pill, Tag } from "@/components/Pill";
 import { ArrowRightIcon, DownloadIcon } from "@/components/icons";
 import {
   certificationSortDate,
@@ -11,7 +11,7 @@ import {
 import { experiences } from "@/lib/data/experience";
 import { profile } from "@/lib/data/profile";
 import { projects } from "@/lib/data/projects";
-import { previewQuotes } from "@/lib/data/recommendations";
+import { previewQuotes, recommendations } from "@/lib/data/recommendations";
 
 // Array order is chronological (most recent first) for both — see their
 // respective data files. No "featured" flag exists yet for projects, so
@@ -33,6 +33,31 @@ const featuredQuote = previewQuotes.find((q) => q.id === "preview-4")!;
 const featuredCert = certifications.reduce((latest, c) =>
   certificationSortDate(c) > certificationSortDate(latest) ? c : latest
 );
+
+// A closing tag cloud, sized by real frequency across every project's own
+// tags — not a curated list like the Skills page, just an honest tally of
+// what actually shows up most. Recomputes itself as projects are added,
+// so it's never manually maintained or allowed to go stale.
+const tagCounts = new Map<string, number>();
+for (const p of projects) {
+  for (const tag of p.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+const topTags = [...tagCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10);
+const maxTagCount = topTags[0]?.[1] ?? 1;
+
+// Three visual weight tiers off the real count, not a fixed per-tag list —
+// so a brand-new tag that shows up on several future projects will
+// naturally earn its way into the heavier tiers on its own.
+function tagWeightClass(count: number): string {
+  const ratio = count / maxTagCount;
+  if (ratio >= 0.9) return "text-lg font-semibold text-ink";
+  if (ratio >= 0.55) return "text-sm font-medium text-ink-soft";
+  return "text-xs text-ink-faint";
+}
 
 export default function HomePage() {
   return (
@@ -145,73 +170,116 @@ export default function HomePage() {
         {/* The one thing only this page does: a quick taste of the rest
             of the site, each card linking to its full page. Every other
             page just enumerates one category of content — this is the
-            spot that's positioned to summarize across all of them. */}
+            spot that's positioned to summarize across all of them.
+            Asymmetric on purpose: the featured project leads as a wide
+            card (it's the deepest content on the site — see its own
+            breakdown page), with the other three as a lighter-weight row
+            underneath rather than four equal boxes competing for
+            attention. */}
         <div className="w-full">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
-            Elsewhere on this site
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
+              Elsewhere on this site
+            </h2>
+            <p className="font-mono text-[11px] text-ink-faint">
+              {projects.length} projects · {certifications.length} certifications · {recommendations.length} recommendations
+            </p>
+          </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4">
             <Link
               href={`/projects/${featuredProject.slug}`}
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover sm:p-6"
             >
               <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
+                <span aria-hidden="true">🚀</span>
                 Featured project
                 <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
               </p>
-              <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+              <p className="mt-2 text-base font-semibold text-ink transition-colors group-hover:text-accent-soft">
                 {featuredProject.name}
               </p>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-faint">
+              <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-ink-faint sm:text-sm">
                 {featuredProject.description}
               </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {featuredProject.tags.slice(0, 4).map((tag) => (
+                  <Tag key={tag}>{tag}</Tag>
+                ))}
+              </div>
             </Link>
 
-            <Link
-              href="/experience"
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
-            >
-              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
-                Featured role
-                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
-              </p>
-              <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
-                {featuredRole.role}
-              </p>
-              <p className="mt-1 text-xs text-ink-faint">
-                {featuredRole.company}
-              </p>
-            </Link>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Link
+                href="/experience"
+                className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              >
+                <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
+                  <span aria-hidden="true">💼</span>
+                  Featured role
+                  <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+                </p>
+                <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+                  {featuredRole.role}
+                </p>
+                <p className="mt-1 text-xs text-ink-faint">
+                  {featuredRole.company}
+                </p>
+              </Link>
 
-            <Link
-              href="/recommendations"
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
-            >
-              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
-                What people say
-                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
-              </p>
-              <p className="mt-2 line-clamp-3 text-xs italic leading-relaxed text-ink-soft">
-                &ldquo;{featuredQuote.quote}&rdquo;
-              </p>
-            </Link>
+              <Link
+                href="/recommendations"
+                className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              >
+                <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
+                  <span aria-hidden="true">💬</span>
+                  What people say
+                  <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+                </p>
+                <p className="mt-2 line-clamp-3 text-xs italic leading-relaxed text-ink-soft">
+                  &ldquo;{featuredQuote.quote}&rdquo;
+                </p>
+              </Link>
 
-            <Link
-              href="/certifications"
-              className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
-            >
-              <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
-                Certifications
-                <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
-              </p>
-              <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
-                {certifications.length} credentials earned
-              </p>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-faint">
-                Most recently: {featuredCert.name}
-              </p>
-            </Link>
+              <Link
+                href="/certifications"
+                className="group rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+              >
+                <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-accent-soft">
+                  <span aria-hidden="true">🏅</span>
+                  Certifications
+                  <ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+                </p>
+                <p className="mt-2 text-sm font-semibold text-ink transition-colors group-hover:text-accent-soft">
+                  {certifications.length} credentials earned
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-faint">
+                  Most recently: {featuredCert.name}
+                </p>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* A different kind of closer than the cards above — not another
+            "go explore" link, just an honest reading of the data: real
+            tag frequency across every project, sized by how often each
+            one actually shows up. No curation, no manual list — this is
+            what the project data says, whatever that turns out to be. */}
+        <div className="w-full">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
+            What actually shows up most
+          </h2>
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-2">
+            {topTags.map(([tag, count]) => (
+              <span
+                key={tag}
+                className={`leading-none transition-colors ${tagWeightClass(count)}`}
+                title={`${count} project${count === 1 ? "" : "s"}`}
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
       </div>
