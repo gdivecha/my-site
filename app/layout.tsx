@@ -45,6 +45,15 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
+              // Runs before the browser's own scroll-restoration kicks in
+              // (that happens on load, ahead of any React effect) — without
+              // this, a hard refresh on a page you'd scrolled down snaps
+              // right back to that old position, restoring the sidebar's
+              // fixed layout mid-scroll instead of the fresh page it
+              // actually is. `history.scrollRestoration = "manual"` turns
+              // that automatic restore off entirely, so a reload always
+              // lands at the top like a genuinely fresh load should.
+              '(function(){try{if("scrollRestoration" in history){history.scrollRestoration="manual";}}catch(e){}})();' +
               '(function(){try{if(localStorage.getItem("theme")==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();',
           }}
         />
