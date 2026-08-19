@@ -98,11 +98,16 @@ html {
   --color-watermark-text: #a79ff0;
   --watermark-text-opacity: 0.11;
   /* Loading shimmer's color (see .watermark-plane--bright below) — the
-     palette's own darker purple, the same value in both themes (not
-     redefined in the light-theme block below, so it carries through
-     unchanged there too). Still unmistakably lighter than
-     --color-watermark-text above. */
-  --color-watermark-wave: var(--color-accent-deep);
+     palette's own darker purple (accent-deep, #4b3dc4 → rgb(75,61,196)),
+     dimmed via alpha down close to --watermark-text-opacity's own
+     0.11 above (not full-strength), so the sweep reads as only a
+     slight lift over the resting watermark text rather than a bright
+     band crossing it. Same rgb in both themes (accent-deep itself
+     doesn't shift between them), redefined again in the light-theme
+     block below at its own alpha rather than just carrying through
+     unchanged, since "subtle" isn't the same number against a
+     near-black background as it is against a near-white one. */
+  --color-watermark-wave: rgba(75, 61, 196, 0.3);
 }
 
 :root[data-theme="light"] {
@@ -186,6 +191,14 @@ html {
   /* Watermark text — a slight purple tint instead of plain near-black ink */
   --color-watermark-text: #8f81ef;
   --watermark-text-opacity: 0.16;
+
+  /* Loading shimmer's color — same accent-deep rgb as the dark-mode
+     value above, dimmed close to --watermark-text-opacity's own 0.16
+     here too, own alpha rather than inherited since the same number
+     reads weaker against this near-white background than it did
+     against near-black — a touch higher than dark mode's for that
+     reason, not because it's meant to stand out more. */
+  --color-watermark-wave: rgba(75, 61, 196, 0.35);
 }
 
 /* Résumé preview image (Portfolio page): it's a plain white-page render of
@@ -549,46 +562,24 @@ html {
      Watermark.tsx), which already provides them, so both stay in sync
      by construction instead of by duplicated values. */
   pointer-events: none;
-  /* mask-size close to 100% (140%, just enough overshoot for the band to
-     fully enter/exit without an abrupt edge clip) means the next
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  /* mask-size close to 100% (140%, just enough overshoot for the band
+     to fully enter/exit without an abrupt edge clip) means the next
      pulse's leading edge is already entering as the previous one's
      trailing edge exits — a much larger mask-size (300%, originally)
      meant most of each cycle was spent with the band already off-
      screen, reading as a pause even though the animation itself never
-     paused.
-
-     The ramp (44%-56%) sets both the band's width and how gradually it
-     falls off — there's no flat opaque core, just a linear fade from
-     transparent up to full and back down, so widening this zone makes
-     it simultaneously wider *and* softer-edged, easing into the
-     background rather than cutting off sharply. This plane is a
-     150vmax square (oversized on purpose, so it still fully covers the
-     screen once rotated) and these percentages are relative to *that*,
-     not the viewport — a first pass at 16 points wide worked out to
-     roughly a third of the actual screen, reading as half the page
-     abruptly flipping bright; this sits between that and a later,
-     narrower 8-point pass that read as too sharp/thin the other way. */
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 44%,
-    black 50%,
-    transparent 56%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 44%,
-    black 50%,
-    transparent 56%,
-    transparent 100%
-  );
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
+     paused. This plane is a 150vmax square (oversized on purpose, so
+     it still fully covers the screen once rotated). */
   mask-size: 140% 100%;
   -webkit-mask-size: 140% 100%;
-  animation: watermark-shimmer-mask 6s linear infinite;
+  /* mask-image is deliberately NOT set here — it's a per-session inline
+     style from Watermark.tsx instead (see maskDataUriRef there): a
+     freshly generated, randomly-proportioned wavy band (SVG, encoded
+     as a data URI), not a fixed CSS shape, so the pulse's own silhouette
+     — not just its color or timing — is different every time it plays. */
+  animation: watermark-shimmer-mask 5s linear infinite;
 }
 
 .watermark-plane--bright .watermark-row__copy span {
@@ -596,14 +587,19 @@ html {
   opacity: 1;
 }
 
-/* from is deliberately far enough right that the band is still fully
-   transparent (off past the field's own right edge) the instant this
-   animation starts — otherwise, since this class only mounts when
-   waving flips true, the very first frame could already show real
-   brightness with no chance to actually see it arrive, reading as a
-   pop rather than an entrance. to is unchanged from before, so the
-   exit position (and its handoff into .watermark-bright-clip's
-   fade-out zone) stays exactly as already tuned. */
+/* Right-to-left, always. Counterintuitively that means animating the
+   percentage FROM -95% TO 120% (increasing) — mask-size above is 140%
+   (the mask image is *larger* than its own container), and the
+   background-position/mask-position percentage formula is
+   `(container_size - image_size) * percentage`; with an oversized
+   image that leading term is negative, which inverts the usual
+   "bigger percentage = further right" reading. Confirmed by tracking
+   a fixed point through the actual formula: at -95% it sits off past
+   the field's own right edge (still fully transparent the instant
+   this starts, since the bright plane only mounts when waving flips
+   true — starting already-visible would read as a pop rather than an
+   entrance), and increasing toward 120% carries it left, off past the
+   left edge. */
 @keyframes watermark-shimmer-mask {
   from {
     mask-position: -95% 0;
@@ -618,9 +614,9 @@ html {
 /* Where the pulse is actually *allowed* to be visible, separate from
    its own shape/motion above: a second, non-moving mask on a wrapper
    around just .watermark-plane--bright (not on .watermark-field, which
-   would also affect the always-visible dim watermark). Field-local ~59%
+   would also affect the always-visible dim watermark). Field-local ~54%
    approximates the midpoint between the sidebar/content partition and
-   the page's right edge, and ~18% is the partition itself (the same
+   the page's right edge, and ~13% is the partition itself (the same
    point .watermark-field's own left-edge fade already resolves to, see
    above) — so the pulse reads at full strength across the right portion
    of the content area, then fades away as it approaches the partition,
@@ -638,15 +634,15 @@ html {
   mask-image: linear-gradient(
     to right,
     transparent 0%,
-    transparent 18%,
-    black 59%,
+    transparent 13%,
+    black 54%,
     black 100%
   );
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    transparent 18%,
-    black 59%,
+    transparent 13%,
+    black 54%,
     black 100%
   );
 }

@@ -14,7 +14,7 @@ import { notifyPageReady } from "@/lib/page-ready";
  * globals.css — used to let an in-progress sweep finish its current
  * cycle rather than cutting off mid-sweep once the page is actually
  * ready (see below). */
-const WAVE_CYCLE_MS = 6000;
+const WAVE_CYCLE_MS = 5000;
 
 export function PageShell({
   watermark,
@@ -66,6 +66,38 @@ export function PageShell({
     );
     const timer = setTimeout(() => setWatermarkVisible(true), baseRemaining);
     return () => clearTimeout(timer);
+  }, []);
+
+  // A second, independent trigger for the exact same shimmer — plays
+  // once, for one full sweep, on every ordinary page mount (i.e. every
+  // tab change, since PageShell itself remounts per route) rather than
+  // only during a genuine loading stall. The `ready`-driven effect
+  // below is untouched by this; the two are deliberately not
+  // coordinated with each other, since no page passes ready={false}
+  // today, so only one of them ever actually fires in practice.
+  //
+  // Starts only once the watermark's own appear animation has actually
+  // finished, not the moment it starts — setWatermarkVisible(true)
+  // above only *begins* its opacity fade, which itself still takes
+  // ENTRANCE_MS to complete, so the same baseRemaining wait plus that
+  // duration is the real "done appearing" moment. Starting the sweep
+  // any earlier would have it moving across a watermark still fading
+  // into view underneath it.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const baseRemaining = Math.max(
+      0,
+      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+    );
+    let endTimer: ReturnType<typeof setTimeout> | null = null;
+    const startTimer = setTimeout(() => {
+      setWaving(true);
+      endTimer = setTimeout(() => setWaving(false), WAVE_CYCLE_MS);
+    }, baseRemaining + ENTRANCE_MS);
+    return () => {
+      clearTimeout(startTimer);
+      if (endTimer) clearTimeout(endTimer);
+    };
   }, []);
 
   // Content readiness — reruns whenever `ready` itself changes, so a

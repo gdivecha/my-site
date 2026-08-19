@@ -17,6 +17,55 @@ const MIN_REPEATS = 4;
 const MAX_REPEATS = 40;
 const PIXELS_PER_SECOND = 9;
 
+/** Builds a wavy vertical band as an inline SVG (a filled path, blurred
+ * for a soft edge — same idea as the plain CSS gradient's transparent-
+ * to-opaque-to-transparent ramp this replaces, just no longer a
+ * straight-edged shape), encoded as a data URI so it can be dropped
+ * straight into mask-image and animated with the same mask-position
+ * sweep the rest of the shimmer already uses.
+ *
+ * Both edges get their own independently-random amplitude, frequency,
+ * and phase — not the same wave mirrored on both sides, which would
+ * only ever produce a constant-width wavy *ribbon*. Independent edges
+ * let the band's width itself vary unevenly along its length each
+ * time, which is what actually makes every session's proportions look
+ * different rather than just its position along one repeating curve. */
+function buildWavyMaskDataUri(): string {
+  const height = 100;
+  const steps = 48;
+  const centerX = 50;
+  const halfWidth = 6;
+
+  function edgeX(i: number, amplitude: number, frequency: number, phase: number) {
+    const y = (i / steps) * height;
+    return centerX + Math.sin((y / height) * Math.PI * 2 * frequency + phase) * amplitude;
+  }
+
+  const ampLeft = 2 + Math.random() * 5;
+  const freqLeft = 1.5 + Math.random() * 3.5;
+  const phaseLeft = Math.random() * Math.PI * 2;
+  const ampRight = 2 + Math.random() * 5;
+  const freqRight = 1.5 + Math.random() * 3.5;
+  const phaseRight = Math.random() * Math.PI * 2;
+
+  const left: string[] = [];
+  const right: string[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const y = (i / steps) * height;
+    left.push(`${(edgeX(i, ampLeft, freqLeft, phaseLeft) - halfWidth).toFixed(2)},${y.toFixed(2)}`);
+    right.push(`${(edgeX(i, ampRight, freqRight, phaseRight) + halfWidth).toFixed(2)},${y.toFixed(2)}`);
+  }
+  const d = `M ${left.join(" L ")} L ${right.reverse().join(" L ")} Z`;
+
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
+    `<filter id="b"><feGaussianBlur stdDeviation="2.5" /></filter>` +
+    `<path d="${d}" fill="white" filter="url(#b)" />` +
+    `</svg>`;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export function Watermark({
   text,
   waving = false,
@@ -42,12 +91,21 @@ export function Watermark({
   // the position each time), reset back to null once waving ends so the
   // next time it starts, this is captured fresh again.
   const brightSyncElapsedRef = useRef<number | null>(null);
+  // This session's wavy mask shape — generated fresh each time waving
+  // starts (same one-shot-per-session capture as brightSyncElapsedRef
+  // above, reset to null once waving ends), not re-rolled on every
+  // re-render while it's true.
+  const maskDataUriRef = useRef<string | null>(null);
   if (waving) {
     if (brightSyncElapsedRef.current === null) {
       brightSyncElapsedRef.current = performance.now() - mountedAtRef.current;
     }
+    if (maskDataUriRef.current === null) {
+      maskDataUriRef.current = buildWavyMaskDataUri();
+    }
   } else {
     brightSyncElapsedRef.current = null;
+    maskDataUriRef.current = null;
   }
 
   // Two things measured off the same rendered copy: how many repetitions
@@ -141,7 +199,13 @@ export function Watermark({
           time. */}
       {waving && (
         <div className="watermark-bright-clip" aria-hidden="true">
-          <div className="watermark-plane watermark-plane--bright">
+          <div
+            className="watermark-plane watermark-plane--bright"
+            style={{
+              maskImage: `url("${maskDataUriRef.current}")`,
+              WebkitMaskImage: `url("${maskDataUriRef.current}")`,
+            }}
+          >
             {/* Phase-locks this freshly-mounted copy's own scroll animation
                 to wherever the always-mounted dim copy's identical
                 animation already is — without this, the two copies' text
