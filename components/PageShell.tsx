@@ -94,13 +94,18 @@ export function PageShell({
   // coordinated with each other, since no page passes ready={false}
   // today, so only one of them ever actually fires in practice.
   //
-  // Starts only once the watermark's own appear animation has actually
-  // finished, not the moment it starts — setWatermarkVisible(true)
-  // above only *begins* its opacity fade, which itself still takes
-  // ENTRANCE_MS to complete, so the same baseRemaining wait plus that
-  // duration is the real "done appearing" moment. Starting the sweep
-  // any earlier would have it moving across a watermark still fading
-  // into view underneath it.
+  // Starts at the same instant the watermark itself begins fading in
+  // (baseRemaining), not once that fade has finished — deliberately
+  // overlapping the two rather than sequencing them. On a tab change
+  // baseRemaining is already ~0, so this was barely noticeable there.
+  // On a genuine cold page load, baseRemaining is the sidebar's own
+  // multi-second staggered cascade (name, roles, tagline, nav,
+  // socials) — waiting for that to *fully* finish, plus the watermark's
+  // own fade on top, meant the shimmer only ever appeared once the
+  // entire page had already gone still, reading as its own separate,
+  // unexplained event rather than part of the same entrance. Starting
+  // it alongside the watermark's fade instead folds it into that same
+  // burst of motion, the same way it already reads on a tab change.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const baseRemaining = Math.max(
@@ -111,7 +116,7 @@ export function PageShell({
     const startTimer = setTimeout(() => {
       setWaving(true);
       endTimer = setTimeout(() => setWaving(false), WAVE_CYCLE_MS);
-    }, baseRemaining + ENTRANCE_MS);
+    }, baseRemaining);
     return () => {
       clearTimeout(startTimer);
       if (endTimer) clearTimeout(endTimer);
