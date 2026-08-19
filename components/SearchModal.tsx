@@ -44,10 +44,11 @@ export function SearchModal({
     return () => cancelAnimationFrame(frame);
   }, [open]);
 
-  // Cmd+K opens search from anywhere on the site.
+  // Cmd+K (Mac) / Ctrl+K (Windows/Linux) opens search from anywhere on the site.
   useEffect(() => {
     function handleGlobalKeydown(event: KeyboardEvent) {
-      if (!event.metaKey || event.key.toLowerCase() !== "k") return;
+      if (!event.metaKey && !event.ctrlKey) return;
+      if (event.key.toLowerCase() !== "k") return;
       const target = event.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
       event.preventDefault();

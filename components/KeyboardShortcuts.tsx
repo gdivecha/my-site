@@ -3,16 +3,20 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "./icons";
+import { isMac } from "@/lib/platform";
 
-const SHORTCUTS: { keys: string[]; label: string }[] = [
-  { keys: ["?"], label: "Show this menu" },
-  { keys: ["⌘", "K"], label: "Search" },
-  { keys: ["⌘", "↑"], label: "Previous tab" },
-  { keys: ["⌘", "↓"], label: "Next tab" },
-  { keys: ["↑", "↓"], label: "Scroll page content" },
-  { keys: ["Space"], label: "Page down" },
-  { keys: ["PageUp"], label: "Page up" },
-];
+function getShortcuts(mac: boolean): { keys: string[]; label: string }[] {
+  const mod = mac ? "⌘" : "Ctrl";
+  return [
+    { keys: ["?"], label: "Show this menu" },
+    { keys: [mod, "K"], label: "Search" },
+    { keys: [mod, "↑"], label: "Previous tab" },
+    { keys: [mod, "↓"], label: "Next tab" },
+    { keys: ["↑", "↓"], label: "Scroll page content" },
+    { keys: ["Space"], label: "Page down" },
+    { keys: ["PageUp"], label: "Page up" },
+  ];
+}
 
 export function KeyboardShortcuts({
   className = "",
@@ -22,6 +26,15 @@ export function KeyboardShortcuts({
   style?: CSSProperties;
 }) {
   const [open, setOpen] = useState(false);
+  // Defaults to Mac (⌘) so the very first paint matches this component's
+  // long-standing hardcoded assumption; corrects to Ctrl on the next render
+  // if the client turns out not to be Mac — same one-frame-correction
+  // pattern as the matchMedia-driven isCompact flags elsewhere.
+  const [mac, setMac] = useState(true);
+  useEffect(() => {
+    setMac(isMac());
+  }, []);
+  const shortcuts = getShortcuts(mac);
 
   useEffect(() => {
     if (!open) return;
@@ -59,7 +72,9 @@ export function KeyboardShortcuts({
         className={`flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-icon-btn text-ink-soft transition-colors hover:bg-icon-btn-hover hover:text-ink ${className}`}
         style={style}
       >
-        <span className="text-[15px] leading-none">⌘</span>
+        <span className={mac ? "text-[15px] leading-none" : "text-[10px] font-semibold leading-none"}>
+          {mac ? "⌘" : "Ctrl"}
+        </span>
       </button>
 
       {open &&
@@ -90,7 +105,7 @@ export function KeyboardShortcuts({
               </div>
 
               <ul className="mt-5 flex flex-col gap-3">
-                {SHORTCUTS.map((shortcut) => (
+                {shortcuts.map((shortcut) => (
                   <li
                     key={shortcut.label}
                     className="flex items-center justify-between gap-4 text-sm"

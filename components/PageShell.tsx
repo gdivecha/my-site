@@ -55,6 +55,16 @@ export function PageShell({
   // genuine first load, ~0 on ordinary navigation. Independent of
   // `ready`: this is the one timer a slow page's content deliberately
   // does NOT get to push out further.
+  //
+  // Also gated on document.fonts.ready, not just the timer: the
+  // watermark's font (Poppins, weight 300) is already preloaded at max
+  // priority, so in the overwhelming majority of loads it's long done by
+  // the time baseRemaining elapses and this resolves on the very next
+  // microtask — no perceptible change. It only actually waits longer on
+  // a genuinely cold fetch (e.g. a brand-new domain's very first request,
+  // nothing cached anywhere yet), which is exactly the case where the
+  // fixed timer alone isn't a reliable guarantee — this way the watermark
+  // can never paint in a mismatched fallback font, on any connection.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setWatermarkVisible(true);
@@ -64,8 +74,16 @@ export function PageShell({
       0,
       SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
     );
-    const timer = setTimeout(() => setWatermarkVisible(true), baseRemaining);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      document.fonts.ready.then(() => {
+        if (!cancelled) setWatermarkVisible(true);
+      });
+    }, baseRemaining);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   // A second, independent trigger for the exact same shimmer — plays

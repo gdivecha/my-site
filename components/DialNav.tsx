@@ -490,10 +490,11 @@ export function DialNav({
     };
   }, [seeking]);
 
-  // Cmd+Up / Cmd+Down step to the previous/next tab, from anywhere on the page.
+  // Cmd+Up/Down (Mac) or Ctrl+Up/Down (Windows/Linux) step to the
+  // previous/next tab, from anywhere on the page.
   useEffect(() => {
     function handleKeydown(event: KeyboardEvent) {
-      if (!event.metaKey) return;
+      if (!event.metaKey && !event.ctrlKey) return;
       if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
       const target = event.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
