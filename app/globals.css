@@ -107,7 +107,7 @@ html {
      block below at its own alpha rather than just carrying through
      unchanged, since "subtle" isn't the same number against a
      near-black background as it is against a near-white one. */
-  --color-watermark-wave: rgba(75, 61, 196, 0.3);
+  --color-watermark-wave: rgba(75, 61, 196, 0.24);
 }
 
 :root[data-theme="light"] {
@@ -198,7 +198,7 @@ html {
      reads weaker against this near-white background than it did
      against near-black — a touch higher than dark mode's for that
      reason, not because it's meant to stand out more. */
-  --color-watermark-wave: rgba(75, 61, 196, 0.35);
+  --color-watermark-wave: rgba(75, 61, 196, 0.28);
 }
 
 /* Résumé preview image (Portfolio page): it's a plain white-page render of

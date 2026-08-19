@@ -34,17 +34,23 @@ function buildWavyMaskDataUri(): string {
   const height = 100;
   const steps = 48;
   const centerX = 50;
-  const halfWidth = 6;
+  // Narrower band — a slim streak passing through rather than a wide
+  // swath covering a third of the screen at once. Deliberately NOT
+  // touched to fix this: mask-size/mask-position in globals.css (those
+  // control the sweep's travel distance and direction, already tuned and
+  // easy to re-break) — only how much of that traveled width is actually
+  // opaque.
+  const halfWidth = 3;
 
   function edgeX(i: number, amplitude: number, frequency: number, phase: number) {
     const y = (i / steps) * height;
     return centerX + Math.sin((y / height) * Math.PI * 2 * frequency + phase) * amplitude;
   }
 
-  const ampLeft = 2 + Math.random() * 5;
+  const ampLeft = 1 + Math.random() * 2.5;
   const freqLeft = 1.5 + Math.random() * 3.5;
   const phaseLeft = Math.random() * Math.PI * 2;
-  const ampRight = 2 + Math.random() * 5;
+  const ampRight = 1 + Math.random() * 2.5;
   const freqRight = 1.5 + Math.random() * 3.5;
   const phaseRight = Math.random() * Math.PI * 2;
 
@@ -59,7 +65,7 @@ function buildWavyMaskDataUri(): string {
 
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
-    `<filter id="b"><feGaussianBlur stdDeviation="2.5" /></filter>` +
+    `<filter id="b"><feGaussianBlur stdDeviation="1.4" /></filter>` +
     `<path d="${d}" fill="white" filter="url(#b)" />` +
     `</svg>`;
 
