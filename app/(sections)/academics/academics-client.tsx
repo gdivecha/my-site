@@ -56,6 +56,10 @@ export function AcademicsPageClient() {
                   alt={`${education.school} logo`}
                   fill
                   sizes="112px"
+                  // Tiny local file — see experience-card.tsx/
+                  // issuer-badge.tsx for why these load eagerly rather
+                  // than lazily.
+                  loading="eager"
                   className="object-contain p-3"
                 />
               </div>

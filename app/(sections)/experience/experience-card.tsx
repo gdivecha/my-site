@@ -33,6 +33,12 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
               alt={`${experience.company} logo`}
               fill
               sizes="112px"
+              // Tiny local files, same reasoning as IssuerBadge's logos
+              // (app/(sections)/certifications/issuer-badge.tsx): lazy
+              // loading buys nothing for a file this small and just means
+              // a fast scroll down this list can outrun the load trigger,
+              // leaving a card's logo blank for a moment.
+              loading="eager"
               className="object-cover"
             />
           </div>
