@@ -85,34 +85,61 @@ export function Watermark({
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
+  // Row 0's dim track — read directly for its live, browser-tracked
+  // animation position (see the sync effect below), rather than
+  // estimating elapsed time in JS.
+  const dimTrackRef = useRef<HTMLDivElement>(null);
+  const brightPlaneRef = useRef<HTMLDivElement>(null);
   const [repeats, setRepeats] = useState(INITIAL_REPEATS);
-  // When this component first mounts — i.e. the moment the dim plane's own
-  // rows start their scroll animation — so the bright plane (mounted much
-  // later, only once waving starts) can work out how far into that same
-  // animation the dim plane already is.
-  const mountedAtRef = useRef(performance.now());
-  // How far into the shared scroll cycle the dim plane already was at the
-  // instant the bright plane mounts — captured once per waving session
-  // (not recomputed on every re-render while it's true, which would jump
-  // the position each time), reset back to null once waving ends so the
-  // next time it starts, this is captured fresh again.
-  const brightSyncElapsedRef = useRef<number | null>(null);
   // This session's wavy mask shape — generated fresh each time waving
-  // starts (same one-shot-per-session capture as brightSyncElapsedRef
-  // above, reset to null once waving ends), not re-rolled on every
+  // starts, reset to null once waving ends — not re-rolled on every
   // re-render while it's true.
   const maskDataUriRef = useRef<string | null>(null);
   if (waving) {
-    if (brightSyncElapsedRef.current === null) {
-      brightSyncElapsedRef.current = performance.now() - mountedAtRef.current;
-    }
     if (maskDataUriRef.current === null) {
       maskDataUriRef.current = buildWavyMaskDataUri();
     }
   } else {
-    brightSyncElapsedRef.current = null;
     maskDataUriRef.current = null;
   }
+
+  // Phase-locks the bright plane's freshly-mounted scroll animation to
+  // wherever the always-mounted dim plane's identical animation already
+  // is — without this, the two copies' text drifts out of horizontal
+  // sync (dim mounted at page load, bright only mounts once waving
+  // starts), so wherever the mask reveals bright text it visibly
+  // doubles/blurs against the dim glyphs around it instead of lining up
+  // with them.
+  //
+  // Previously this was estimated in JS (performance.now() at mount vs.
+  // at sync time), which assumes the CSS animation actually starts
+  // ticking at the same instant the component function runs — it
+  // doesn't; there's a real gap between React committing and the browser
+  // actually painting/starting the animation, and that gap grows under
+  // main-thread contention. A cold page load (hydration, layout, fonts,
+  // images all competing at once) is exactly when that gap is largest,
+  // which is exactly when this was visibly off — a tab change, with the
+  // rest of the app already warm, had far less contention and looked
+  // fine. Reading the dim track's *actual* currentTime from the
+  // browser's own animation clock via the Web Animations API sidesteps
+  // the estimate entirely: it's exact regardless of how much jank
+  // preceded it.
+  useLayoutEffect(() => {
+    if (!waving) return;
+    const dimTrack = dimTrackRef.current;
+    const brightPlane = brightPlaneRef.current;
+    if (!dimTrack || !brightPlane) return;
+    const dimAnim = dimTrack.getAnimations()[0];
+    if (!dimAnim) return;
+    const currentTime = dimAnim.currentTime;
+    brightPlane
+      .querySelectorAll<HTMLDivElement>(".watermark-row__track")
+      .forEach((track) => {
+        track.getAnimations().forEach((anim) => {
+          anim.currentTime = currentTime;
+        });
+      });
+  }, [waving]);
 
   // Two things measured off the same rendered copy: how many repetitions
   // are actually needed to outrun the viewport (so the loop never runs
@@ -165,13 +192,16 @@ export function Watermark({
   // ref can only ever point at one live DOM node, and the resize
   // measurement only needs one reference sample regardless of how many
   // copies of the markup exist.
-  function renderRows(attachRef: boolean, trackStyle?: React.CSSProperties) {
+  function renderRows(attachRef: boolean) {
     return Array.from({ length: ROWS }).map((_, row) => (
       <div
         key={row}
         className={`watermark-row${row % 2 === 1 ? " watermark-row--reverse" : ""}`}
       >
-        <div className="watermark-row__track" style={trackStyle}>
+        <div
+          className="watermark-row__track"
+          ref={attachRef && row === 0 ? dimTrackRef : undefined}
+        >
           {[0, 1].map((copy) => (
             <div
               className="watermark-row__copy"
@@ -207,21 +237,15 @@ export function Watermark({
         <div className="watermark-bright-clip" aria-hidden="true">
           <div
             className="watermark-plane watermark-plane--bright"
+            ref={brightPlaneRef}
             style={{
               maskImage: `url("${maskDataUriRef.current}")`,
               WebkitMaskImage: `url("${maskDataUriRef.current}")`,
             }}
           >
-            {/* Phase-locks this freshly-mounted copy's own scroll animation
-                to wherever the always-mounted dim copy's identical
-                animation already is — without this, the two copies' text
-                drifts out of horizontal sync (dim mounted at page load,
-                this one only mounts once waving starts), so wherever the
-                mask reveals bright text it visibly doubles/ghosts against
-                the dim glyphs around it instead of lining up with them. */}
-            {renderRows(false, {
-              animationDelay: `-${brightSyncElapsedRef.current ?? 0}ms`,
-            })}
+            {/* Phase-lock to the dim plane happens imperatively, in the
+                useLayoutEffect above, once these tracks actually exist. */}
+            {renderRows(false)}
           </div>
         </div>
       )}
