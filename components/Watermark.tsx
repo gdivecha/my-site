@@ -40,17 +40,17 @@ function buildWavyMaskDataUri(): string {
   // control the sweep's travel distance and direction, already tuned and
   // easy to re-break) — only how much of that traveled width is actually
   // opaque.
-  const halfWidth = 3;
+  const halfWidth = 4.5;
 
   function edgeX(i: number, amplitude: number, frequency: number, phase: number) {
     const y = (i / steps) * height;
     return centerX + Math.sin((y / height) * Math.PI * 2 * frequency + phase) * amplitude;
   }
 
-  const ampLeft = 1 + Math.random() * 2.5;
+  const ampLeft = 1.75 + Math.random() * 3.75;
   const freqLeft = 1.5 + Math.random() * 3.5;
   const phaseLeft = Math.random() * Math.PI * 2;
-  const ampRight = 1 + Math.random() * 2.5;
+  const ampRight = 1.75 + Math.random() * 3.75;
   const freqRight = 1.5 + Math.random() * 3.5;
   const phaseRight = Math.random() * Math.PI * 2;
 
@@ -65,7 +65,7 @@ function buildWavyMaskDataUri(): string {
 
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
-    `<filter id="b"><feGaussianBlur stdDeviation="1.4" /></filter>` +
+    `<filter id="b"><feGaussianBlur stdDeviation="2.1" /></filter>` +
     `<path d="${d}" fill="white" filter="url(#b)" />` +
     `</svg>`;
 
