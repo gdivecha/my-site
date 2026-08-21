@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { ChevronDownIcon } from "@/components/icons";
+import { FilterMenu } from "@/components/FilterMenu";
 import { recommendations, previewQuotes } from "@/lib/data/recommendations";
 import { QuoteCard } from "./quote-card";
 import { RoleCard } from "./role-card";
@@ -85,8 +86,26 @@ export function RecommendationsPageClient() {
             Interested in reading more?
           </h3>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <div className="flex flex-wrap gap-2">
+          {/* "Expand all" used to be stacked below the company filter on
+              mobile — needed when the filter was a whole row of pills,
+              but now that FilterMenu collapses that into one compact
+              button (see below), it's the same "one small control beside
+              another" shape as desktop, so they share a line here too. */}
+          <div className="mt-6 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 md:justify-between">
+            {/* Mobile: the same options collapsed into one tappable
+                control (see FilterMenu) instead of a pill row that would
+                otherwise wrap across several lines. Desktop keeps the
+                full pill row. order-2 — on mobile the filter sits to the
+                right of "Expand all" (see its own order-1 below);
+                desktop keeps the original (unreordered) DOM order. */}
+            <FilterMenu
+              options={companiesForCategory.map((c) => ({ id: c, label: c }))}
+              activeId={activeCompany}
+              onSelect={setCompany}
+              label="Filter by company"
+              className="order-2 md:order-none"
+            />
+            <div className="hidden flex-wrap gap-2 md:flex md:justify-start">
               {companiesForCategory.map((c) => {
                 const active = activeCompany === c;
                 return (
@@ -108,7 +127,7 @@ export function RecommendationsPageClient() {
             <button
               type="button"
               onClick={toggleAll}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent"
+              className="order-1 inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent md:order-none"
             >
               {allOpen ? "Collapse all" : "Expand all"}
               <ChevronDownIcon

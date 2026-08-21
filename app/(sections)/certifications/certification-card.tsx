@@ -30,14 +30,20 @@ export function CertificationCard({
   return (
     <Wrapper
       {...linkProps}
-      className={`group flex flex-col gap-3 rounded-2xl border p-6 text-left backdrop-blur-[6px] transition-all duration-200 hover:-translate-y-0.5 hover:bg-card-tint-hover hover:shadow-lg hover:shadow-accent/10 ${
+      className={`group flex flex-col gap-3 rounded-2xl border p-6 text-right backdrop-blur-[6px] transition-all duration-200 hover:-translate-y-0.5 hover:bg-card-tint-hover hover:shadow-lg hover:shadow-accent/10 md:text-left ${
         major
           ? "border-accent/30 bg-card-tint hover:border-accent/60"
           : "border-line bg-card-tint hover:border-accent/40"
       }`}
     >
+      {/* order-2, not DOM order — on mobile the logo sits to the right
+          of the name/issuer text (matching the site's usual mobile
+          right-anchored-media convention). The text block's own flex-1
+          is what actually pushes the logo flush to the row's right edge
+          once reordered — no justify-between needed. Desktop keeps the
+          original logo-left order. */}
       <div className="flex items-center gap-4">
-        <div className="relative shrink-0">
+        <div className="relative order-2 shrink-0 md:order-none">
           {hasIssuerBadge(cert.issuer) ? (
             <IssuerBadge
               issuer={cert.issuer}
@@ -76,19 +82,28 @@ export function CertificationCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line pt-3 text-[11px] text-ink-faint">
+      {/* justify-end packs date/ID/category together at the row's right
+          edge on mobile — desktop keeps the original spread-apart
+          layout (date/ID left, category pushed right via ml-auto,
+          scoped to md: now so it doesn't fight justify-end on mobile). */}
+      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-t border-line pt-3 text-[11px] text-ink-faint md:justify-start">
         {cert.date && <span>{cert.date}</span>}
         {cert.credentialId && <span>ID: {cert.credentialId}</span>}
-        <span className="ml-auto uppercase tracking-widest">
+        <span className="uppercase tracking-widest md:ml-auto">
           {categoryLabel}
         </span>
       </div>
 
       {cert.credentialUrl && (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-accent-soft">
+        // self-end, not text-align — this span is a flex item of the
+        // card's own flex-col, so its position in the row is controlled
+        // by cross-axis alignment, not text-align (which only affects
+        // its own inline content). self-start on desktop reproduces the
+        // original left position exactly (no visible box to shift).
+        <span className="inline-flex items-center gap-1 self-end text-xs font-medium text-accent-soft md:self-start">
           View credential
           <ArrowRightIcon
-            className="h-3.5 w-3.5 -translate-x-1 transition-transform duration-150 group-hover:translate-x-0"
+            className="h-3.5 w-3.5 translate-x-0 transition-transform duration-150 md:-translate-x-1 md:group-hover:translate-x-0"
             aria-hidden="true"
           />
         </span>

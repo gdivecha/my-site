@@ -36,7 +36,7 @@ export function TamacordBreakdown() {
   return (
     <div className="mt-14 flex flex-col gap-14">
       <div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 md:justify-start">
           {AWARDS.map((a) => (
             <span
               key={a}

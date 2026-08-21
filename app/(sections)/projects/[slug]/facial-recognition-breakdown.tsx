@@ -28,8 +28,12 @@ function ServiceBox({
         accent ? "border-accent/50 bg-card-tint" : "border-line bg-card-tint"
       }`}
     >
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tag-bg text-accent-soft">
+      {/* order-2/justify-end/text-right (mobile only) — icon on the
+          right of the label, matching the site's usual mobile
+          right-anchored-icon convention. Desktop keeps the original
+          icon-left order. */}
+      <div className="flex items-center justify-end gap-2.5 text-right md:justify-start md:text-left">
+        <span className="order-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tag-bg text-accent-soft md:order-none">
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="min-w-0">
@@ -37,7 +41,7 @@ function ServiceBox({
           <p className="font-mono text-[10px] text-ink-faint">{tech}</p>
         </div>
       </div>
-      <p className="mt-2 text-xs leading-relaxed text-ink-soft">{role}</p>
+      <p className="mt-2 text-xs leading-relaxed text-ink-soft text-right md:text-left">{role}</p>
     </div>
   );
 }
@@ -291,7 +295,7 @@ export function FacialRecognitionBreakdown() {
         <h3 className="text-lg font-semibold text-ink">
           What I built, and what I didn&apos;t
         </h3>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap justify-end gap-2 md:justify-start">
           {OWNERSHIP.map((o) => (
             <span
               key={o.service}

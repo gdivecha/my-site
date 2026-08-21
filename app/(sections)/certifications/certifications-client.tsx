@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PageHeading } from "@/components/PageHeading";
 import { PageShell } from "@/components/PageShell";
 import { CodeBracketsIcon, DatabaseIcon, SparkleIcon, SwapIcon } from "@/components/icons";
+import { FilterMenu } from "@/components/FilterMenu";
 import {
   certificationCategories,
   certificationSortDate,
@@ -106,6 +107,16 @@ export function CertificationsPageClient() {
   const [sort, setSort] = useState<SortMode>("linked");
   const sortLabel = SORT_OPTIONS.find((o) => o.id === sort)!.label;
 
+  // Shared by the desktop pill row and the mobile FilterMenu below, so
+  // the count math only lives in one place.
+  const filterOptions = FILTERS.map((f) => ({
+    ...f,
+    count:
+      f.id === "all"
+        ? certifications.length
+        : certifications.filter((c) => c.category === f.id).length,
+  }));
+
   function cycleSort() {
     setSort((prev) => {
       const index = SORT_OPTIONS.findIndex((o) => o.id === prev);
@@ -136,13 +147,27 @@ export function CertificationsPageClient() {
         certifications separated from course-completion certificates.
       </p>
 
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => {
-            const count =
-              f.id === "all"
-                ? certifications.length
-                : certifications.filter((c) => c.category === f.id).length;
+      {/* The sort link used to be stacked below the filter pills on
+          mobile — needed when the filter was a whole row of pills, but
+          now that FilterMenu collapses that into one compact button (see
+          below), it's the same "one small control beside another" shape
+          as desktop, so they share a line here too. */}
+      <div className="mt-8 flex flex-wrap items-center justify-end gap-x-4 gap-y-3 md:justify-between">
+        {/* Mobile: the same options collapsed into one tappable control
+            (see FilterMenu) instead of a pill row that would otherwise
+            wrap across several lines. Desktop keeps the full pill row.
+            order-2 — on mobile the filter sits to the right of sort (see
+            the sort button's own order-1 below); desktop keeps the
+            original (unreordered) DOM order. */}
+        <FilterMenu
+          options={filterOptions}
+          activeId={filter}
+          onSelect={setFilter}
+          label="Filter by category"
+          className="order-2 md:order-none"
+        />
+        <div className="hidden flex-wrap gap-2 md:flex md:justify-start">
+          {filterOptions.map((f) => {
             const active = filter === f.id;
             return (
               <button
@@ -156,7 +181,7 @@ export function CertificationsPageClient() {
                 }`}
               >
                 {f.label}
-                <sup className="text-[11px] font-semibold">{count}</sup>
+                <sup className="text-[11px] font-semibold">{f.count}</sup>
               </button>
             );
           })}
@@ -165,7 +190,7 @@ export function CertificationsPageClient() {
         <button
           type="button"
           onClick={cycleSort}
-          className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent"
+          className="order-1 inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent md:order-none"
         >
           <SwapIcon className="h-3.5 w-3.5 rotate-90" aria-hidden="true" />
           {sortLabel}

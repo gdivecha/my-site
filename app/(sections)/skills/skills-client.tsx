@@ -52,8 +52,22 @@ export function SkillsPageClient() {
     <PageShell watermark="SKILLS">
       <PageHeading eyebrow="Skills">My Expertise</PageHeading>
 
-      <div className="mt-6 flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[6px]">
+      {/* Same gap-x-4 the filter+sort rows on Projects/Certifications use
+          for this exact "one compact control beside another" shape, so
+          the spacing reads consistently across pages. Graph view's own
+          icon-toggle + mode-toggle pairing keeps its own tighter gap-2 —
+          those two are wider together, and gap-2 is what was tuned to
+          keep them from wrapping onto two lines on a narrow phone. */}
+      <div
+        className={`mt-6 flex flex-wrap items-center justify-end md:flex-row md:justify-between ${
+          view === "list" ? "gap-x-4 gap-y-3" : "gap-2"
+        }`}
+      >
+        {/* order-2, not DOM order — on mobile this view-selector sits to
+            the right of whichever mode/sort control is currently beside
+            it, in both branches below; desktop keeps the natural
+            (unreordered) DOM order it always had. */}
+        <div className="order-2 flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[6px] md:order-none">
           <button
             type="button"
             onClick={() => setView("graph")}
@@ -86,7 +100,7 @@ export function SkillsPageClient() {
           <button
             type="button"
             onClick={toggleAll}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent"
+            className="order-1 inline-flex items-center gap-1.5 text-xs font-medium text-accent-soft transition-colors hover:text-accent md:order-none"
           >
             {allOpen ? "Collapse all" : "Expand all"}
             <ChevronDownIcon
@@ -94,12 +108,20 @@ export function SkillsPageClient() {
             />
           </button>
         ) : (
-          <div className="flex items-center gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[6px]">
+          <div className="order-1 flex flex-wrap items-center justify-end gap-1 rounded-lg border border-line bg-card-tint p-1 backdrop-blur-[6px] md:order-none">
+            {/* whitespace-nowrap on each button — without it, a container
+                too narrow to fit both side by side wraps text awkwardly
+                mid-button ("By" / "category" split across two lines
+                inside the same pill) instead of the pair itself dropping
+                to a second line as two clean, still-single-line
+                buttons. flex-wrap on the container is what allows that
+                clean drop; justify-end keeps the second one right-
+                aligned under the first when it does. */}
             <button
               type="button"
               onClick={() => setGraphMode("category")}
               aria-pressed={graphMode === "category"}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 graphMode === "category"
                   ? "bg-accent text-[var(--color-base)]"
                   : "text-ink-faint hover:text-ink"
@@ -111,7 +133,7 @@ export function SkillsPageClient() {
               type="button"
               onClick={() => setGraphMode("connections")}
               aria-pressed={graphMode === "connections"}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 graphMode === "connections"
                   ? "bg-accent text-[var(--color-base)]"
                   : "text-ink-faint hover:text-ink"

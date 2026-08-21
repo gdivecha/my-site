@@ -11,6 +11,15 @@ html {
 @theme {
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.25rem;
+  /* Every non-heading content size site-wide runs through text-sm (body
+     paragraphs, card descriptions, form fields, nav/UI labels, etc.) —
+     nudging it down here shrinks all of that together in one place
+     instead of touching every file that uses it. line-height is
+     deliberately left alone (inherits Tailwind's own default for this
+     step) — most of the affected body copy sets its own leading-relaxed
+     anyway, and shrinking both at once risked cramming lines together
+     rather than just reading a bit smaller. */
+  --text-sm: 0.85rem;
 }
 
 :root {
@@ -31,6 +40,27 @@ html {
   --color-ink-soft: #a8a4c0;
   --color-ink-faint: #5c5878;
 
+  /* PageShell's fallback padding-top when --sidebar-title-top isn't set
+     (see components/PageShell.tsx and PageHeading.tsx) — that variable
+     only ever gets set on md+, where PageHeading measures the sidebar
+     name's position to line their bottoms up; below md there's no
+     sidebar name to line up with (it's a compact sticky bar instead),
+     so this plain fallback is what actually governs the gap between the
+     sticky bar's bottom edge and each page's own title there. */
+  --page-title-top: 3rem;
+
+  /* Home's intro photo (see app/(sections)/home/page.tsx) — the photo
+     has an explicit width here and the pill column beside it conforms
+     to its height (see align-items:end on .home-intro-grid), same
+     relationship on both tiers now that the title sits in its own
+     full-width row above rather than beside the photo. The vh-based
+     term is what actually shrinks it on genuinely short viewports
+     rather than just narrow ones. Below sm this is overridden by a
+     smaller, width-based clamp instead (see the media query further
+     down) — the photo shares its row with the pill column rather than
+     getting the full viewport width to itself there. */
+  --home-photo-size: clamp(180px, 24vh, 260px);
+
   /* dial nav rail track */
   --dial-rail-color: rgba(92, 88, 120, 0.18);
 
@@ -40,6 +70,15 @@ html {
      to the same purple-leaning tone as before. */
   --color-card-tint: rgba(66, 66, 82, 0.3);
   --color-card-tint-hover: rgba(58, 59, 96, 0.3);
+
+  /* Mobile sticky sidebar background (see components/Sidebar.tsx) — same
+     rgb as --color-card-tint, but much less transparent: page content
+     scrolls directly underneath this one, so it has to stay clearly
+     legible over whatever's passing behind (photos, the watermark,
+     etc.), not just a subtle tint like a resting card. A dedicated
+     token rather than reusing --color-card-tint directly since that one
+     still needs to stay at its own lighter opacity for actual cards. */
+  --color-sidebar-sticky-bg: rgba(21, 21, 31, 0.88);
 
   /* Tag chip background (skill/tech tags) */
   --color-tag-bg: var(--color-panel-alt);
@@ -136,6 +175,8 @@ html {
      each card); hover brings in the purple tint. */
   --color-card-tint: transparent;
   --color-card-tint-hover: rgba(109, 95, 232, 0.11);
+
+  --color-sidebar-sticky-bg: rgba(255, 255, 255, 0.77);
 
   /* Tag chip background — panel-alt is too close to the page background
      here, so use a visible purple wash instead. */
@@ -315,6 +356,7 @@ html {
 
   --color-card-tint: var(--color-card-tint);
   --color-card-tint-hover: var(--color-card-tint-hover);
+  --color-sidebar-sticky-bg: var(--color-sidebar-sticky-bg);
   --color-tag-bg: var(--color-tag-bg);
   --color-roles-text: var(--color-roles-text);
   --color-dial-tick: var(--color-dial-tick);
@@ -448,8 +490,17 @@ html {
   transition: right 0.35s ease-out;
 }
 
-.text-gradient:hover::after {
-  right: 0;
+/* (hover: hover) — not just the bare :hover selector — since touch
+   browsers commonly simulate :hover on tap and then leave it "stuck"
+   active until the next tap elsewhere, with no real mouse ever
+   involved. That reads as the underline appearing (and staying) just
+   from tapping the name on mobile, not from any actual hover. Scoping
+   to devices with genuine hover capability is the same fix already
+   used for the custom cursor, see components/CustomCursor.tsx. */
+@media (hover: hover) {
+  .text-gradient:hover::after {
+    right: 0;
+  }
 }
 
 .no-scrollbar {
@@ -459,6 +510,106 @@ html {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* The page's own document scrollbar — most mobile browsers already
+   auto-hide this, but desktop browsers simulating a narrow viewport
+   (resizing the window, DevTools device mode) show a normal persistent
+   one, same as any other width. */
+@media (max-width: 767px) {
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Shrinks the gap between the sticky bar's bottom edge and each page's
+   own title — see --page-title-top above for what this actually
+   controls. */
+@media (max-width: 767px) {
+  :root {
+    --page-title-top: 1rem;
+  }
+}
+
+/* Home's intro block (see app/(sections)/home/page.tsx) — a single grid
+   whose 4 items (title, photo, pills, bio) get reassigned between two
+   grid-template-areas layouts by breakpoint, rather than existing twice
+   in the DOM (each item, especially the photo's priority <Image>,
+   renders once no matter which layout is active). The title always
+   spans the full row above the photo+pills row now (this used to sit
+   beside the photo below sm, with the photo stretched to match its
+   height — dropped in favor of this simpler, uniform structure, which
+   also sidesteps a real CSS Grid bug that combination triggered: a
+   row-spanning item with align-self:stretch + max-height made the
+   grid's own reported height come out shorter than the sum of its own
+   grid-template-rows, letting the bio paragraphs below silently
+   overflow past "Elsewhere on this site"). Below sm, pills sit to the
+   LEFT of the photo (photo on the right) — matching the page's own
+   mobile-wide right-indent convention (PageShell's text-right), so the
+   pill column's own right edge lands flush against the photo. sm+
+   mirrors that (photo on the left, pills on the right) to match the
+   page's own left-aligned convention there. */
+.home-intro-grid {
+  display: grid;
+  /* minmax(0,4fr) 5fr, not 1fr auto — the photo's own column needs to be
+     the majority (5/9 ≈ 55.6%) of the row's width, not whatever's left
+     after the pills. auto here would size the photo's column to match
+     its own rendered width, which is itself derived from the photo's
+     height (see intro-hero.tsx) — a fr split is what actually lets the
+     photo's column claim more than half up front, before that
+     height-to-width derivation even happens. */
+  grid-template-columns: minmax(0, 4fr) 5fr;
+  align-items: end;
+  column-gap: 1rem;
+  /* 1.5rem — matches the outer wrapper's own gap-6 between the intro
+     block and "Elsewhere on this site" below it (see the min-h-0
+     wrapper in page.tsx), so the gap above the first paragraph and the
+     gap before "Elsewhere" read as the same size instead of one being
+     barely-there and the other much larger. This same row-gap also
+     separates the title row from the photo/pills row below it — a
+     smaller value there read fine, but there's no clean way to give the
+     two row-gaps in one grid different sizes, so both move together. */
+  row-gap: 1.5rem;
+  grid-template-areas:
+    "title title"
+    "pills photo"
+    "bio   bio";
+}
+
+@media (min-width: 640px) {
+  .home-intro-grid {
+    /* Column ROLES flip along with the area assignment below, not just
+       the areas themselves — sm+ puts the photo in column 1 and the
+       pills in column 2 (the opposite of the mobile arrangement above),
+       so the auto/flexible tracks need to swap right along with them.
+       Reusing the base "minmax(0,1fr) auto" here left the photo sitting
+       in the flexible track — which stretched it far past its own
+       explicit width, sitting flush left in the leftover space, and
+       shoved the pills' auto track out past a big dead gap instead of
+       flush against the photo. Confirmed empirically via screenshot. */
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1.25rem;
+    row-gap: 1.5rem;
+    grid-template-areas:
+      "title title"
+      "photo pills"
+      "bio   bio";
+  }
+}
+
+/* Below sm the photo shares its row with just the pill column (not the
+   full viewport width the sm+ vh-based clamp above assumes) — a
+   width-based clamp instead, so it scales with the column it's actually
+   competing with for space. */
+@media (max-width: 639px) {
+  :root {
+    --home-photo-size: clamp(96px, 30vw, 140px);
+  }
 }
 
 .watermark-field {
@@ -478,6 +629,19 @@ html {
   }
 }
 
+/* The left-edge fade above exists to line the watermark's own fade-in
+   up with roughly where desktop's fixed sidebar column ends and the
+   page content begins — on mobile there's no side-by-side sidebar/
+   content split to line up with (the sidebar stacks above instead), so
+   the same mask just faded out an arbitrary strip of the narrow
+   viewport's left edge for no reason tied to anything on screen. */
+@media (max-width: 767px) {
+  .watermark-field {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+
 .watermark-plane {
   position: absolute;
   top: 50%;
@@ -490,6 +654,7 @@ html {
   justify-content: center;
   gap: clamp(0.25rem, 0.6vw, 0.75rem);
 }
+
 
 .watermark-row {
   width: 100%;
@@ -512,6 +677,13 @@ html {
   display: flex;
   align-items: center;
   gap: 1.8em;
+}
+
+@media (max-width: 767px) {
+  .watermark-row__track,
+  .watermark-row__copy {
+    gap: 1em;
+  }
 }
 
 .watermark-row__copy span {
@@ -611,6 +783,36 @@ html {
   }
 }
 
+/* Mobile: bottom-to-top instead of right-to-left — the mask shape
+   Watermark.tsx generates for this (buildWavyMaskDataUri, orientation
+   "horizontal") is rotated 90° from the desktop one to match (a band
+   spanning the full width with wavy top/bottom edges, not full height
+   with wavy left/right edges), so the oversized axis flips too: 140% on
+   the Y axis here instead of X. Direction was verified empirically
+   (sampled screenshots), not by re-deriving the mask-position formula —
+   that formula's own "bigger percentage = further right/down" reading
+   inverts once the image is larger than its container the way it is
+   here, and reasoning it out from scratch got the horizontal version
+   wrong twice before actually checking. */
+@media (max-width: 767px) {
+  .watermark-plane--bright {
+    mask-size: 100% 140%;
+    -webkit-mask-size: 100% 140%;
+    animation: watermark-shimmer-mask-vertical 5s linear infinite;
+  }
+}
+
+@keyframes watermark-shimmer-mask-vertical {
+  from {
+    mask-position: 0 -95%;
+    -webkit-mask-position: 0 -95%;
+  }
+  to {
+    mask-position: 0 120%;
+    -webkit-mask-position: 0 120%;
+  }
+}
+
 /* Where the pulse is actually *allowed* to be visible, separate from
    its own shape/motion above: a second, non-moving mask on a wrapper
    around just .watermark-plane--bright (not on .watermark-field, which
@@ -645,6 +847,19 @@ html {
     black 54%,
     black 100%
   );
+}
+
+/* Same reasoning as .watermark-field's own left-edge fade above: this
+   fade zone exists to taper the pulse out before it'd otherwise run
+   into desktop's fixed sidebar column — there's no such partition on
+   mobile (the sidebar's a sticky bar stacked above, not a side-by-side
+   split), so let the sweep read at full strength all the way through
+   instead of fading out partway across the narrow viewport. */
+@media (max-width: 767px) {
+  .watermark-bright-clip {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

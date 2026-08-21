@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import { TechLogo } from "@/components/TechIcon";
 import { CodeBracketsIcon } from "@/components/icons";
+import { ENTRANCE_MS, SIDEBAR_CASCADE_DONE_MS } from "@/lib/entrance-timing";
 import {
   categoryConnections,
   skillConnections,
@@ -281,6 +289,69 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   const [viewBox, setViewBox] = useState<ViewBox>(defaultViewBox);
   const [legendOpen, setLegendOpen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  // Starts false (desktop framing, matching the category graph's own
+  // reasoning) so server and client agree on the first render — decided
+  // for real in the layout effect below, once window exists.
+  const [isMobile, setIsMobile] = useState(false);
+  useLayoutEffect(() => {
+    function check() {
+      setIsMobile(window.innerWidth < 768);
+    }
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  // Same fix as the category graph's frame (see skill-graph.tsx): the
+  // old `h-[min(560px,56vh)]` guess had no idea how much space the
+  // heading/tab row above and the fixed bottom nav bar below actually
+  // consume, so on some real viewports it could run past the visible
+  // fold. Measures the real gap this frame already has above it (however
+  // it actually arises — the "mt-4" wrapper this component is rendered
+  // inside, in skills-client.tsx — read directly from the DOM rather
+  // than assumed, since that margin isn't declared in this file) and
+  // mirrors it as the bottom gap too, shrinking the frame's height to
+  // whatever's actually left between them.
+  const [mobileFrameHeight, setMobileFrameHeight] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    if (!isMobile) {
+      setMobileFrameHeight(null);
+      return;
+    }
+    function measure() {
+      const el = frameRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const prevSibling = el.parentElement?.previousElementSibling;
+      const topGap = prevSibling ? rect.top - prevSibling.getBoundingClientRect().bottom : 0;
+      const navEl = document.querySelector<HTMLElement>("[data-dial-nav]");
+      const reservedBottom = (navEl?.getBoundingClientRect().height ?? 0) + topGap;
+      // The style below sets the SVG's own (content) height, not the
+      // frame div's — the frame's border then adds on top of that, so
+      // without subtracting it here the frame's actual bottom edge lands
+      // a couple pixels past the intended gap (confirmed: an unadjusted
+      // version measured 2px short, exactly this frame's 1px top + 1px
+      // bottom border).
+      const cs = getComputedStyle(el);
+      const borderY = parseFloat(cs.borderTopWidth || "0") + parseFloat(cs.borderBottomWidth || "0");
+      const availableHeight = window.innerHeight - rect.top - reservedBottom - borderY;
+      // Pure zero/negative guard, not a design floor — see skill-graph.tsx's
+      // identical reasoning for MOBILE_FRAME_MIN_PX.
+      setMobileFrameHeight(Math.max(150, availableHeight));
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    // The heading/tab row above is still mid-entrance (fade+slide) at the
+    // exact moment this layout effect first runs, throwing off the
+    // measured top — same real, confirmed bug as the category graph's
+    // identical fix; re-measuring once more once that entrance is known
+    // to have finished corrects it.
+    const settleTimer = window.setTimeout(measure, SIDEBAR_CASCADE_DONE_MS + ENTRANCE_MS);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.clearTimeout(settleTimer);
+    };
+  }, [isMobile]);
   const dragRef = useRef<{ startX: number; startY: number; startViewBox: ViewBox } | null>(null);
   // What's currently spotlit: either one hovered edge (that edge + its two
   // endpoints), or one hovered node (that node + every node it's directly
@@ -482,11 +553,15 @@ export function SkillConnectionGraph({ categories }: { categories: SkillCategory
   }
 
   return (
-    <div className="graph-frame relative w-full overflow-hidden rounded-2xl border border-line bg-base">
+    <div
+      ref={frameRef}
+      className="graph-frame relative w-full overflow-hidden rounded-2xl border border-line bg-base"
+    >
       <svg
         ref={svgRef}
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
         className="h-[min(560px,56vh)] w-full cursor-grab touch-none active:cursor-grabbing md:h-[min(680px,62vh)]"
+        style={isMobile && mobileFrameHeight != null ? { height: mobileFrameHeight } : undefined}
         role="img"
         aria-label="Skills grouped by category, and connected to each other by the projects and roles that used them together — pannable and zoomable"
         onPointerDown={handlePointerDown}

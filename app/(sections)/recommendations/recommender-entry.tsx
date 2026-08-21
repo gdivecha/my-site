@@ -13,7 +13,7 @@ export function RecommenderEntry({
 
   return (
     <div className="border-t border-line pt-4 first:border-t-0 first:pt-0">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+      <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 md:justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-ink">
             {recommendation.recommenderName}

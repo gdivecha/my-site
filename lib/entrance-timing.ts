@@ -86,3 +86,43 @@ export const REASONABLE_LOAD_WAIT_MS = 200;
  * compete with the right side still animating in. */
 export const DIAL_NUDGE_DELAY_MS =
   SIDEBAR_CASCADE_DONE_MS + ENTRANCE_MS + DIAL_POST_CONTENT_DELAY_MS;
+
+// Mobile's sidebar cascade only has three stages that actually render
+// anything (name, role, socials) — the tagline and the inline dial-in-
+// sidebar block are both `hidden md:block` there (see Sidebar.tsx; the
+// mobile dial renders separately, via its own bottom-bar portal).
+// Reusing the desktop SIDEBAR_STAGE_DELAYS/SIDEBAR_CASCADE_DONE_MS
+// values as-is on mobile just waits through two stages' worth of dead
+// time (~1s) where nothing visible happens before socials — and
+// everything downstream (utility icons, page content, watermark, the
+// dial's own nudge and initial lock release) inherits that same
+// needless delay. These mirror the desktop constants' own derivations,
+// just skipping straight from the role reveal to socials.
+const M_NAME_DELAY_MS = 0;
+const M_ROLES_DELAY_MS = M_NAME_DELAY_MS + ENTRANCE_MS;
+const M_SOCIALS_DELAY_MS = M_ROLES_DELAY_MS + ROLE_REVEAL_DURATION_MS;
+
+/** Mobile equivalent of SIDEBAR_STAGE_DELAYS — stages 3 and 4 (tagline,
+ * inline dial) collapse to the same moment as stage 2 since neither
+ * renders anything to wait for on mobile; only the index-based `stage
+ * >= N` checks in Sidebar.tsx care that this array still has 5 entries. */
+export const MOBILE_SIDEBAR_STAGE_DELAYS = [
+  M_NAME_DELAY_MS,
+  M_ROLES_DELAY_MS,
+  M_ROLES_DELAY_MS,
+  M_ROLES_DELAY_MS,
+  M_SOCIALS_DELAY_MS,
+] as const;
+
+/** Mobile equivalent of SIDEBAR_CASCADE_DONE_MS. */
+export const MOBILE_SIDEBAR_CASCADE_DONE_MS =
+  M_SOCIALS_DELAY_MS +
+  (profile.socials.length - 1) * SOCIALS_STAGGER_MS +
+  ENTRANCE_MS;
+
+/** Mobile equivalent of ICONS_DELAY_MS. */
+export const MOBILE_ICONS_DELAY_MS = MOBILE_SIDEBAR_CASCADE_DONE_MS;
+
+/** Mobile equivalent of DIAL_NUDGE_DELAY_MS. */
+export const MOBILE_DIAL_NUDGE_DELAY_MS =
+  MOBILE_SIDEBAR_CASCADE_DONE_MS + ENTRANCE_MS + DIAL_POST_CONTENT_DELAY_MS;

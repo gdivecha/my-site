@@ -70,8 +70,12 @@ export function StraySafeBreakdown() {
           className="mt-6 max-w-md rounded-2xl border border-dashed border-line bg-card-tint p-6 backdrop-blur-[6px]"
           style={{ transform: "rotate(-0.75deg)" }}
         >
-          <div className="flex items-center gap-2 border-b border-dashed border-line pb-4">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-tag-bg text-accent-soft">
+          {/* order-2/justify-end/text-right (mobile only) — icon on the
+              right of the label, matching the site's usual mobile
+              right-anchored-icon convention. Desktop keeps the original
+              icon-left order. */}
+          <div className="flex items-center justify-end gap-2 border-b border-dashed border-line pb-4 text-right md:justify-start md:text-left">
+            <span className="order-2 flex h-8 w-8 items-center justify-center rounded-full bg-tag-bg text-accent-soft md:order-none">
               <FileIcon className="h-4 w-4" aria-hidden="true" />
             </span>
             <p className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
@@ -105,9 +109,13 @@ export function StraySafeBreakdown() {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px]">
-            <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-accent-soft">
-              <MailIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            {/* justify-end/order-2/text-right (mobile only) — icon on
+                the right of the label, matching the site's usual mobile
+                right-anchored-icon convention. Desktop keeps the
+                original icon-left order. */}
+            <p className="inline-flex w-full items-center justify-end gap-1.5 text-xs font-semibold uppercase tracking-widest text-accent-soft md:justify-start md:text-left">
               If you lost a pet
+              <MailIcon className="order-2 h-3.5 w-3.5 md:order-none" aria-hidden="true" />
             </p>
             <ol className="mt-3 flex flex-col gap-2">
               {OWNER_TRACK.map((step, i) => (
@@ -115,17 +123,21 @@ export function StraySafeBreakdown() {
                   key={step}
                   className="flex gap-2 text-sm leading-relaxed text-ink-soft"
                 >
-                  <span className="text-ink-faint">{i + 1}.</span>
-                  {step}
+                  {/* Number stays pinned left (unchanged) — only the
+                      step text right-aligns as its own wrapping block,
+                      via flex-1 giving it the row's full remaining
+                      width to right-align within. */}
+                  <span className="shrink-0 text-ink-faint">{i + 1}.</span>
+                  <span className="flex-1 text-right md:text-left">{step}</span>
                 </li>
               ))}
             </ol>
           </div>
 
           <div className="rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px]">
-            <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-accent-soft">
-              <SearchIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            <p className="inline-flex w-full items-center justify-end gap-1.5 text-xs font-semibold uppercase tracking-widest text-accent-soft md:justify-start md:text-left">
               If you found a stray
+              <SearchIcon className="order-2 h-3.5 w-3.5 md:order-none" aria-hidden="true" />
             </p>
             <ol className="mt-3 flex flex-col gap-2">
               {FINDER_TRACK.map((step, i) => (
@@ -133,8 +145,8 @@ export function StraySafeBreakdown() {
                   key={step}
                   className="flex gap-2 text-sm leading-relaxed text-ink-soft"
                 >
-                  <span className="text-ink-faint">{i + 1}.</span>
-                  {step}
+                  <span className="shrink-0 text-ink-faint">{i + 1}.</span>
+                  <span className="flex-1 text-right md:text-left">{step}</span>
                 </li>
               ))}
             </ol>

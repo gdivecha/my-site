@@ -5,10 +5,23 @@ import { Watermark } from "./Watermark";
 import { APP_LOADED_AT } from "@/lib/app-load-time";
 import {
   ENTRANCE_MS,
+  MOBILE_SIDEBAR_CASCADE_DONE_MS,
   REASONABLE_LOAD_WAIT_MS,
   SIDEBAR_CASCADE_DONE_MS,
 } from "@/lib/entrance-timing";
 import { notifyPageReady } from "@/lib/page-ready";
+
+/** Mobile's sidebar cascade is shorter (see entrance-timing.ts — it
+ * skips two stages that don't render anything below md) — every
+ * `baseRemaining` wait in this file needs to key off that shorter
+ * value there, or the page's own content/watermark keeps waiting on
+ * desktop's longer schedule even once the (already-visible, already-
+ * finished) mobile sidebar has nothing left to wait for. */
+function cascadeDoneMs() {
+  return window.innerWidth < 768
+    ? MOBILE_SIDEBAR_CASCADE_DONE_MS
+    : SIDEBAR_CASCADE_DONE_MS;
+}
 
 /** Must match .watermark-plane--bright's animation-duration in
  * globals.css — used to let an in-progress sweep finish its current
@@ -72,7 +85,7 @@ export function PageShell({
     }
     const baseRemaining = Math.max(
       0,
-      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+      cascadeDoneMs() - (Date.now() - APP_LOADED_AT)
     );
     let cancelled = false;
     const timer = setTimeout(() => {
@@ -110,7 +123,7 @@ export function PageShell({
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const baseRemaining = Math.max(
       0,
-      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+      cascadeDoneMs() - (Date.now() - APP_LOADED_AT)
     );
     let endTimer: ReturnType<typeof setTimeout> | null = null;
     const startTimer = setTimeout(() => {
@@ -134,7 +147,7 @@ export function PageShell({
 
     const baseRemaining = Math.max(
       0,
-      SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
+      cascadeDoneMs() - (Date.now() - APP_LOADED_AT)
     );
 
     if (!ready) {
@@ -180,9 +193,18 @@ export function PageShell({
   }, [ready]);
 
   return (
+    // min-h-screen deliberately NOT here — the shared layout's own
+    // <main> (app/(sections)/layout.tsx) already applies it, wrapping
+    // this PageShell AND the mobile copyright below it together, which
+    // is the actual "keep copyright pinned near the bottom on short
+    // content" mechanism. Having it here too was redundant and doubled
+    // the effect: PageShell padded itself out to a full screen BEFORE
+    // copyright even started, so short tab content (e.g. Academics'
+    // Achievements tab) left a huge empty gap above the copyright
+    // instead of copyright sitting one screen-height down, total.
     <div
-      className="relative isolate min-h-screen overflow-hidden px-6 pb-12 sm:px-10 md:px-16 md:pb-16"
-      style={{ paddingTop: "var(--sidebar-title-top, 3rem)" }}
+      className="relative isolate overflow-hidden px-6 pb-12 text-right sm:px-10 md:px-16 md:pb-16 md:text-left"
+      style={{ paddingTop: "var(--sidebar-title-top, var(--page-title-top))" }}
     >
       <div
         className={`transition-opacity ease-out ${watermarkVisible ? "opacity-100" : "opacity-0"}`}

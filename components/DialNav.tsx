@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type TransitionEvent,
+} from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { APP_LOADED_AT } from "@/lib/app-load-time";
@@ -9,6 +18,7 @@ import { navItems } from "@/lib/data/nav";
 import { onPageReady } from "@/lib/page-ready";
 import { LockIcon } from "./icons";
 import {
+  MOBILE_SIDEBAR_CASCADE_DONE_MS,
   NUDGE_START_DELAY_MS,
   REASONABLE_LOAD_WAIT_MS,
   SIDEBAR_CASCADE_DONE_MS,
@@ -43,6 +53,8 @@ const FADE_MASK = [
   "transparent 100%",
 ].join(", ");
 const FADE_MASK_IMAGE = `linear-gradient(to bottom, ${FADE_MASK})`;
+// Same fade curve, sideways — for the horizontal mobile bar below.
+const FADE_MASK_IMAGE_H = `linear-gradient(to right, ${FADE_MASK})`;
 
 function findActiveIndex(pathname: string) {
   const exact = navItems.findIndex((item) => item.href === pathname);
@@ -163,7 +175,22 @@ function emitDialTick(ctx: AudioContext) {
  * (a "back out" easing curve) so it reads as a small organic pop rather
  * than a mechanical fade; exit is a plain, quicker fade+shrink with no
  * overshoot, like settling rather than springing. */
-function AnimatedLock({ show }: { show: boolean }) {
+function AnimatedLock({
+  show,
+  badge = false,
+}: {
+  show: boolean;
+  /** Wraps the icon in its own small circular background — for the
+   * mobile bar's standalone corner badge (see below), which has no
+   * adjacent label text of its own to sit next to the way the vertical
+   * dial's inline usage does. Kept inside this component rather than
+   * added at each call site so the background shares the exact same
+   * rendered/entered lifecycle as the icon — appearing and
+   * (importantly) playing its exit fade in sync with it, not vanishing
+   * abruptly the instant `show` flips false while the icon's own exit
+   * animation is still mid-flight. */
+  badge?: boolean;
+}) {
   const [rendered, setRendered] = useState(show);
   const [entered, setEntered] = useState(false);
 
@@ -191,27 +218,65 @@ function AnimatedLock({ show }: { show: boolean }) {
 
   if (!rendered) return null;
 
+  const handleTransitionEnd = (event: TransitionEvent) => {
+    if (event.propertyName !== "opacity") return;
+    if (!show) setRendered(false);
+  };
+
+  if (badge) {
+    // A plain fade, deliberately not the spring/rotate treatment below —
+    // that reads right sitting inline next to text on the vertical
+    // dial, but this is its own free-floating popup with nothing beside
+    // it to play off of, so a bounce there just reads as jittery rather
+    // than purposeful. The icon fades as one unit with its circle, not
+    // separately — no independent motion of its own.
+    // border-accent/50 + text-accent-soft, not the plain border-line/
+    // text-ink-soft this used to be — a lock this muted (essentially the
+    // same tone as the rest of the quiet chrome around it) was easy to
+    // miss entirely despite marking a real "don't navigate yet" state.
+    // The accent color already reads as "something active" everywhere
+    // else on this site (the focused nav tab, an active filter), so
+    // reusing it here is a legible, non-gimmicky way to make it stand
+    // out rather than inventing a new attention cue.
+    return (
+      <div
+        // rgb(109,95,232) is --color-accent's literal value — that one
+        // token is identical in both themes (unlike accent-soft/-deep),
+        // so it's safe to inline here for the glow ring without a CSS
+        // var that doesn't otherwise exist.
+        className="flex h-6 w-6 items-center justify-center rounded-full border border-accent/50 bg-icon-btn shadow-[0_0_0_3px_rgba(109,95,232,0.25)]"
+        style={{
+          opacity: entered ? 1 : 0,
+          transition: "opacity 200ms ease-out",
+        }}
+        onTransitionEnd={handleTransitionEnd}
+      >
+        <LockIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-accent-soft" />
+      </div>
+    );
+  }
+
   // Plain inline styles rather than swapping Tailwind utility classes —
   // this animation only has two states and needs to be unambiguous about
   // exactly which properties transition and for how long.
+  const animatedStyle: CSSProperties = {
+    transformOrigin: "50% 50%",
+    opacity: entered ? 1 : 0,
+    transform: entered ? "scale(1) rotate(0deg)" : "scale(0.4) rotate(-25deg)",
+    transition: entered
+      ? "transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 260ms ease-out"
+      : "transform 220ms ease-in, opacity 200ms ease-in",
+  };
+
+  // text-accent-soft, not text-ink-faint — same reasoning as the badge
+  // variant above: this marks a real "don't navigate yet" state and was
+  // too easy to miss at the same quiet tone as everything around it.
   return (
     <LockIcon
       aria-hidden="true"
-      className="h-3 w-3 shrink-0 text-ink-faint"
-      style={{
-        transformOrigin: "50% 50%",
-        opacity: entered ? 1 : 0,
-        transform: entered
-          ? "scale(1) rotate(0deg)"
-          : "scale(0.4) rotate(-25deg)",
-        transition: entered
-          ? "transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 260ms ease-out"
-          : "transform 220ms ease-in, opacity 200ms ease-in",
-      }}
-      onTransitionEnd={(event) => {
-        if (event.propertyName !== "opacity") return;
-        if (!show) setRendered(false);
-      }}
+      className="h-3.5 w-3.5 shrink-0 text-accent-soft"
+      style={animatedStyle}
+      onTransitionEnd={handleTransitionEnd}
     />
   );
 }
@@ -259,6 +324,15 @@ export function DialNav({
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmatic = useRef(false);
   const hasMounted = useRef(false);
+  // Mobile horizontal bar's own scroll container and per-item center
+  // positions — see the isCompact layout effect further down. Items
+  // aren't a fixed pitch like the vertical dial's rows (labels range
+  // from "Home" to "Recommendations"), so their positions have to be
+  // measured off the actual rendered DOM rather than computed from a
+  // constant.
+  const hScrollRef = useRef<HTMLDivElement>(null);
+  const hItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const hCentersRef = useRef<number[]>([]);
 
   // Below md (768px — the same breakpoint Sidebar itself switches on:
   // that's where it stops being a fixed, full-height column and starts
@@ -299,16 +373,29 @@ export function DialNav({
   const [seeking, setSeeking] = useState(true);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const remaining = Math.max(
-        0,
-        SIDEBAR_CASCADE_DONE_MS - (Date.now() - APP_LOADED_AT)
-      );
+      // isCompact (mobile) uses its own shorter cascade — see
+      // entrance-timing.ts — so under reduced motion, this lock
+      // releases on the same schedule the rest of the mobile entrance
+      // (icons, page content) actually settles on, not desktop's longer
+      // one.
+      const cascadeDoneMs = isCompact
+        ? MOBILE_SIDEBAR_CASCADE_DONE_MS
+        : SIDEBAR_CASCADE_DONE_MS;
+      const remaining = Math.max(0, cascadeDoneMs - (Date.now() - APP_LOADED_AT));
       const timer = window.setTimeout(() => {
         setSeeking(false);
         playDialTick();
       }, remaining);
       return () => window.clearTimeout(timer);
     }
+    // isCompact is intentionally excluded — this effect is documented
+    // (see above) to only ever run once, on the genuine first mount;
+    // isCompact has already resolved to its real value by then (its own
+    // effect is declared earlier in this component, so it fires first
+    // within the same initial commit), and re-running this on a later
+    // resize would incorrectly re-arm a lock-release that's only
+    // supposed to happen once per page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Re-locks on every later navigation too, not just the first load —
@@ -369,21 +456,61 @@ export function DialNav({
     focusedRawRef.current = focusedRaw;
   }, [focusedRaw]);
 
-  const scrollToRaw = useCallback((rawIndex: number, smooth: boolean) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    programmatic.current = true;
-    el.scrollTo({
-      top: rawIndex * ROW_HEIGHT,
-      behavior: smooth ? "smooth" : "auto",
-    });
-    window.setTimeout(
-      () => {
-        programmatic.current = false;
-      },
-      smooth ? 500 : 50
-    );
-  }, []);
+  const scrollToRaw = useCallback(
+    (rawIndex: number, smooth: boolean) => {
+      if (isCompact) {
+        const el = hScrollRef.current;
+        const center = hCentersRef.current[rawIndex];
+        if (!el || center === undefined) return;
+        programmatic.current = true;
+        el.scrollTo({
+          left: center - el.clientWidth / 2,
+          behavior: smooth ? "smooth" : "auto",
+        });
+        // A fixed short delay (what the vertical dial uses below) isn't
+        // safe here: rows are a small, constant 36px apart, so native
+        // smooth-scroll always settles well under 500ms. Horizontal
+        // labels can be much further apart (jumping between the tripled
+        // copies, or just "Home" to "Recommendations"), so that same
+        // smooth-scroll can genuinely still be mid-flight past 500ms —
+        // if the guard lifts before it actually settles, an in-between
+        // scroll event reads a transient position and stomps the correct
+        // focus with whatever tab happened to be passing by. scrollend
+        // clears it exactly when the scroll truly stops instead; the
+        // timeout is only a fallback for browsers without that event.
+        if (smooth && "onscrollend" in window) {
+          const clearProgrammatic = () => {
+            programmatic.current = false;
+            el.removeEventListener("scrollend", clearProgrammatic);
+          };
+          el.addEventListener("scrollend", clearProgrammatic);
+          window.setTimeout(clearProgrammatic, 1200);
+        } else {
+          window.setTimeout(
+            () => {
+              programmatic.current = false;
+            },
+            smooth ? 500 : 50
+          );
+        }
+        return;
+      }
+      const el = scrollRef.current;
+      if (!el) return;
+      programmatic.current = true;
+      el.scrollTo({
+        top: rawIndex * ROW_HEIGHT,
+        behavior: smooth ? "smooth" : "auto",
+      });
+      window.setTimeout(
+        () => {
+          programmatic.current = false;
+        },
+        smooth ? 500 : 50
+      );
+    },
+    [isCompact]
+  );
 
   useEffect(() => {
     const activeIndex = findActiveIndex(pathname);
@@ -400,6 +527,39 @@ export function DialNav({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Measures each rendered item's horizontal center (see hCentersRef
+  // above) once the mobile bar actually exists, and jumps it straight to
+  // the already-known focused item — no animation, mirroring how the
+  // vertical dial positions itself on mount. Re-measures on resize and
+  // once fonts finish loading, since these widths come from rendered
+  // text, not a fixed constant, so anything that can reflow the label
+  // widths has to refresh them.
+  useLayoutEffect(() => {
+    if (!isCompact) return;
+    const el = hScrollRef.current;
+    if (!el) return;
+
+    function measure() {
+      if (!el) return;
+      const containerRect = el.getBoundingClientRect();
+      hCentersRef.current = hItemRefs.current.map((item) => {
+        if (!item) return 0;
+        const itemRect = item.getBoundingClientRect();
+        return itemRect.left - containerRect.left + el.scrollLeft + itemRect.width / 2;
+      });
+    }
+
+    measure();
+    const center = hCentersRef.current[focusedRawRef.current];
+    if (center !== undefined) {
+      el.scrollLeft = center - el.clientWidth / 2;
+    }
+
+    window.addEventListener("resize", measure);
+    document.fonts?.ready.then(measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [isCompact]);
+
   // One-time scroll nudge on page load: up, down past rest, up again, down
   // again (opposite the swing before it), then back to rest — four swings
   // whose position over time traces a sine/cosine curve (quick departure,
@@ -408,16 +568,18 @@ export function DialNav({
   // off-grid instead of the browser correcting it back to a row.
   const [peeking, setPeeking] = useState(false);
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = isCompact ? hScrollRef.current : scrollRef.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     // The down leg travels from +SWING to -SWING in one continuous sweep
-    // (2×SWING total), so this needs to stay under half a row or that
-    // middle leg covers more than a full row and visually blows past the
-    // neighboring tab, reading as a snap. 0.45 leaves a small margin
-    // (2×SWING ≈ 0.9 of a row) while still reading clearly as motion.
-    const SWING = ROW_HEIGHT * 0.45;
+    // (2×SWING total), so this needs to stay under half a row/item or
+    // that middle leg blows past the neighboring tab and reads as a
+    // snap. The vertical dial derives this from its fixed row height;
+    // the horizontal bar has no fixed pitch (labels range from "Home" to
+    // "Recommendations"), so it uses a flat pixel amount tuned to read
+    // the same way.
+    const SWING = isCompact ? 14 : ROW_HEIGHT * 0.45;
 
     let frameId: number;
 
@@ -434,7 +596,9 @@ export function DialNav({
       function step(now: number) {
         if (!el) return;
         const t = Math.min((now - start) / duration, 1);
-        el.scrollTop = from + delta * ease(t);
+        const value = from + delta * ease(t);
+        if (isCompact) el.scrollLeft = value;
+        else el.scrollTop = value;
         if (t < 1) frameId = requestAnimationFrame(step);
         else onDone?.();
       }
@@ -446,15 +610,15 @@ export function DialNav({
       programmatic.current = true;
       setPeeking(true);
       // Also a genuine lock, not just the visual cue: the nudge is
-      // directly driving el.scrollTop itself via rAF the whole time it
-      // runs, and real scroll/click input arriving mid-swing would fight
-      // that animation. seeking already gates both the lock icon (next
-      // to the real focused tab, which doesn't change during the swing)
-      // and pointer-events-none on the scroll container — reusing it
-      // here covers the nudge with the same actual lock, not a second
-      // one.
+      // directly driving the scroll position itself via rAF the whole
+      // time it runs, and real scroll/click input arriving mid-swing
+      // would fight that animation. seeking already gates both the lock
+      // icon (next to the real focused tab, which doesn't change during
+      // the swing) and pointer-events-none on the scroll container —
+      // reusing it here covers the nudge with the same actual lock, not
+      // a second one.
       setSeeking(true);
-      const rest = el.scrollTop;
+      const rest = isCompact ? el.scrollLeft : el.scrollTop;
 
       animate(rest, rest - SWING, 360, easeOutSine, () => {
         animate(rest - SWING, rest + SWING, 620, easeOutSine, () => {
@@ -475,7 +639,7 @@ export function DialNav({
       window.clearTimeout(timer);
       cancelAnimationFrame(frameId);
     };
-  }, [nudgeDelayMs]);
+  }, [nudgeDelayMs, isCompact]);
 
   // While the dial is locked, the page itself shouldn't be scrollable
   // either — otherwise the mouse wheel/trackpad can still move the
@@ -586,92 +750,260 @@ export function DialNav({
     return () => el.removeEventListener("scrollend", handleScrollEnd);
   }, [pathname, router]);
 
-  return (
-    <nav className="relative" aria-label="Section navigation" data-dial-nav>
-      {/* Static pill-shaped rail: always centered on the focused row. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-0 rounded-full"
-        style={{
-          width: RAIL_WIDTH,
-          height: CONTAINER_HEIGHT,
-          background: "var(--dial-rail-color)",
-          maskImage: FADE_MASK_IMAGE,
-          WebkitMaskImage: FADE_MASK_IMAGE,
-        }}
-      />
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className={`no-scrollbar relative overflow-x-hidden overflow-y-auto ${
-          peeking ? "" : "snap-y snap-mandatory"
-        } ${
-          // The seeking overlay above is itself pointer-events-none (it
-          // has to be, to stay purely decorative) — without this, the
-          // real rows underneath stayed fully scrollable/clickable the
-          // whole time, just invisibly, while it looked locked. This is
-          // the actual lock; the overlay is only ever what makes it
-          // visible.
-          seeking ? "pointer-events-none" : ""
-        }`}
-        style={{
-          height: CONTAINER_HEIGHT,
-          maskImage: FADE_MASK_IMAGE,
-          WebkitMaskImage: FADE_MASK_IMAGE,
-          // Setting overflow-y alone quietly computes overflow-x to
-          // auto too (a CSS spec quirk), which let a horizontal
-          // trackpad swipe or shift+wheel nudge the dial sideways —
-          // explicit overflow-x-hidden above covers mouse/trackpad
-          // input; touch-action further stops touchscreen panning from
-          // moving it on the x-axis, leaving y untouched.
-          touchAction: "pan-y",
-        }}
-      >
-        <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
-        {Array.from({ length: COPIES }).flatMap((_, copyIdx) =>
-          navItems.map((item, itemIdx) => {
-            const rawIndex = copyIdx * N + itemIdx;
-            const focused = rawIndex === focusedRaw;
-            return (
-              <Link
-                key={rawIndex}
-                href={item.href}
-                onClick={() => {
-                  setFocusedRaw(rawIndex);
-                  lastTickedRawRef.current = rawIndex;
-                  scrollToRaw(rawIndex, true);
-                }}
-                aria-current={focused ? "page" : undefined}
-                className="flex w-full shrink-0 snap-center items-center gap-3 pr-2"
-                style={{ height: ROW_HEIGHT, scrollSnapStop: "always" }}
-              >
-                <span
-                  className="relative z-10 flex shrink-0 items-center justify-center"
-                  style={{ width: RAIL_WIDTH }}
-                >
-                  <span
-                    className={`h-[3px] w-3.5 rounded-full transition-all duration-200 ${
-                      focused ? "bg-dial-tick" : "bg-ink-faint/50"
-                    }`}
-                  />
-                </span>
-                <span
-                  className={`flex items-center gap-2 text-sm uppercase tracking-wide transition-all duration-200 ${
-                    focused
-                      ? "font-semibold text-ink"
-                      : "font-medium text-dial-inactive"
-                  }`}
-                >
-                  {item.label}
-                  {focused && <AnimatedLock show={seeking} />}
-                </span>
-              </Link>
-            );
-          })
-        )}
-        <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
-      </div>
+  /** Finds whichever measured item center is closest to the horizontal
+   * bar's current visual center — the variable-pitch equivalent of the
+   * vertical dial's `Math.round(scrollTop / ROW_HEIGHT)`. */
+  function closestRawIndex(el: HTMLDivElement) {
+    const target = el.scrollLeft + el.clientWidth / 2;
+    const centers = hCentersRef.current;
+    let rawIndex = 0;
+    let best = Infinity;
+    centers.forEach((center, i) => {
+      const distance = Math.abs(center - target);
+      if (distance < best) {
+        best = distance;
+        rawIndex = i;
+      }
+    });
+    return rawIndex;
+  }
 
-    </nav>
+  function handleScrollH() {
+    const el = hScrollRef.current;
+    if (!el || hCentersRef.current.length === 0) return;
+    let rawIndex = closestRawIndex(el);
+
+    // Seamlessly jump between copies so the list feels infinite — same
+    // idea as handleScroll above, just repositioning via a measured
+    // center instead of a fixed row pitch.
+    if (rawIndex < N * 0.5) {
+      rawIndex += N;
+      el.scrollLeft = hCentersRef.current[rawIndex] - el.clientWidth / 2;
+    } else if (rawIndex > N * (COPIES - 0.5)) {
+      rawIndex -= N;
+      el.scrollLeft = hCentersRef.current[rawIndex] - el.clientWidth / 2;
+    }
+
+    if (programmatic.current) return;
+
+    setFocusedRaw(rawIndex);
+
+    if (rawIndex !== lastTickedRawRef.current) {
+      lastTickedRawRef.current = rawIndex;
+      playDialTick();
+    }
+
+    if (!("onscrollend" in window)) {
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+      settleTimer.current = setTimeout(() => {
+        const target = navItems[mod(rawIndex, N)];
+        if (target && target.href !== pathname) {
+          router.push(target.href);
+        }
+      }, SETTLE_DELAY);
+    }
+  }
+
+  useEffect(() => {
+    const el = hScrollRef.current;
+    if (!isCompact || !el || !("onscrollend" in window)) return;
+
+    function handleScrollEndH() {
+      if (!el || programmatic.current || hCentersRef.current.length === 0) return;
+      const rawIndex = closestRawIndex(el);
+      const target = navItems[mod(rawIndex, N)];
+      if (target && target.href !== pathname) {
+        router.push(target.href);
+      }
+    }
+
+    el.addEventListener("scrollend", handleScrollEndH);
+    return () => el.removeEventListener("scrollend", handleScrollEndH);
+  }, [isCompact, pathname, router]);
+
+  return (
+    <>
+      {!isCompact && (
+        <nav className="relative" aria-label="Section navigation" data-dial-nav>
+          {/* Static pill-shaped rail: always centered on the focused row. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 rounded-full"
+            style={{
+              width: RAIL_WIDTH,
+              height: CONTAINER_HEIGHT,
+              background: "var(--dial-rail-color)",
+              maskImage: FADE_MASK_IMAGE,
+              WebkitMaskImage: FADE_MASK_IMAGE,
+            }}
+          />
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className={`no-scrollbar relative overflow-x-hidden overflow-y-auto ${
+              peeking ? "" : "snap-y snap-mandatory"
+            } ${
+              // The seeking overlay above is itself pointer-events-none (it
+              // has to be, to stay purely decorative) — without this, the
+              // real rows underneath stayed fully scrollable/clickable the
+              // whole time, just invisibly, while it looked locked. This is
+              // the actual lock; the overlay is only ever what makes it
+              // visible.
+              seeking ? "pointer-events-none" : ""
+            }`}
+            style={{
+              height: CONTAINER_HEIGHT,
+              maskImage: FADE_MASK_IMAGE,
+              WebkitMaskImage: FADE_MASK_IMAGE,
+              // Setting overflow-y alone quietly computes overflow-x to
+              // auto too (a CSS spec quirk), which let a horizontal
+              // trackpad swipe or shift+wheel nudge the dial sideways —
+              // explicit overflow-x-hidden above covers mouse/trackpad
+              // input; touch-action further stops touchscreen panning from
+              // moving it on the x-axis, leaving y untouched.
+              touchAction: "pan-y",
+            }}
+          >
+            <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
+            {Array.from({ length: COPIES }).flatMap((_, copyIdx) =>
+              navItems.map((item, itemIdx) => {
+                const rawIndex = copyIdx * N + itemIdx;
+                const focused = rawIndex === focusedRaw;
+                return (
+                  <Link
+                    key={rawIndex}
+                    href={item.href}
+                    onClick={() => {
+                      setFocusedRaw(rawIndex);
+                      lastTickedRawRef.current = rawIndex;
+                      scrollToRaw(rawIndex, true);
+                    }}
+                    aria-current={focused ? "page" : undefined}
+                    className="flex w-full shrink-0 snap-center items-center gap-3 pr-2"
+                    style={{ height: ROW_HEIGHT, scrollSnapStop: "always" }}
+                  >
+                    <span
+                      className="relative z-10 flex shrink-0 items-center justify-center"
+                      style={{ width: RAIL_WIDTH }}
+                    >
+                      <span
+                        className={`h-[3px] w-3.5 rounded-full transition-all duration-200 ${
+                          focused ? "bg-dial-tick" : "bg-ink-faint/50"
+                        }`}
+                      />
+                    </span>
+                    <span
+                      className={`flex items-center gap-2 text-sm uppercase tracking-wide transition-all duration-200 ${
+                        focused
+                          ? "font-semibold text-ink"
+                          : "font-medium text-dial-inactive"
+                      }`}
+                    >
+                      {item.label}
+                      {focused && <AnimatedLock show={seeking} />}
+                    </span>
+                  </Link>
+                );
+              })
+            )}
+            <div style={{ height: EDGE_PADDING }} aria-hidden="true" />
+          </div>
+        </nav>
+      )}
+
+      {/* Mobile: horizontal, fixed to the bottom of the viewport — portaled
+          to document.body rather than rendered in place, since Sidebar's
+          own entrance-cascade wrapper around this component applies a
+          translate-y transform, and a transformed ancestor becomes the
+          containing block for any position:fixed descendant instead of
+          the viewport (the same issue ScrollHint hit earlier). Portaling
+          is the same fix already used elsewhere in this codebase
+          (SearchModal, KeyboardShortcuts) for exactly this problem. */}
+      {isCompact &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <nav
+            aria-label="Section navigation"
+            data-dial-nav
+            className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-sidebar-sticky-bg backdrop-blur-[6px]"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            <div
+              ref={hScrollRef}
+              onScroll={handleScrollH}
+              className={`no-scrollbar relative flex items-center overflow-x-auto overflow-y-hidden ${
+                peeking ? "" : "snap-x snap-mandatory"
+              } ${seeking ? "pointer-events-none" : ""}`}
+              style={{
+                height: 56,
+                maskImage: FADE_MASK_IMAGE_H,
+                WebkitMaskImage: FADE_MASK_IMAGE_H,
+                touchAction: "pan-x",
+              }}
+            >
+              <div style={{ width: "50vw", flexShrink: 0 }} aria-hidden="true" />
+              {Array.from({ length: COPIES }).flatMap((_, copyIdx) =>
+                navItems.map((item, itemIdx) => {
+                  const rawIndex = copyIdx * N + itemIdx;
+                  const focused = rawIndex === focusedRaw;
+                  return (
+                    <Link
+                      key={rawIndex}
+                      href={item.href}
+                      ref={(node) => {
+                        hItemRefs.current[rawIndex] = node;
+                      }}
+                      onClick={() => {
+                        setFocusedRaw(rawIndex);
+                        lastTickedRawRef.current = rawIndex;
+                        scrollToRaw(rawIndex, true);
+                      }}
+                      aria-current={focused ? "page" : undefined}
+                      className="flex shrink-0 snap-center items-center px-4"
+                      style={{ scrollSnapStop: "always" }}
+                    >
+                      <span
+                        className={`whitespace-nowrap text-sm uppercase tracking-wide transition-all duration-200 ${
+                          focused
+                            ? "font-semibold text-ink"
+                            : "font-medium text-dial-inactive"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })
+              )}
+              <div style={{ width: "50vw", flexShrink: 0 }} aria-hidden="true" />
+            </div>
+            {/* Independent of the scrolling label row (which is why it's
+                a sibling here, not inline with the focused label the way
+                the vertical dial does it) — a small popup floating just
+                above the bar, centered on it horizontally, rather than
+                squeezed into its 56px-tall row next to whatever the
+                current label's text happens to be. bottom-full (not
+                top-*) is what puts it above rather than inside the bar;
+                the mb-2 adds the actual gap, since bottom-full alone
+                would butt its edge flush against the bar's own top edge
+                with none. left-1/2 -translate-x-1/2 centers it — the bar
+                itself spans the full viewport width, so centering on
+                that centers it on-screen too, not just within whatever
+                the currently-scrolled label happens to be. badge=true
+                gets AnimatedLock its own circular background (see its
+                definition) instead of a separate wrapper here, so the
+                background shares the icon's exact enter/exit lifecycle
+                rather than vanishing the instant `seeking` flips false
+                while the icon's own exit animation is still playing. */}
+            <div
+              className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2"
+              aria-hidden="true"
+            >
+              <AnimatedLock show={seeking} badge />
+            </div>
+          </nav>,
+          document.body
+        )}
+    </>
   );
 }

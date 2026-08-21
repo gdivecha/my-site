@@ -143,7 +143,7 @@ export function ReliaNetBreakdown() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap justify-end gap-2 md:justify-start">
           {USE_CASES.map((useCase) => (
             <Tag key={useCase}>{useCase}</Tag>
           ))}
@@ -207,9 +207,13 @@ export function ReliaNetBreakdown() {
           {STEPS.map((step, i) => {
             const Icon = step.icon;
             return (
-              <li key={step.title} className="relative pl-10">
+              // right-4/translate-x-1/2 (mobile), reverted to the
+              // original left-4/-translate-x-1/2 at md+ — icon on the
+              // right of the text, matching the site's usual mobile
+              // right-anchored-icon convention.
+              <li key={step.title} className="relative pr-10 text-right md:pl-10 md:pr-0 md:text-left">
                 <span
-                  className="absolute left-4 top-0 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full"
+                  className="absolute right-4 top-0 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full md:left-4 md:right-auto md:-translate-x-1/2"
                   style={{
                     background: "var(--color-step-icon-bg)",
                     color: "var(--color-step-icon-fg)",

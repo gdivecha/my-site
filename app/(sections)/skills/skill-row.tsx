@@ -20,7 +20,7 @@ export function SkillRow({
     <div className="group rounded-2xl border border-line bg-card-tint backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover">
       <button
         type="button"
-        className="flex w-full items-center gap-3 px-6 py-4 text-left"
+        className="flex w-full items-center gap-3 px-6 py-4 md:text-left"
         onClick={onToggle}
         aria-expanded={open}
       >

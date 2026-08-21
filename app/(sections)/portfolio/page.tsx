@@ -6,6 +6,7 @@ import { DownloadIcon, FileIcon } from "@/components/icons";
 import { experiences } from "@/lib/data/experience";
 import { profile } from "@/lib/data/profile";
 import { projects } from "@/lib/data/projects";
+import { StatsBar } from "./stats-bar";
 
 export const metadata: Metadata = {
   title: "Portfolio",
@@ -40,18 +41,7 @@ export default function PortfolioPage() {
     <PageShell watermark="PORTFOLIO">
       <PageHeading eyebrow="Portfolio">My Résumé</PageHeading>
 
-      <div className="mt-6 flex max-w-2xl flex-wrap divide-x divide-line overflow-hidden rounded-2xl border border-line bg-card-tint backdrop-blur-[6px]">
-        {stats.map((stat) => (
-          <div key={stat.label} className="min-w-[5.5rem] flex-1 px-2 py-4 text-center sm:px-4">
-            <p className="font-display text-xl font-bold tabular-nums text-accent-soft sm:text-3xl">
-              {stat.value}
-            </p>
-            <p className="mt-1 text-[9px] uppercase tracking-wide text-ink-faint sm:text-[11px]">
-              {stat.label}
-            </p>
-          </div>
-        ))}
-      </div>
+      <StatsBar stats={stats} />
 
       {/* A rendered image of the PDF's first page, not a live iframe embed
           of the PDF itself — Chrome's built-in PDF viewer is a sandboxed

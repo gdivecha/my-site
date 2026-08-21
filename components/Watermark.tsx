@@ -17,23 +17,31 @@ const MIN_REPEATS = 4;
 const MAX_REPEATS = 40;
 const PIXELS_PER_SECOND = 9;
 
-/** Builds a wavy vertical band as an inline SVG (a filled path, blurred
- * for a soft edge — same idea as the plain CSS gradient's transparent-
- * to-opaque-to-transparent ramp this replaces, just no longer a
- * straight-edged shape), encoded as a data URI so it can be dropped
- * straight into mask-image and animated with the same mask-position
- * sweep the rest of the shimmer already uses.
+/** Builds a wavy band as an inline SVG (a filled path, blurred for a
+ * soft edge — same idea as the plain CSS gradient's transparent-to-
+ * opaque-to-transparent ramp this replaces, just no longer a straight-
+ * edged shape), encoded as a data URI so it can be dropped straight
+ * into mask-image and animated with the same mask-position sweep the
+ * rest of the shimmer already uses.
  *
- * Both edges get their own independently-random amplitude, frequency,
- * and phase — not the same wave mirrored on both sides, which would
- * only ever produce a constant-width wavy *ribbon*. Independent edges
- * let the band's width itself vary unevenly along its length each
- * time, which is what actually makes every session's proportions look
- * different rather than just its position along one repeating curve. */
-function buildWavyMaskDataUri(): string {
-  const height = 100;
+ * `orientation` picks which axis the band spans and which edges get the
+ * wave: "vertical" (desktop, sweeps right-to-left) is a band spanning
+ * the full height with wavy left/right edges; "horizontal" (mobile,
+ * sweeps bottom-to-top) is a band spanning the full width with wavy
+ * top/bottom edges instead — see the matching mask-size/keyframes pair
+ * for each in globals.css.
+ *
+ * Both wavy edges get their own independently-random amplitude,
+ * frequency, and phase — not the same wave mirrored on both sides,
+ * which would only ever produce a constant-width wavy *ribbon*.
+ * Independent edges let the band's width itself vary unevenly along its
+ * length each time, which is what actually makes every session's
+ * proportions look different rather than just its position along one
+ * repeating curve. */
+function buildWavyMaskDataUri(orientation: "vertical" | "horizontal"): string {
+  const size = 100;
   const steps = 48;
-  const centerX = 50;
+  const center = 50;
   // Narrower band — a slim streak passing through rather than a wide
   // swath covering a third of the screen at once. Deliberately NOT
   // touched to fix this: mask-size/mask-position in globals.css (those
@@ -42,26 +50,33 @@ function buildWavyMaskDataUri(): string {
   // opaque.
   const halfWidth = 5;
 
-  function edgeX(i: number, amplitude: number, frequency: number, phase: number) {
-    const y = (i / steps) * height;
-    return centerX + Math.sin((y / height) * Math.PI * 2 * frequency + phase) * amplitude;
+  function edgePos(i: number, amplitude: number, frequency: number, phase: number) {
+    const pos = (i / steps) * size;
+    return center + Math.sin((pos / size) * Math.PI * 2 * frequency + phase) * amplitude;
   }
 
-  const ampLeft = 2 + Math.random() * 4.25;
-  const freqLeft = 1.5 + Math.random() * 3.5;
-  const phaseLeft = Math.random() * Math.PI * 2;
-  const ampRight = 2 + Math.random() * 4.25;
-  const freqRight = 1.5 + Math.random() * 3.5;
-  const phaseRight = Math.random() * Math.PI * 2;
+  const amp1 = 2 + Math.random() * 4.25;
+  const freq1 = 1.5 + Math.random() * 3.5;
+  const phase1 = Math.random() * Math.PI * 2;
+  const amp2 = 2 + Math.random() * 4.25;
+  const freq2 = 1.5 + Math.random() * 3.5;
+  const phase2 = Math.random() * Math.PI * 2;
 
-  const left: string[] = [];
-  const right: string[] = [];
+  const edge1: string[] = [];
+  const edge2: string[] = [];
   for (let i = 0; i <= steps; i++) {
-    const y = (i / steps) * height;
-    left.push(`${(edgeX(i, ampLeft, freqLeft, phaseLeft) - halfWidth).toFixed(2)},${y.toFixed(2)}`);
-    right.push(`${(edgeX(i, ampRight, freqRight, phaseRight) + halfWidth).toFixed(2)},${y.toFixed(2)}`);
+    const pos = (i / steps) * size;
+    const e1 = (edgePos(i, amp1, freq1, phase1) - halfWidth).toFixed(2);
+    const e2 = (edgePos(i, amp2, freq2, phase2) + halfWidth).toFixed(2);
+    if (orientation === "vertical") {
+      edge1.push(`${e1},${pos.toFixed(2)}`);
+      edge2.push(`${e2},${pos.toFixed(2)}`);
+    } else {
+      edge1.push(`${pos.toFixed(2)},${e1}`);
+      edge2.push(`${pos.toFixed(2)},${e2}`);
+    }
   }
-  const d = `M ${left.join(" L ")} L ${right.reverse().join(" L ")} Z`;
+  const d = `M ${edge1.join(" L ")} L ${edge2.reverse().join(" L ")} Z`;
 
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
@@ -91,13 +106,34 @@ export function Watermark({
   const dimTrackRef = useRef<HTMLDivElement>(null);
   const brightPlaneRef = useRef<HTMLDivElement>(null);
   const [repeats, setRepeats] = useState(INITIAL_REPEATS);
+  // Guards the convergence loop below — measure width, adjust repeats,
+  // remeasure — against never actually converging. It normally settles
+  // in 1-2 passes since width scales with repeats, but for some exact
+  // text-length/viewport-width combinations (confirmed: "CONTACT" at
+  // exactly 375px, though presumably not unique to that pair) the
+  // computed target oscillates between two values instead of settling,
+  // and re-runs fast enough to blow past React's own update-depth limit
+  // — a real crash, not just a layout glitch. Capping attempts trades a
+  // very occasional slightly-off repeat count for never crashing the
+  // page outright.
+  const syncAttemptsRef = useRef(0);
   // This session's wavy mask shape — generated fresh each time waving
   // starts, reset to null once waving ends — not re-rolled on every
   // re-render while it's true.
   const maskDataUriRef = useRef<string | null>(null);
   if (waving) {
     if (maskDataUriRef.current === null) {
-      maskDataUriRef.current = buildWavyMaskDataUri();
+      // Matches the same md breakpoint (767px) everything else on the
+      // page uses for "mobile" — read live rather than cached in state
+      // since this only ever runs once per waving session anyway (no
+      // re-render to keep in sync with a resize crossing the breakpoint
+      // mid-session).
+      const isMobile =
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 767px)").matches;
+      maskDataUriRef.current = buildWavyMaskDataUri(
+        isMobile ? "horizontal" : "vertical"
+      );
     }
   } else {
     maskDataUriRef.current = null;
@@ -166,9 +202,20 @@ export function Watermark({
         Math.max(MIN_REPEATS, Math.ceil(target / perRepeat))
       );
       if (needed !== repeats) {
+        if (syncAttemptsRef.current >= 5) {
+          // Not converging — stop adjusting and just go with whatever's
+          // currently rendered rather than looping indefinitely.
+          fieldEl.style.setProperty(
+            "--watermark-duration",
+            `${width / PIXELS_PER_SECOND}s`
+          );
+          return;
+        }
+        syncAttemptsRef.current += 1;
         setRepeats(needed);
         return; // the resulting re-render + resize triggers sync again
       }
+      syncAttemptsRef.current = 0;
 
       fieldEl.style.setProperty(
         "--watermark-duration",

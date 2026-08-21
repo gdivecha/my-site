@@ -26,25 +26,39 @@ export function CopyEmailButton({ email }: { email: string }) {
       // glyph) rather than a plain pill button — a familiar "click to
       // copy" pattern from developer tools — but in the site's normal
       // typeface, not monospace, to stay consistent with everything else.
-      className={`group mt-5 inline-flex items-center gap-3 rounded-lg border px-4 py-2.5 text-sm transition-all duration-200 ${
+      // gap/padding/text all tighten on the smallest screens specifically
+      // (not just an even scale-down) — the icons and divider are fixed-
+      // size chrome around the email text, so on a narrow phone they were
+      // what pushed a perfectly reasonable-length address past one line
+      // and into an awkward mid-word break (see the email span's
+      // break-all below). Unchanged from sm: up, where there's already
+      // enough room.
+      className={`group mt-5 inline-flex max-w-full items-center gap-1 rounded-lg border px-3 py-2.5 text-xs transition-all duration-200 sm:gap-3 sm:px-4 sm:text-sm ${
         copied
           ? "border-accent/50 bg-accent/10 text-accent-soft"
           : "border-line bg-input-bg text-ink hover:border-accent/40"
       }`}
     >
-      <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
+      <span className="relative flex h-3.5 w-3.5 shrink-0 items-center justify-center sm:h-4 sm:w-4">
         <MailIcon
-          className={`absolute h-4 w-4 text-accent-soft transition-all duration-200 ${
+          className={`absolute h-3.5 w-3.5 text-accent-soft transition-all duration-200 sm:h-4 sm:w-4 ${
             copied ? "scale-50 opacity-0" : "scale-100 opacity-100"
           }`}
         />
         <CheckIcon
-          className={`absolute h-4 w-4 transition-all duration-200 ${
+          className={`absolute h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${
             copied ? "scale-100 opacity-100" : "scale-50 opacity-0"
           }`}
         />
       </span>
-      {copied ? "Copied to clipboard!" : email}
+      {/* break-all, not the default nowrap an unbroken string like an
+          email address would otherwise get inside a flex child — on a
+          narrow phone the button's other content (icon, divider, copy
+          glyph) plus this in one unbreakable line is wider than the
+          viewport itself. */}
+      <span className="break-all">
+        {copied ? "Copied to clipboard!" : email}
+      </span>
       {!copied && (
         <>
           <span className="h-4 w-px shrink-0 bg-line" aria-hidden="true" />

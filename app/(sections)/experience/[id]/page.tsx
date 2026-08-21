@@ -53,9 +53,13 @@ export default async function ExperienceDetailPage({
       </Link>
 
       <div className="mt-6 max-w-3xl">
+        {/* order-2, not DOM order — on mobile the logo sits to the right
+            of the role/company text (matching the site's usual mobile
+            right-anchored-media convention, e.g. Home's photo-right
+            layout), desktop keeps the original logo-left order. */}
         <div className="flex items-start gap-5">
           {experience.logoSrc ? (
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line sm:h-28 sm:w-28">
+            <div className="relative order-2 h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line sm:h-28 sm:w-28 md:order-none">
               <Image
                 src={experience.logoSrc}
                 alt={`${experience.company} logo`}
@@ -67,11 +71,11 @@ export default async function ExperienceDetailPage({
           ) : (
             <ImagePlaceholder
               label={experience.company}
-              className="h-24 w-24 shrink-0 sm:h-28 sm:w-28"
+              className="order-2 h-24 w-24 shrink-0 sm:h-28 sm:w-28 md:order-none"
             />
           )}
 
-          <div className="min-w-0">
+          <div className="order-1 min-w-0 md:order-none">
             <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl">
               {experience.role}
             </h1>
@@ -89,7 +93,7 @@ export default async function ExperienceDetailPage({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap justify-end gap-2 md:justify-start">
           {experience.tags.map((tag) => (
             <Tag key={tag}>{tag}</Tag>
           ))}

@@ -25,7 +25,7 @@ export function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group flex flex-col rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
+      className="group flex flex-col rounded-2xl border border-line bg-card-tint p-5 md:text-left backdrop-blur-[6px] transition-colors hover:border-accent/40 hover:bg-card-tint-hover"
     >
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-ink-faint">
@@ -52,13 +52,13 @@ export function ProjectCard({ project }: { project: Project }) {
       <h3 className="mt-3 text-base font-semibold text-ink transition-colors group-hover:text-accent-soft">
         {project.name}
         {" "}
-        <ArrowRightIcon className="ml-0.5 inline h-3.5 w-3.5 -translate-x-1 align-middle opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
+        <ArrowRightIcon className="ml-0.5 hidden h-3.5 w-3.5 -translate-x-1 align-middle opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100 md:inline" />
       </h3>
       <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-soft">
         {project.description}
       </p>
 
-      <div className="mt-4 flex flex-wrap gap-1.5">
+      <div className="mt-4 flex flex-wrap justify-end gap-1.5 md:justify-start">
         {project.tags.map((tag) => (
           <Tag key={tag}>{tag}</Tag>
         ))}

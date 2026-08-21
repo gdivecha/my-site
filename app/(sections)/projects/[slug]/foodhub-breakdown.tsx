@@ -96,8 +96,13 @@ export function FoodHubBreakdown() {
             return (
               <div key={layer.name} className="flex flex-col items-center">
                 <div className="w-full rounded-2xl border border-line bg-card-tint p-4 backdrop-blur-[6px] sm:p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tag-bg text-accent-soft">
+                  {/* order-2/justify-end/text-right (mobile only) —
+                      icon on the right of the label, matching the
+                      site's usual mobile right-anchored-icon
+                      convention. Desktop keeps the original icon-left
+                      order. */}
+                  <div className="flex items-center justify-end gap-3 text-right md:justify-start md:text-left">
+                    <span className="order-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tag-bg text-accent-soft md:order-none">
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <p className="text-sm font-semibold text-ink">
@@ -107,7 +112,7 @@ export function FoodHubBreakdown() {
                       </span>
                     </p>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5 pl-12">
+                  <div className="mt-3 flex flex-wrap justify-end gap-1.5 pl-12 md:justify-start">
                     {layer.items.map((item) => (
                       <span
                         key={item}
@@ -198,7 +203,7 @@ export function FoodHubBreakdown() {
               <p className="mt-1 text-[11px] uppercase tracking-widest text-ink-faint">
                 PK: {entity.pk}
               </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap justify-end gap-1.5 md:justify-start">
                 {entity.fields.map((field) => (
                   <span
                     key={field}

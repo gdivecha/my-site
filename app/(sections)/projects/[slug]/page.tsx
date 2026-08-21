@@ -157,13 +157,13 @@ export default async function ProjectDetailPage({
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">
           {project.description}
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap justify-end gap-2 md:justify-start">
           {project.tags.map((tag) => (
             <Tag key={tag}>{tag}</Tag>
           ))}
         </div>
         {project.repoUrls ? (
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+          <div className="mt-4 flex flex-wrap justify-end gap-x-4 gap-y-1.5 md:justify-start">
             {project.repoUrls.map((repo) => (
               <a
                 key={repo.url}

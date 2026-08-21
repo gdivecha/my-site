@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import { TechLogo } from "@/components/TechIcon";
 import { CodeBracketsIcon } from "@/components/icons";
+import { ENTRANCE_MS, SIDEBAR_CASCADE_DONE_MS } from "@/lib/entrance-timing";
 import type { SkillCategory } from "@/lib/data/skills";
 import { categoryIcons } from "./category-icons";
 
@@ -40,6 +48,46 @@ const ROTATION_PER_DELTA = 0.15;
 // a third of the graph's width reads as a deliberate spin, matching the
 // wheel's own feel rather than being hair-trigger or sluggish.
 const DRAG_ROTATION_PER_PX = 0.4;
+// Degrees per second the wheel spins on its own on mobile, when nothing
+// is actively dragging it — slow enough to read as ambient motion, not
+// a distraction from the icons themselves.
+const AUTO_ROTATE_DEG_PER_SEC = 6;
+// How long auto-rotate stays paused after the person releases a manual
+// drag — "a few seconds" to actually look at what they just spun to,
+// not an instant resume that reads as the spin fighting the gesture.
+const AUTO_ROTATE_RESUME_DELAY_MS = 3000;
+
+// Mobile frames the wheel tighter than desktop and off-center, rather
+// than the full SIZE×SIZE square centered on the root — root sits fixed
+// at (CENTER, CENTER) regardless of viewBox (it's always radius 0 in the
+// polar layout), so offsetting the viewBox here is what actually pins it
+// near the bottom-right corner of the frame instead of dead center, per
+// the reference layout. Existing drag/wheel rotation needs no changes at
+// all to work with this — every node's position is already recomputed
+// from its own angle via polarPoint() on every rotationOffset change
+// (not a CSS transform on a fixed layout), so nodes just naturally swing
+// into and out of whatever window this viewBox happens to show, staying
+// upright the whole time with no counter-rotation needed.
+// 0.62, not the tighter 0.58 tried first — the farthest-reaching
+// direction from the corner-anchored root (straight "up") gets
+// ROOT_SCREEN_FRACTION of this view's own size, and that needs to be
+// enough to fully contain even the outermost skill nodes (SKILL_RING +
+// SKILL_NODE_SIZE/2, ~867 units) when one rotates to face that
+// direction — 0.58 gave only ~832, just short, which is exactly why
+// top-of-circle nodes were disappearing instead of showing. 0.62 gives
+// ~889, with real margin.
+const MOBILE_VIEW = SIZE * 0.62;
+const ROOT_SCREEN_FRACTION = 0.82;
+// Pure sanity guard against a zero/negative computed size (e.g. a
+// measurement that runs against a layout that hasn't settled yet) —
+// deliberately NOT a "never go below this" design floor. The frame's
+// bottom gap is measured to match its top gap exactly (see the
+// useLayoutEffect below), so anything bigger than the real fit would
+// eat back into that matched gap — on a genuinely short viewport (e.g.
+// iPhone SE, 375×667) the real available space between the heading and
+// the bottom nav bar can be under 100px. Shrinking the graph to actually
+// fit is the correct trade-off over a size floor fighting the gap.
+const MOBILE_FRAME_MIN_PX = 60;
 
 type Point = { x: number; y: number };
 
@@ -133,6 +181,102 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
   const [rotationOffset, setRotationOffset] = useState(0);
   const { categoryNodes, skillNodes } = useGraphLayout(categories, rotationOffset);
   const [hovered, setHovered] = useState<{ label: string } & Point>();
+  // Starts false (desktop framing) so server and client agree on the
+  // very first render — "use client" components still render once on
+  // the server, where window doesn't exist, so this can't be decided
+  // until after mount. Corrected in the layout effect below, before
+  // paint, so mobile doesn't flash the desktop framing first.
+  const [isMobile, setIsMobile] = useState(false);
+  useLayoutEffect(() => {
+    function check() {
+      setIsMobile(window.innerWidth < 768);
+    }
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  // Locks the container's actual on-screen pixel size on mobile, rather
+  // than trusting a flat `72vh` guess (see the old className comment
+  // below) to leave enough room above/below it — that guess had no idea
+  // how tall the heading/tab row above this component actually renders,
+  // nor how much space the fixed-position bottom nav bar actually
+  // reserves (which itself varies by device via env(safe-area-inset-
+  // bottom)), so on some real viewports the square frame came out taller
+  // than the space actually available and pushed root (anchored near its
+  // bottom-right corner) off the bottom of the screen. Measuring the nav
+  // bar's real rendered height directly (via its [data-dial-nav]
+  // attribute) instead of hardcoding a pixel guess for it is what
+  // actually accounts for that safe-area inset correctly on every
+  // device, rather than guessing at one number that only happens to work
+  // on some.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mobileFrameSize, setMobileFrameSize] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    if (!isMobile) {
+      setMobileFrameSize(null);
+      return;
+    }
+    function measure() {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const top = rect.top;
+      // Measured off the parent, not `el` itself — once `el` gets sized
+      // by this same effect below, measuring its own rect here on a
+      // later resize would cap every future measurement by whatever the
+      // previous measurement produced instead of the page's actual
+      // available width, shrinking a little further each time.
+      const availableWidth =
+        el.parentElement?.getBoundingClientRect().width ?? window.innerWidth;
+      // Mirrors the frame's own right gap (the page's own horizontal
+      // padding — see PageShell's px-6/sm:px-10 — since the frame is
+      // right-aligned via ml-auto) as the bottom gap too, rather than a
+      // separately-tuned constant. Read live off the actual rendered
+      // position (window width minus the frame's own right edge) instead
+      // of hardcoding a padding value, since which padding class is
+      // active depends on the viewport width itself (px-6 vs sm:px-10).
+      const rightGap = window.innerWidth - rect.right;
+      const navEl = document.querySelector<HTMLElement>("[data-dial-nav]");
+      const reservedBottom = (navEl?.getBoundingClientRect().height ?? 0) + rightGap;
+      const availableHeight = window.innerHeight - top - reservedBottom;
+      setMobileFrameSize(
+        Math.max(MOBILE_FRAME_MIN_PX, Math.min(availableHeight, availableWidth))
+      );
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    // The heading/tab row above this component is still mid-entrance
+    // (fade+slide) at the exact moment this layout effect first runs, so
+    // that first measurement's `top` can be off by however far that
+    // slide still has left to go — confirmed via a real measurement
+    // (~20px on mobile) that only shows up once the animation actually
+    // settles, not something a resize event ever fires for. Re-measuring
+    // once more right as that entrance is known to finish (the same
+    // "page content has settled" moment PageShell/DialNav already
+    // synchronize on) corrects it without guessing at an arbitrary delay.
+    const settleTimer = window.setTimeout(
+      measure,
+      SIDEBAR_CASCADE_DONE_MS + ENTRANCE_MS
+    );
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.clearTimeout(settleTimer);
+    };
+  }, [isMobile]);
+  // Numeric bounds, not just the viewBox string — the tooltip below
+  // (plain HTML, positioned by percentage) needs these same values to
+  // place itself correctly once mobile's framing is no longer the
+  // simple "0 0 SIZE SIZE" square its old (hovered.x / SIZE) math
+  // assumed.
+  const viewBoxBounds = isMobile
+    ? {
+        x: CENTER - MOBILE_VIEW * ROOT_SCREEN_FRACTION,
+        y: CENTER - MOBILE_VIEW * ROOT_SCREEN_FRACTION,
+        w: MOBILE_VIEW,
+        h: MOBILE_VIEW,
+      }
+    : { x: 0, y: 0, w: SIZE, h: SIZE };
+  const viewBox = `${viewBoxBounds.x} ${viewBoxBounds.y} ${viewBoxBounds.w} ${viewBoxBounds.h}`;
   // Touch/pointer-drag rotation — the wheel listener below has no touch
   // equivalent, so without this the whole wheel is inert on any
   // touch-only device (nodes visible, but nothing off-angle ever
@@ -141,6 +285,17 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
   // same relationship the connection graph's own pointer-drag pan has to
   // its wheel-driven zoom.
   const dragRef = useRef<{ startX: number; startRotation: number } | null>(null);
+  // Timestamp (performance.now()-scale) auto-rotate stays paused until —
+  // set on release, not just while dragRef is active, so the pause
+  // outlasts the gesture itself (see handlePointerUp/the auto-rotate
+  // effect below). 0 by default: nothing has been dragged yet, so
+  // there's no reason to start paused.
+  const pausedUntilRef = useRef(0);
+  // Previous tick's paused state — lets the auto-rotate effect detect
+  // the exact PAUSED→SPINNING transition (to clear a stale tooltip right
+  // as the graph starts moving again) without that check re-running on
+  // every already-spinning frame.
+  const wasPausedRef = useRef(true);
 
   function handlePointerDown(e: PointerEvent<SVGSVGElement>) {
     dragRef.current = { startX: e.clientX, startRotation: rotationOffset };
@@ -154,9 +309,56 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
   }
 
   function handlePointerUp(e: PointerEvent<SVGSVGElement>) {
+    // This same handler is also wired to onPointerLeave (see the SVG
+    // below), which fires on plain mouse movement off the graph even
+    // when nothing was ever actually dragged — checking dragRef here
+    // (before clearing it) is what keeps that from continuously
+    // re-triggering the post-drag pause on every casual mouse-out.
+    // Confirmed empirically: without this check, hovering a node then
+    // moving away was enough to keep resetting the pause indefinitely,
+    // so auto-rotate never actually resumed.
+    const wasDragging = !!dragRef.current;
     dragRef.current = null;
     e.currentTarget.releasePointerCapture(e.pointerId);
+    // Keeps auto-rotate paused for a few seconds after releasing too,
+    // not just during the drag itself — a straight resume the instant
+    // the finger lifts read as the spin fighting the gesture rather than
+    // giving the person a moment to actually look at whatever they just
+    // dragged into view.
+    if (wasDragging) {
+      pausedUntilRef.current = performance.now() + AUTO_ROTATE_RESUME_DELAY_MS;
+    }
   }
+
+  // Ambient auto-rotation on mobile — a rAF loop instead of setInterval
+  // so the step scales with real elapsed time (frame-rate independent,
+  // and immune to the big single jump a backgrounded/throttled tab would
+  // otherwise produce on the next tick). Skips entirely while actively
+  // dragging OR within AUTO_ROTATE_RESUME_DELAY_MS after releasing (see
+  // pausedUntilRef, set in handlePointerUp) — manual interaction always
+  // wins outright rather than fighting the auto-spin for control.
+  // wasPausedRef tracks the previous tick's paused/spinning state
+  // specifically to catch the PAUSED→SPINNING transition once — that's
+  // the one moment a stale hover tooltip needs clearing, since the
+  // node it's anchored to is about to start moving out from under it.
+  useEffect(() => {
+    if (!isMobile) return;
+    let raf: number;
+    let last = performance.now();
+    function tick(now: number) {
+      const dt = now - last;
+      last = now;
+      const paused = !!dragRef.current || now < pausedUntilRef.current;
+      if (!paused) {
+        if (wasPausedRef.current) setHovered(undefined);
+        setRotationOffset((prev) => prev + (AUTO_ROTATE_DEG_PER_SEC * dt) / 1000);
+      }
+      wasPausedRef.current = paused;
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isMobile]);
 
   const categoryPos = new Map(categoryNodes.map((n) => [n.category.id, n]));
 
@@ -205,15 +407,62 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
 
   return (
     <div>
-      {/* max-w-[min(48rem,72vh)]: the viewBox is a perfect square, so an
-          equivalent max-height is just the same value in width terms —
-          this is what actually keeps the whole graph within one
-          viewport (72vh leaves room for the heading/toggle row above),
-          rather than the old flat max-w-3xl, which had no awareness of
-          how tall the square it produces actually is. */}
-      <div className="relative mx-auto mt-12 w-full max-w-[min(48rem,72vh)]">
+      {/* max-w-[min(48rem,72vh)]: desktop-only sizing now — the viewBox is
+          a perfect square, so an equivalent max-height is just the same
+          value in width terms. Mobile instead gets an explicit pixel
+          width/height below (mobileFrameSize), measured against the real
+          viewport rather than trusting vh units to know how much space
+          the heading/tab row above and the fixed bottom nav below
+          actually consume. */}
+      <div
+        ref={containerRef}
+        // mx-auto (centered) on desktop, where the frame is deliberately
+        // the page's one focal square. On mobile that same centering is
+        // what broke the anchor: root sits toward the frame's own
+        // bottom-right corner (see ROOT_SCREEN_FRACTION), but whenever
+        // the frame's square size is height-capped rather than
+        // width-capped (see mobileFrameSize above), the frame itself
+        // ends up narrower than the content column — centering it then
+        // leaves dead space to its right, pulling the whole wheel
+        // visibly away from the page's actual right margin instead of
+        // hugging it. ml-auto (right-aligned) instead keeps the frame's
+        // own right edge flush against the content column's right edge
+        // regardless of how much narrower than full-width it ends up.
+        className={`relative mt-12 w-full max-w-[min(48rem,72vh)] ${
+          isMobile ? "ml-auto" : "mx-auto"
+        }`}
+        // Mobile only — desktop's full SIZE×SIZE view already contains
+        // every node with margin to spare (see MOBILE_VIEW's own
+        // comment), so nothing there ever actually reaches this edge.
+        // Same masking technique the watermark already uses elsewhere
+        // (see .watermark-field in globals.css) to fade content into
+        // the frame's own edge instead of a bare CSS clip. Right/bottom
+        // only, not top/left — root sits anchored near the bottom-right
+        // corner (see ROOT_SCREEN_FRACTION), so those are the two edges
+        // content actually approaches as it rotates; top/left stay
+        // fully opaque instead of also dimming the graph's own interior.
+        style={
+          isMobile
+            ? {
+                ...(mobileFrameSize != null
+                  ? {
+                      width: mobileFrameSize,
+                      height: mobileFrameSize,
+                      maxWidth: mobileFrameSize,
+                    }
+                  : null),
+                maskImage:
+                  "linear-gradient(to bottom, black 90%, transparent), linear-gradient(to right, black 90%, transparent)",
+                maskComposite: "intersect",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, black 90%, transparent), linear-gradient(to right, black 90%, transparent)",
+                WebkitMaskComposite: "source-in",
+              }
+            : undefined
+        }
+      >
         <svg
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          viewBox={viewBox}
           className="w-full touch-none cursor-grab active:cursor-grabbing"
           role="img"
           aria-label="Skills grouped by category, shown as a network graph you can spin by scrolling or dragging"
@@ -300,7 +549,11 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
             quiet skill leaves) and a darker filled disc. Labels show on
             hover (see the tooltip below) rather than always-on text, same
             as the skill leaves — keeps the wheel legible as it spins
-            instead of a ring of text sweeping past at every angle. */}
+            instead of a ring of text sweeping past at every angle. A
+            node rotating out of frame on mobile is clipped by the SVG's
+            own viewBox rather than hidden outright — the fade mask on
+            the frame itself (see the container div's style above) is
+            what keeps that from reading as a hard cutout. */}
         {categoryNodes.map((n) => {
           const CategoryIcon = categoryIcons[n.category.id] ?? CodeBracketsIcon;
           return (
@@ -338,7 +591,8 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
             Deliberately no glow at this tier — 34 of them glowing would
             drown out the root/category hierarchy this graph is built to
             show, so they stay quiet until hovered. */}
-        {skillNodes.map((n) => (
+        {skillNodes.map((n) => {
+          return (
           <g
             key={n.skill.name}
             onMouseEnter={() => setHovered({ label: n.skill.name, x: n.x, y: n.y })}
@@ -367,7 +621,8 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
               </div>
             </foreignObject>
           </g>
-        ))}
+          );
+        })}
       </svg>
 
       {hovered && (
@@ -375,8 +630,8 @@ export function SkillGraph({ categories }: { categories: SkillCategory[] }) {
           role="tooltip"
           className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-[calc(100%+10px)] whitespace-nowrap rounded-md border border-line bg-panel-alt px-2 py-1 text-[11px] font-semibold tracking-wide text-ink shadow-sm"
           style={{
-            left: `${(hovered.x / SIZE) * 100}%`,
-            top: `${(hovered.y / SIZE) * 100}%`,
+            left: `${((hovered.x - viewBoxBounds.x) / viewBoxBounds.w) * 100}%`,
+            top: `${((hovered.y - viewBoxBounds.y) / viewBoxBounds.h) * 100}%`,
           }}
         >
           {hovered.label.toUpperCase()}

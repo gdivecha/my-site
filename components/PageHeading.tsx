@@ -82,7 +82,7 @@ export function PageHeading({
       </p>
       <h1
         ref={headingRef}
-        className="mt-2 font-display text-[36px] font-bold leading-tight text-ink sm:text-[48px]"
+        className="mt-2 font-display text-[30px] font-bold leading-tight text-ink sm:text-[48px]"
       >
         {children}
       </h1>

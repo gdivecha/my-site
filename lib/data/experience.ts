@@ -108,7 +108,7 @@ export const experiences: Experience[] = [
   {
     id: "dayforce-performance-fall23",
     company: "Dayforce",
-    role: "Software Development Engineer",
+    role: "Software Developer Intern",
     team: "Performance Engineering Team",
     dateRange: "Sep '23 - Dec '23",
     startDate: "2023-09-01",
@@ -151,7 +151,7 @@ export const experiences: Experience[] = [
   {
     id: "dayforce-performance-winter23",
     company: "Dayforce",
-    role: "Software Development Engineer",
+    role: "Software Developer Intern",
     team: "Performance Engineering Team",
     dateRange: "Jan '23 - Apr '23",
     startDate: "2023-01-01",

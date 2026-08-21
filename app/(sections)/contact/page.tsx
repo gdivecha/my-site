@@ -19,7 +19,12 @@ export default function ContactPage() {
     <PageShell watermark="CONTACT">
       <PageHeading eyebrow="Contact">Let&apos;s talk</PageHeading>
 
-      <div className="mt-8 max-w-xl rounded-2xl border border-line bg-card-tint p-6 backdrop-blur-[6px] md:p-8">
+      {/* p-5, not p-6, specifically below sm: the copy-email button's own
+          text needs every spare pixel of the card's content width on a
+          narrow phone to fit the email on one line (see
+          copy-email-button.tsx) — a couple of reclaimed padding pixels
+          on each side is what closes that gap. */}
+      <div className="mt-8 max-w-xl rounded-2xl border border-line bg-card-tint p-5 backdrop-blur-[6px] sm:p-6 md:p-8">
         <p className="text-sm leading-relaxed text-ink-soft">
           Open to full-time roles, freelance work, or just talking shop
           about something you&apos;re building. Reach out directly:
